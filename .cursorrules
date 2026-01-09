@@ -1,0 +1,66 @@
+# Laravel Development Rules
+
+## Code Style & Philosophy
+- Ưu tiên **đơn giản – dễ đọc – đúng chuẩn Laravel**
+- Không tạo abstraction khi chưa cần
+- CRUD thì viết thẳng trong Controller
+- Validation dùng FormRequest khi hợp lý, còn lại dùng `$request->validate()`
+- Không fake business rule
+
+## Architecture
+- **Logic đặt trực tiếp trong Controller**
+- Chỉ dùng Service khi thật sự cần tái sử dụng
+- **KHÔNG dùng Repository pattern**
+- Không tự ý tạo layer không được yêu cầu
+
+## Code Quality
+- Code xuất ra phải tuân theo Laravel Pint default rules
+- Viết code đúng chuẩn Laravel
+- Không bịa yêu cầu
+- Không over-engineer
+- Khi gọi các method từ Model, nên sử dụng `query()` để IDE có thể auto complete tốt hơn
+  - Ví dụ: `Admin::query()->firstOrCreate()` thay vì `Admin::firstOrCreate()`
+  - Ví dụ: `User::query()->where()->get()` thay vì `User::where()->get()`
+
+## Project Structure
+- Trong `app/` chỉ có 3 folder: **Admin**, **Web**, và **Share**
+- **Share**: Chứa mọi thứ dùng chung giữa Admin và Web
+  - Models (tất cả models đặt ở đây, Admin và Web không có models riêng)
+  - Services (chỉ những service tái sử dụng và phức tạp)
+  - Utils (utilities dùng chung)
+  - Exceptions (exception handlers)
+  - Providers (Service Providers dùng chung)
+- **Admin**: Code theo kiểu MVC với Laravel Blade
+  - Controllers: `app/Admin/Http/Controllers/`
+  - Requests: `app/Admin/Http/Requests/`
+  - Views: `resources/views/admin/` (Blade templates)
+  - Routes: `routes/admin.php` (prefix: `/admin`)
+  - Xây dựng Blade views theo HTML mẫu từ `resources/dashcode/`
+  - CSS, assets, JS của Dashcode đã ở `public/dashcode/`, sử dụng helper `asset('dashcode/...')` khi gọi tài nguyên
+  - **Tất cả label, message trong Admin phải dùng tiếng Việt, không cần đa ngôn ngữ**
+- **Web**: Code kiểu API response JSON
+  - Controllers: `app/Web/Http/Controllers/`
+  - Requests: `app/Web/Http/Requests/`
+  - Routes: `routes/api.php`
+
+## Docker & Commands
+- Mọi lệnh PHP và Composer phải chạy qua Laravel Sail
+- Sử dụng format: `sail exec --user sail laravel.test <command>`
+- Ví dụ: `sail exec --user sail laravel.test php artisan make:migration ...`
+- Ví dụ: `sail exec --user sail laravel.test composer install`
+- **QUAN TRỌNG**: Phải dùng Laravel commands khi có sẵn, không được tự code
+- Đặc biệt với migration: PHẢI dùng `php artisan make:migration`, không được tự tạo file migration
+- Các commands khác như `make:model`, `make:controller` cũng phải dùng artisan commands
+- **Sau khi hoàn thành task**: Phải chạy `sail exec --user sail laravel.test vendor/bin/pint` để format code theo Laravel Pint rules
+
+## Database Seeders
+- **DatabaseSeeder**: Chỉ chứa các seeder bắt buộc khi hệ thống chạy (ví dụ: AdminsSeeder)
+- **FakeDatabaseSeeder**: Chứa các seeder dùng để seed dữ liệu fake cho testing (ví dụ: UsersSeeder)
+- Khi seed dữ liệu fake, chạy: `sail exec --user sail laravel.test php artisan db:seed --class=FakeDatabaseSeeder`
+- Khi seed dữ liệu bắt buộc, chạy: `sail exec --user sail laravel.test php artisan db:seed` (hoặc `--class=DatabaseSeeder`)
+
+## General
+- Luôn ưu tiên giải pháp đơn giản nhất
+- Tuân theo Laravel conventions
+- Code phải dễ đọc và dễ maintain
+
