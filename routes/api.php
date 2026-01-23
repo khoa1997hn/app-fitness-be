@@ -2,6 +2,7 @@
 
 use App\Web\Http\Controllers\API\V1\Auth\AuthController;
 use App\Web\Http\Controllers\API\V1\Auth\RegistrationController;
+use App\Web\Http\Controllers\API\V1\Auth\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -34,7 +35,7 @@ Route::as('api.')
                     Route::middleware('auth:api')->group(function () {
                         Route::post('logout', [AuthController::class, 'logout'])->name('logout');
                         Route::post('refresh', [AuthController::class, 'refresh'])->name('refresh');
-                        Route::get('me', [AuthController::class, 'me'])->name('me');
+                        Route::get('profile', [ProfileController::class, 'show'])->name('profile.show');
                     });
                 });
         });

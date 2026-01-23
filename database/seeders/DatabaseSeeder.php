@@ -16,6 +16,5 @@ class DatabaseSeeder extends Seeder
     {
         // Chỉ seed các dữ liệu bắt buộc khi hệ thống chạy
         $this->call(AdminsSeeder::class);
-        $this->call(SettingsSeeder::class);
     }
 }

@@ -39,62 +39,6 @@
                     </span>
                 </a>
             </li>
-            <li>
-                <a href="{{ route('admin.tours.index') }}" class="navItem">
-                    <span class="flex items-center">
-                        <iconify-icon class="nav-icon" icon="heroicons-outline:map"></iconify-icon>
-                        <span>Tours</span>
-                    </span>
-                </a>
-            </li>
-            <li>
-                <a href="{{ route('admin.coupons.index') }}" class="navItem">
-                    <span class="flex items-center">
-                        <iconify-icon class="nav-icon" icon="heroicons-outline:ticket"></iconify-icon>
-                        <span>Coupons</span>
-                    </span>
-                </a>
-            </li>
-            <li>
-                <a href="{{ route('admin.tracking-emails.index') }}" class="navItem">
-                    <span class="flex items-center">
-                        <iconify-icon class="nav-icon" icon="heroicons-outline:mail"></iconify-icon>
-                        <span>Tracking Emails</span>
-                    </span>
-                </a>
-            </li>
-            <li>
-                <a href="{{ route('admin.evisa.index') }}" class="navItem">
-                    <span class="flex items-center">
-                        <iconify-icon class="nav-icon" icon="heroicons-outline:cog"></iconify-icon>
-                        <span>EVisa</span>
-                    </span>
-                </a>
-            </li>
-            <li>
-                <a href="{{ route('admin.fasttrack.index') }}" class="navItem">
-                    <span class="flex items-center">
-                        <iconify-icon class="nav-icon" icon="heroicons-outline:cog"></iconify-icon>
-                        <span>Fast Track</span>
-                    </span>
-                </a>
-            </li>
-            <li>
-                <a href="{{ route('admin.carpickup.index') }}" class="navItem">
-                    <span class="flex items-center">
-                        <iconify-icon class="nav-icon" icon="heroicons-outline:cog"></iconify-icon>
-                        <span>Car Pickup</span>
-                    </span>
-                </a>
-            </li>
-            <li>
-                <a href="{{ route('admin.esim.index') }}" class="navItem">
-                    <span class="flex items-center">
-                        <iconify-icon class="nav-icon" icon="heroicons-outline:cog"></iconify-icon>
-                        <span>E-Sim</span>
-                    </span>
-                </a>
-            </li>
         </ul>
     </div>
 </div>

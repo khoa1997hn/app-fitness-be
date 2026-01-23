@@ -119,7 +119,7 @@ Truy cập: http://localhost:8000
 
 ```bash
 git clone <repository-url>
-cd visa-website
+cd fitness-website
 composer install --optimize-autoloader --no-dev
 ```
 
@@ -152,13 +152,13 @@ php artisan view:cache
 
 ### Bước 5: Cấu hình Nginx
 
-Tạo file cấu hình Nginx (ví dụ: `/etc/nginx/sites-available/visa-website`):
+Tạo file cấu hình Nginx (ví dụ: `/etc/nginx/sites-available/fitness-website`):
 
 ```nginx
 server {
     listen 80;
     server_name your-domain.com;
-    root /path/to/visa-website/public;
+    root /path/to/fitness-website/public;
 
     add_header X-Frame-Options "SAMEORIGIN";
     add_header X-Content-Type-Options "nosniff";
@@ -190,7 +190,7 @@ server {
 
 Kích hoạt site:
 ```bash
-sudo ln -s /etc/nginx/sites-available/visa-website /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/fitness-website /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl reload nginx
 ```
@@ -207,10 +207,10 @@ sudo systemctl start php8.5-fpm
 ### Bước 7: Phân quyền
 
 ```bash
-sudo chown -R www-data:www-data /path/to/visa-website/storage
-sudo chown -R www-data:www-data /path/to/visa-website/bootstrap/cache
-sudo chmod -R 775 /path/to/visa-website/storage
-sudo chmod -R 775 /path/to/visa-website/bootstrap/cache
+sudo chown -R www-data:www-data /path/to/fitness-website/storage
+sudo chown -R www-data:www-data /path/to/fitness-website/bootstrap/cache
+sudo chmod -R 775 /path/to/fitness-website/storage
+sudo chmod -R 775 /path/to/fitness-website/bootstrap/cache
 ```
 
 ## Seed dữ liệu
