@@ -28,4 +28,9 @@ return [
     'not_found_error' => 'Không tìm thấy tài nguyên được yêu cầu.',
     'server_error' => 'Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau.',
 
+    // Subscription messages
+    'receipt_verified_successfully' => 'Xác thực receipt thành công.',
+    'purchase_verified_successfully' => 'Xác thực purchase thành công.',
+    'invalid_receipt' => 'Receipt không hợp lệ (:detail).',
+
 ];

@@ -27,7 +27,6 @@ class AuthController extends Controller
         if (! $token = auth('api')->attempt($credentials)) {
             return ResponseAPI::error(
                 __('messages.login_failed'),
-                null,
                 401
             );
         }

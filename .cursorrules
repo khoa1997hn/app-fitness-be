@@ -21,6 +21,9 @@
 - Khi gọi các method từ Model, nên sử dụng `query()` để IDE có thể auto complete tốt hơn
   - Ví dụ: `Admin::query()->firstOrCreate()` thay vì `Admin::firstOrCreate()`
   - Ví dụ: `User::query()->where()->get()` thay vì `User::where()->get()`
+- **Khi catch exception**: Luôn dùng `catch (\Throwable $e)` thay vì `catch (\Exception $e)` để bắt được cả Error và Exception
+- **Khi throw exception**: Phải tạo domain exception trong `app/Share/Exceptions` thay vì `throw new \Exception(...)`. Domain exception phải kế thừa từ base exception phù hợp (ví dụ: `SubscriptionException`)
+- **Khi sử dụng enum trong method parameters**: Để type hint là `string` thay vì enum class để linh hoạt. Khi gọi method, vẫn truyền giá trị enum trực tiếp (ví dụ: `EnumName::Value`)
 
 ## Project Structure
 - Trong `app/` chỉ có 3 folder: **Admin**, **Web**, và **Share**
@@ -45,6 +48,7 @@
 
 ## Docker & Commands
 - Mọi lệnh PHP và Composer phải chạy qua Laravel Sail
+- **Nếu Sail chưa chạy**: Tự động chạy `sail up -d` trước khi thực thi các lệnh
 - Sử dụng format: `sail exec --user sail laravel.test <command>`
 - Ví dụ: `sail exec --user sail laravel.test php artisan make:migration ...`
 - Ví dụ: `sail exec --user sail laravel.test composer install`

@@ -21,7 +21,7 @@ class ResponseAPI
     /**
      * Trả về response lỗi
      */
-    public static function error(string $message, ?array $errors = null, int $code = 400): JsonResponse
+    public static function error(string $message, int $code = 500, ?array $errors = null): JsonResponse
     {
         $response = [
             'success' => false,

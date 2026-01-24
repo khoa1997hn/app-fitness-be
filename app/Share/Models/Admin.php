@@ -2,13 +2,18 @@
 
 namespace App\Share\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property string $username
+ * @property string $password
+ * @property \Carbon\Carbon $created_at
+ * @property \Carbon\Carbon $updated_at
+ */
 class Admin extends Authenticatable
 {
-    use HasFactory;
-
     /**
      * The attributes that are mass assignable.
      *

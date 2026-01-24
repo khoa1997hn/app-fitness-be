@@ -40,8 +40,8 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($e instanceof ValidationException) {
                 return ResponseAPI::error(
                     __('messages.validation_error'),
-                    $e->errors(),
-                    422
+                    422,
+                    $e->errors()
                 );
             }
 
@@ -49,7 +49,6 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($e instanceof AuthenticationException) {
                 return ResponseAPI::error(
                     __('messages.authentication_error'),
-                    null,
                     401
                 );
             }
@@ -58,7 +57,6 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($e instanceof \Illuminate\Auth\Access\AuthorizationException || $e instanceof AccessDeniedHttpException) {
                 return ResponseAPI::error(
                     __('messages.authorization_error'),
-                    null,
                     403
                 );
             }
@@ -67,7 +65,6 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($e instanceof ModelNotFoundException || $e instanceof NotFoundHttpException) {
                 return ResponseAPI::error(
                     __('messages.not_found_error'),
-                    null,
                     404
                 );
             }
@@ -75,12 +72,12 @@ return Application::configure(basePath: dirname(__DIR__))
             // Các exception khác (500)
             return ResponseAPI::error(
                 config('app.debug') ? $e->getMessage() : __('messages.server_error'),
+                500,
                 config('app.debug') ? [
                     'file' => $e->getFile(),
                     'line' => $e->getLine(),
                     'trace' => $e->getTraceAsString(),
-                ] : null,
-                500
+                ] : null
             );
         });
     })->create();

@@ -1,8 +1,10 @@
 <?php
 
 use App\Web\Http\Controllers\API\V1\Auth\AuthController;
-use App\Web\Http\Controllers\API\V1\Auth\RegistrationController;
 use App\Web\Http\Controllers\API\V1\Auth\ProfileController;
+use App\Web\Http\Controllers\API\V1\Auth\RegistrationController;
+use App\Web\Http\Controllers\API\V1\Subscription\AppleIapController;
+use App\Web\Http\Controllers\API\V1\Subscription\GoogleIapController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -37,6 +39,16 @@ Route::as('api.')
                         Route::post('refresh', [AuthController::class, 'refresh'])->name('refresh');
                         Route::get('profile', [ProfileController::class, 'show'])->name('profile.show');
                     });
+                });
+
+            Route::as('subscriptions.')
+                ->prefix('subscriptions')
+                ->middleware('auth:api')
+                ->group(function () {
+                    Route::post('iap/google/verify', [GoogleIapController::class, 'verify'])
+                        ->name('iap.google.verify');
+                    Route::post('iap/apple/verify', [AppleIapController::class, 'verify'])
+                        ->name('iap.apple.verify');
                 });
         });
     });

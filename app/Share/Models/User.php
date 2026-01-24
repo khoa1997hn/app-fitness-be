@@ -3,14 +3,29 @@
 namespace App\Share\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Share\Enums\Plan;
+use App\Share\Enums\SubscriptionStatus;
+use App\Share\Models\Traits\User\ManagesSubscription;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 
+/**
+ * @property int $id
+ * @property string $email
+ * @property string $first_name
+ * @property string $last_name
+ * @property string $password
+ * @property \Carbon\Carbon|null $dob
+ * @property SubscriptionStatus|null $subscription_status
+ * @property Plan|null $plan
+ * @property-read Subscription|null $subscription
+ * @property-read Subscription|null $validSubscription
+ */
 class User extends Authenticatable implements JWTSubject
 {
-    use HasFactory, Notifiable;
+    use HasFactory, ManagesSubscription, Notifiable;
 
     /**
      * Create a new factory instance for the model.
@@ -33,6 +48,8 @@ class User extends Authenticatable implements JWTSubject
         'last_name',
         'password',
         'dob',
+        'subscription_status',
+        'plan',
     ];
 
     /**
@@ -54,6 +71,8 @@ class User extends Authenticatable implements JWTSubject
         return [
             'password' => 'hashed',
             'dob' => 'date',
+            'subscription_status' => SubscriptionStatus::class,
+            'plan' => Plan::class,
         ];
     }
 
@@ -69,6 +88,8 @@ class User extends Authenticatable implements JWTSubject
             'first_name' => $this->first_name,
             'last_name' => $this->first_name,
             'dob' => $this->dob,
+            'plan' => $this->plan?->value,
+            'subscription_status' => $this->subscription_status?->value,
         ];
     }
 }
