@@ -79,6 +79,7 @@ class GoogleService
                     // Activate subscription (renew or upgrade)
                     $subscriptionModel = $this->subscriptionService->activate(
                         user: $user,
+                        plan: $plan,
                         provider: SubscriptionProvider::GoogleIap,
                         providerSubscriptionId: $subscription->getOrderId() ?? $purchaseToken,
                         amount: $amount,

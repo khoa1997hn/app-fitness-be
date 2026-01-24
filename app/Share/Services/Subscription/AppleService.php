@@ -104,6 +104,7 @@ class AppleService
                     // Activate subscription (renew or upgrade)
                     $subscriptionModel = $this->subscriptionService->activate(
                         user: $user,
+                        plan: $plan,
                         provider: SubscriptionProvider::AppleIap,
                         providerSubscriptionId: $originalTransactionId,
                         amount: $amount,

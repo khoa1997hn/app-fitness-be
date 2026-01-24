@@ -3,8 +3,9 @@
 namespace App\Share\Services\Subscription;
 
 use App\Share\Enums\BillingCycle;
+use App\Share\Enums\Plan;
 use App\Share\Enums\SubscriptionStatus;
-use App\Share\Exceptions\Subscription\UserHasNoSubscriptionPlanException;
+use App\Share\Exceptions\Subscription\SubscriptionNotFoundException;
 use App\Share\Models\Subscription;
 use App\Share\Models\User;
 use Carbon\Carbon;
@@ -17,6 +18,7 @@ class SubscriptionService
      */
     public function activate(
         User $user,
+        Plan $plan,
         string $provider,
         string $providerSubscriptionId,
         float $amount,
@@ -24,14 +26,6 @@ class SubscriptionService
         bool $autoRenew = true,
         ?array $metadata = null
     ): Subscription {
-        // Get plan from existing subscription
-        $existingSubscription = $user->subscription;
-        if (! $existingSubscription) {
-            throw new UserHasNoSubscriptionPlanException;
-        }
-
-        $plan = $existingSubscription->plan;
-
         return DB::transaction(function () use (
             $user,
             $plan,
@@ -42,8 +36,11 @@ class SubscriptionService
             $amount,
             $metadata
         ) {
-            // Cancel existing active subscription if any
-            $this->cancelActiveSubscription($user);
+            // Lock subscription để đảm bảo thread-safe
+            Subscription::query()
+                ->where('user_id', $user->id)
+                ->lockForUpdate()
+                ->first();
 
             $subscription = Subscription::query()->updateOrCreate(
                 ['user_id' => $user->id],
@@ -76,19 +73,15 @@ class SubscriptionService
      */
     public function renew(Subscription $subscription, ?Carbon $expiresAt = null): Subscription
     {
-        $subscription->update([
-            'status' => SubscriptionStatus::Active,
-            'expires_at' => $expiresAt,
-            'auto_renew' => true,
-        ]);
-
-        // Update user subscription status and plan
-        $subscription->user->update([
-            'subscription_status' => SubscriptionStatus::Active,
-            'plan' => $subscription->plan,
-        ]);
-
-        return $subscription->fresh();
+        return $this->updateSubscription(
+            $subscription,
+            [
+                'status' => SubscriptionStatus::Active,
+                'expires_at' => $expiresAt,
+                'auto_renew' => true,
+            ],
+            SubscriptionStatus::Active
+        );
     }
 
     /**
@@ -96,19 +89,15 @@ class SubscriptionService
      */
     public function cancel(Subscription $subscription): Subscription
     {
-        $subscription->update([
-            'status' => SubscriptionStatus::Cancelled,
-            'cancelled_at' => now(),
-            'auto_renew' => false,
-        ]);
-
-        // Update user subscription status and plan
-        $subscription->user->update([
-            'subscription_status' => SubscriptionStatus::Cancelled,
-            'plan' => $subscription->plan,
-        ]);
-
-        return $subscription->fresh();
+        return $this->updateSubscription(
+            $subscription,
+            [
+                'status' => SubscriptionStatus::Cancelled,
+                'cancelled_at' => now(),
+                'auto_renew' => false,
+            ],
+            SubscriptionStatus::Cancelled
+        );
     }
 
     /**
@@ -116,28 +105,60 @@ class SubscriptionService
      */
     public function expire(Subscription $subscription): Subscription
     {
-        $subscription->update([
-            'status' => SubscriptionStatus::Expired,
-        ]);
-
-        // Update user subscription status and plan
-        $subscription->user->update([
-            'subscription_status' => SubscriptionStatus::Expired,
-            'plan' => $subscription->plan,
-        ]);
-
-        return $subscription->fresh();
+        return $this->updateSubscription(
+            $subscription,
+            [
+                'status' => SubscriptionStatus::Expired,
+            ],
+            SubscriptionStatus::Expired
+        );
     }
 
     /**
-     * Cancel active subscription for user
+     * Refund subscription
      */
-    public function cancelActiveSubscription(User $user): void
+    public function refund(Subscription $subscription): Subscription
     {
-        $activeSubscription = $user->validSubscription;
+        return $this->updateSubscription(
+            $subscription,
+            [
+                'status' => SubscriptionStatus::Refunded,
+                'cancelled_at' => now(),
+                'auto_renew' => false,
+            ],
+            SubscriptionStatus::Refunded
+        );
+    }
 
-        if ($activeSubscription) {
-            $this->cancel($activeSubscription);
-        }
+    /**
+     * Update subscription with lock and update user
+     */
+    protected function updateSubscription(
+        Subscription $subscription,
+        array $subscriptionData,
+        string $userStatus
+    ): Subscription {
+        return DB::transaction(function () use ($subscription, $subscriptionData, $userStatus) {
+            // Lock subscription để đảm bảo thread-safe
+            $subscription = Subscription::query()
+                ->where('id', $subscription->id)
+                ->lockForUpdate()
+                ->first();
+
+            if (! $subscription) {
+                throw new SubscriptionNotFoundException;
+            }
+
+            // Update subscription theo dữ liệu từ event
+            $subscription->update($subscriptionData);
+
+            // Update user subscription status and plan
+            $subscription->user->update([
+                'subscription_status' => $userStatus,
+                'plan' => $subscription->plan,
+            ]);
+
+            return $subscription->fresh();
+        });
     }
 }

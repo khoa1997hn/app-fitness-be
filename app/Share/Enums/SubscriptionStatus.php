@@ -15,4 +15,6 @@ class SubscriptionStatus extends Enum
     public const Cancelled = 'cancelled';
 
     public const GracePeriod = 'grace_period';
+
+    public const Refunded = 'refunded';
 }

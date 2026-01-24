@@ -37,8 +37,11 @@ class TrialService
             $amount,
             $metadata
         ) {
-            // Cancel existing active subscription if any
-            $this->subscriptionService->cancelActiveSubscription($user);
+            // Lock subscription để đảm bảo thread-safe
+            Subscription::query()
+                ->where('user_id', $user->id)
+                ->lockForUpdate()
+                ->first();
 
             $subscription = Subscription::query()->updateOrCreate(
                 ['user_id' => $user->id],

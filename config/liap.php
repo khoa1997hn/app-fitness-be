@@ -67,9 +67,33 @@ return [
          |
          */
 
-        /*  \Imdhemy\Purchases\Events\AppStore\Cancel::class => [
-              \App\Listeners\AppStore\Cancel::class,
-          ],*/
+        \Imdhemy\Purchases\Events\AppStore\InitialBuy::class => [
+            \App\Share\Listeners\Subscriptions\Apple\InitialBuyListener::class,
+        ],
+
+        \Imdhemy\Purchases\Events\AppStore\DidRenew::class => [
+            \App\Share\Listeners\Subscriptions\Apple\DidRenewListener::class,
+        ],
+
+        \Imdhemy\Purchases\Events\AppStore\DidFailToRenew::class => [
+            \App\Share\Listeners\Subscriptions\Apple\DidFailToRenewListener::class,
+        ],
+
+        \Imdhemy\Purchases\Events\AppStore\GracePeriodExpired::class => [
+            \App\Share\Listeners\Subscriptions\Apple\GracePeriodExpiredListener::class,
+        ],
+
+        \Imdhemy\Purchases\Events\AppStore\Expired::class => [
+            \App\Share\Listeners\Subscriptions\Apple\ExpiredListener::class,
+        ],
+
+        \Imdhemy\Purchases\Events\AppStore\Cancel::class => [
+            \App\Share\Listeners\Subscriptions\Apple\CancelListener::class,
+        ],
+
+        \Imdhemy\Purchases\Events\AppStore\Refund::class => [
+            \App\Share\Listeners\Subscriptions\Apple\RefundListener::class,
+        ],
 
         /*
          |--------------------------------------------------------------------------
@@ -80,9 +104,29 @@ return [
          | @see @see https://imdhemy.com/laravel-iap-docs/docs/server-notifications/event-list#google-play-events
          */
 
-        /* \Imdhemy\Purchases\Events\GooglePlay\SubscriptionRecovered::class => [
-             \App\Listeners\GooglePlay\SubscriptionRecovered::class,
-         ],*/
+        \Imdhemy\Purchases\Events\GooglePlay\SubscriptionPurchased::class => [
+            \App\Share\Listeners\Subscriptions\Google\SubscriptionPurchasedListener::class,
+        ],
+
+        \Imdhemy\Purchases\Events\GooglePlay\SubscriptionRenewed::class => [
+            \App\Share\Listeners\Subscriptions\Google\SubscriptionRenewedListener::class,
+        ],
+
+        \Imdhemy\Purchases\Events\GooglePlay\SubscriptionExpired::class => [
+            \App\Share\Listeners\Subscriptions\Google\SubscriptionExpiredListener::class,
+        ],
+
+        \Imdhemy\Purchases\Events\GooglePlay\SubscriptionCanceled::class => [
+            \App\Share\Listeners\Subscriptions\Google\SubscriptionCanceledListener::class,
+        ],
+
+        \Imdhemy\Purchases\Events\GooglePlay\SubscriptionRevoked::class => [
+            \App\Share\Listeners\Subscriptions\Google\SubscriptionRevokedListener::class,
+        ],
+
+        \Imdhemy\Purchases\Events\GooglePlay\SubscriptionInGracePeriod::class => [
+            \App\Share\Listeners\Subscriptions\Google\SubscriptionInGracePeriodListener::class,
+        ],
     ],
 
     /*
