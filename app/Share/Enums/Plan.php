@@ -8,7 +8,7 @@ class Plan extends Enum
 {
     public const Basic = 'basic';
 
-    public const Combo = 'combo';
+    public const Plus = 'plus';
 
-    public const Premium = 'premium';
+    public const All = 'all';
 }

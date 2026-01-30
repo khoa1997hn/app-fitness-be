@@ -12,20 +12,20 @@ return [
     */
 
     'plans' => [
-        'BASIC' => [
+        \App\Share\Enums\Plan::Basic => [
             'price' => env('PLAN_BASIC_PRICE'),
             'google_item_id' => env('PLAN_BASIC_GOOGLE_ITEM_ID'),
             'apple_product_id' => env('PLAN_BASIC_APPLE_PRODUCT_ID'),
         ],
-        'COMBO' => [
-            'price' => env('PLAN_COMBO_PRICE'),
-            'google_item_id' => env('PLAN_COMBO_GOOGLE_ITEM_ID'),
-            'apple_product_id' => env('PLAN_COMBO_APPLE_PRODUCT_ID'),
+        \App\Share\Enums\Plan::Plus => [
+            'price' => env('PLAN_PLUS_PRICE'),
+            'google_item_id' => env('PLAN_PLUS_GOOGLE_ITEM_ID'),
+            'apple_product_id' => env('PLAN_PLUS_APPLE_PRODUCT_ID'),
         ],
-        'PREMIUM' => [
-            'price' => env('PLAN_PREMIUM_PRICE'),
-            'google_item_id' => env('PLAN_PREMIUM_GOOGLE_ITEM_ID'),
-            'apple_product_id' => env('PLAN_PREMIUM_APPLE_PRODUCT_ID'),
+        \App\Share\Enums\Plan::All => [
+            'price' => env('PLAN_ALL_PRICE'),
+            'google_item_id' => env('PLAN_ALL_GOOGLE_ITEM_ID'),
+            'apple_product_id' => env('PLAN_ALL_APPLE_PRODUCT_ID'),
         ],
     ],
 

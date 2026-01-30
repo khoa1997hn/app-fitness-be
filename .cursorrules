@@ -45,6 +45,9 @@
   - Controllers: `app/Web/Http/Controllers/`
   - Requests: `app/Web/Http/Requests/`
   - Routes: `routes/api.php`
+  - **Response trong Controller**: KHÔNG được return full model object. Phải map từng field cần thiết vào array rõ ràng. Kể cả khi trả về đầy đủ tất cả field thì cũng phải liệt kê từng phần tử mappings ra.
+    - ❌ Sai: `return ResponseAPI::success(['subscription' => $subscription])`
+    - ✅ Đúng: `return ResponseAPI::success(['subscription' => ['id' => $subscription->id, 'plan' => $subscription->plan->value, ...]])`
 
 ## Docker & Commands
 - Mọi lệnh PHP và Composer phải chạy qua Laravel Sail
@@ -62,6 +65,19 @@
 - **FakeDatabaseSeeder**: Chứa các seeder dùng để seed dữ liệu fake cho testing (ví dụ: UsersSeeder)
 - Khi seed dữ liệu fake, chạy: `sail exec --user sail laravel.test php artisan db:seed --class=FakeDatabaseSeeder`
 - Khi seed dữ liệu bắt buộc, chạy: `sail exec --user sail laravel.test php artisan db:seed` (hoặc `--class=DatabaseSeeder`)
+
+## Swagger/OpenAPI Documentation
+- **Tất cả API endpoints trong `app/Web/Http/Controllers/API/V1` phải có Swagger annotations đầy đủ**
+- Sử dụng OpenAPI annotations từ `zircote/swagger-php` (đã được cài đặt qua L5 Swagger)
+- **Docs phải chi tiết, nested đầy đủ các input và output chuẩn**:
+  - Mô tả đầy đủ cho từng endpoint (summary, description)
+  - Định nghĩa rõ ràng request body với nested structures
+  - Định nghĩa rõ ràng response với nested structures
+  - Liệt kê đầy đủ các status codes có thể trả về
+  - Mô tả validation rules trong annotations
+  - Định nghĩa security schemes (Bearer token) cho các endpoint cần authentication
+- Base controller: `app/Web/Http/Controllers/API/V1/APIController.php`
+- Response format chuẩn: `ResponseAPI::success()` và `ResponseAPI::error()` với cấu trúc `{success: boolean, message: string, data: mixed, errors?: array}`
 
 ## General
 - Luôn ưu tiên giải pháp đơn giản nhất
