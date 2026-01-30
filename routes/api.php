@@ -3,6 +3,7 @@
 use App\Web\Http\Controllers\API\V1\Auth\AuthController;
 use App\Web\Http\Controllers\API\V1\Auth\ProfileController;
 use App\Web\Http\Controllers\API\V1\Auth\RegistrationController;
+use App\Web\Http\Controllers\API\V1\BannerController;
 use App\Web\Http\Controllers\API\V1\Subscription\AppleIapController;
 use App\Web\Http\Controllers\API\V1\Subscription\GoogleIapController;
 use Illuminate\Support\Facades\Route;
@@ -50,5 +51,7 @@ Route::as('api.')
                     Route::post('iap/apple/verify', [AppleIapController::class, 'verify'])
                         ->name('iap.apple.verify');
                 });
+
+            Route::get('banners', [BannerController::class, 'index'])->name('banners.index');
         });
     });
