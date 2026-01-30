@@ -30,6 +30,7 @@ class UserFactory extends Factory
             'password' => Hash::make('password'),
             'first_name' => fake()->firstName(),
             'last_name' => fake()->lastName(),
+            'phone' => fake()->optional()->phoneNumber(),
             'dob' => fake()->date(),
         ];
     }

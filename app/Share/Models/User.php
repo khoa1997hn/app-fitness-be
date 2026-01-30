@@ -17,6 +17,7 @@ use Tymon\JWTAuth\Contracts\JWTSubject;
  * @property string $first_name
  * @property string $last_name
  * @property string $password
+ * @property string|null $phone
  * @property \Carbon\Carbon|null $dob
  * @property SubscriptionStatus|null $subscription_status
  * @property Plan|null $plan
@@ -47,6 +48,7 @@ class User extends Authenticatable implements JWTSubject
         'first_name',
         'last_name',
         'password',
+        'phone',
         'dob',
         'subscription_status',
         'plan',
@@ -87,6 +89,7 @@ class User extends Authenticatable implements JWTSubject
             'email' => $this->email,
             'first_name' => $this->first_name,
             'last_name' => $this->first_name,
+            'phone' => $this->phone,
             'dob' => $this->dob,
             'plan' => $this->plan?->value,
             'subscription_status' => $this->subscription_status?->value,

@@ -20,6 +20,7 @@ class RegistrationController extends Controller
             'password' => 'required|string|min:8|max:50',
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
+            'phone' => 'nullable|string|max:255',
             'dob' => 'required|date:Y-m-d',
         ]);
 
@@ -28,6 +29,7 @@ class RegistrationController extends Controller
             'password' => $validated['password'],
             'first_name' => $validated['first_name'],
             'last_name' => $validated['last_name'],
+            'phone' => $validated['phone'] ?? null,
             'dob' => $validated['dob'],
         ]);
 
