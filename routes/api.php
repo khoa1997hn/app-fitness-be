@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::as('api.')
+    ->middleware([\App\Share\Http\Middleware\SetLocaleMiddleware::class])
     ->group(function () {
         Route::get('/health', function () {
             return response()->json([

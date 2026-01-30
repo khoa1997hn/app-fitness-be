@@ -7,7 +7,13 @@ use OpenApi\Attributes as OA;
 
 #[OA\Info(
     version: '1.0.0',
-    description: 'API documentation cho Fitness App - Hệ thống quản lý subscription và authentication',
+    description: 'API documentation cho Fitness App - Hệ thống quản lý subscription và authentication.
+
+**Đa ngôn ngữ:**
+Tất cả API endpoints hỗ trợ đa ngôn ngữ thông qua header `x-locale`. 
+- Header `x-locale` (optional): Locale code (ví dụ: `vi`, `en`)
+- Nếu không có header, hệ thống sẽ sử dụng locale mặc định từ config
+- Các locale được hỗ trợ: `vi` (Tiếng Việt), `en` (English)',
     title: 'Fitness App API'
 )]
 #[OA\Server(
