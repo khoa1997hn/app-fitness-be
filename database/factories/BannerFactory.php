@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Share\Attributes\File;
 use App\Share\Models\Banner;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -24,12 +25,21 @@ class BannerFactory extends Factory
      */
     public function definition(): array
     {
+        $locale = app()->getFallbackLocale();
+
         return [
-            'image_url' => fake()->imageUrl(800, 400, 'business', true),
-            'link_url' => fake()->optional()->url(),
             'description' => fake()->optional()->sentence(),
-            'order' => fake()->numberBetween(0, 100),
-            'is_active' => true,
+            $locale => [
+                'image' => new File(
+                    path: 'path/to/image.jpg',
+                    name: 'image.jpg',
+                    extension: 'jpg',
+                    size: 1000,
+                ),
+                'link_url' => fake()->optional()->url(),
+                'order' => fake()->numberBetween(0, 100),
+                'is_active' => fake()->boolean(80),
+            ],
         ];
     }
 }

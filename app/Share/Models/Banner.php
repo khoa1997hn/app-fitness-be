@@ -2,56 +2,40 @@
 
 namespace App\Share\Models;
 
+use App\Share\Attributes\File;
+use Astrotomic\Translatable\Contracts\Translatable as TranslatableContract;
+use Astrotomic\Translatable\Translatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
  * @property int $id
- * @property string $image_url
- * @property string|null $link_url
  * @property string|null $description
+ * @property File $image
+ * @property string|null $link_url
  * @property int $order
  * @property bool $is_active
  * @property \Carbon\Carbon $created_at
  * @property \Carbon\Carbon $updated_at
  */
-class Banner extends Model
+class Banner extends Model implements TranslatableContract
 {
     use HasFactory;
+    use Translatable;
 
-    /**
-     * Create a new factory instance for the model.
-     *
-     * @return \Illuminate\Database\Eloquent\Factories\Factory<static>
-     */
     protected static function newFactory()
     {
         return \Database\Factories\BannerFactory::new();
     }
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
-        'image_url',
-        'link_url',
         'description',
+    ];
+
+    protected $translatedAttributes = [
+        'image',
+        'link_url',
         'order',
         'is_active',
     ];
-
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
-    {
-        return [
-            'order' => 'integer',
-            'is_active' => 'boolean',
-        ];
-    }
 }

@@ -13,15 +13,21 @@ return new class extends Migration
     {
         Schema::create('banners', function (Blueprint $table) {
             $table->id();
-            $table->string('image_url');
-            $table->string('link_url')->nullable();
             $table->string('description', 500)->nullable();
+            $table->timestamps();
+        });
+
+        Schema::create('banner_translations', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('banner_id')->constrained()->cascadeOnDelete();
+            $table->string('locale')->index();
+            $table->unique(['banner_id', 'locale']);
+
+            $table->jsonb('image');
+            $table->string('link_url')->nullable();
             $table->integer('order')->default(0);
             $table->boolean('is_active')->default(true);
-            $table->timestamps();
-
-            $table->index('is_active');
-            $table->index('order');
         });
     }
 
@@ -31,5 +37,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('banners');
+        Schema::dropIfExists('banner_translations');
     }
 };
