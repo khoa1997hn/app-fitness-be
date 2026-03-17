@@ -14,7 +14,7 @@ class ProfileController extends BaseAPIController
      * Lấy thông tin user đang đăng nhập
      */
     #[OA\Get(
-        path: '/api/v1/auth/profile',
+        path: '/auth/profile',
         description: 'Trả về thông tin chi tiết của user hiện tại đang đăng nhập (dựa trên JWT token)',
         summary: 'Lấy thông tin profile của user đang đăng nhập',
         security: [['bearerAuth' => []]],

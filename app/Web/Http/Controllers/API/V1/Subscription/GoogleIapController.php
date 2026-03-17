@@ -20,7 +20,7 @@ class GoogleIapController extends BaseAPIController
      * Verify Google Play purchase
      */
     #[OA\Post(
-        path: '/api/v1/subscriptions/iap/google/verify',
+        path: '/subscriptions/iap/google/verify',
         description: 'Xác thực purchase token từ Google Play và tạo/cập nhật subscription cho user. Hỗ trợ các gói: basic, plus, all.',
         summary: 'Xác thực giao dịch Google Play',
         security: [['bearerAuth' => []]],

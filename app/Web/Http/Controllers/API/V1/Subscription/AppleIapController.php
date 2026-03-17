@@ -20,7 +20,7 @@ class AppleIapController extends BaseAPIController
      * Verify Apple App Store purchase
      */
     #[OA\Post(
-        path: '/api/v1/subscriptions/iap/apple/verify',
+        path: '/subscriptions/iap/apple/verify',
         description: 'Xác thực receipt từ Apple App Store và tạo/cập nhật subscription cho user. Hỗ trợ các gói: basic, plus, all.',
         summary: 'Xác thực giao dịch Apple App Store',
         security: [['bearerAuth' => []]],

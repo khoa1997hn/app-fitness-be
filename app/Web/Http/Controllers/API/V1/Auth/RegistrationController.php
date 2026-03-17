@@ -15,7 +15,7 @@ class RegistrationController extends BaseAPIController
      * Đăng ký user mới
      */
     #[OA\Post(
-        path: '/api/v1/auth/register',
+        path: '/auth/register',
         description: 'Tạo tài khoản user mới với thông tin đăng ký. Sau khi đăng ký thành công, user cần đăng nhập để lấy JWT token.',
         summary: 'Đăng ký tài khoản mới',
         requestBody: new OA\RequestBody(

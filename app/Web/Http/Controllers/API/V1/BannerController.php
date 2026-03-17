@@ -15,7 +15,7 @@ class BannerController extends BaseAPIController
      * Lấy danh sách banners
      */
     #[OA\Get(
-        path: '/api/v1/banners',
+        path: '/banners',
         description: 'Lấy danh sách banners hiển thị trên home page. Có thể filter theo id (1 hoặc nhiều ids), sắp xếp theo order tăng dần và id giảm dần.',
         summary: 'Lấy danh sách banners',
         tags: ['Banners'],

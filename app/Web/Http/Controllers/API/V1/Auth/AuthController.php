@@ -14,7 +14,7 @@ class AuthController extends BaseAPIController
      * Đăng nhập và lấy JWT token
      */
     #[OA\Post(
-        path: '/api/v1/auth/login',
+        path: '/auth/login',
         description: 'Xác thực thông tin đăng nhập của user và trả về JWT access token để sử dụng cho các request tiếp theo',
         summary: 'Đăng nhập và lấy JWT token',
         requestBody: new OA\RequestBody(
@@ -105,7 +105,7 @@ class AuthController extends BaseAPIController
      * Đăng xuất (Invalidate token)
      */
     #[OA\Post(
-        path: '/api/v1/auth/logout',
+        path: '/auth/logout',
         description: 'Vô hiệu hóa JWT token hiện tại của user, yêu cầu đăng nhập lại để lấy token mới',
         summary: 'Đăng xuất',
         security: [['bearerAuth' => []]],
@@ -145,7 +145,7 @@ class AuthController extends BaseAPIController
      * Làm mới token
      */
     #[OA\Post(
-        path: '/api/v1/auth/refresh',
+        path: '/auth/refresh',
         description: 'Tạo JWT token mới dựa trên token hiện tại, token cũ sẽ bị vô hiệu hóa',
         summary: 'Làm mới JWT token',
         security: [['bearerAuth' => []]],
