@@ -35,7 +35,7 @@ class ProgramsSeeder extends Seeder
             $program = Program::create(['rating' => 4.5]);
 
             $cover = [
-                'path' => 'programs/cover/sample.jpg',
+                'path' => 'program/cover/sample.jpg',
                 'name' => 'sample.jpg',
                 'extension' => 'jpg',
                 'size' => 102400,
@@ -112,7 +112,7 @@ class ProgramsSeeder extends Seeder
         $video->fill([
             'vi' => [
                 'file' => [
-                    'path' => 'lessons/video/sample-vi.mp4',
+                    'path' => 'lesson/video/sample-vi.mp4',
                     'name' => 'sample-vi.mp4',
                     'extension' => 'mp4',
                     'size' => 5242880,
@@ -121,7 +121,7 @@ class ProgramsSeeder extends Seeder
             ],
             'en' => [
                 'file' => [
-                    'path' => 'lessons/video/sample-en.mp4',
+                    'path' => 'lesson/video/sample-en.mp4',
                     'name' => 'sample-en.mp4',
                     'extension' => 'mp4',
                     'size' => 5242880,

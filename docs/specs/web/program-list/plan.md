@@ -57,3 +57,17 @@ Tạo nền tảng DB Program/Lesson/Video (translatable pattern, file lưu cộ
 - `GET /api/v1/programs` không token → 401.
 - Có token → 200, list program đúng field, có `duration_minutes`/`course_count`, KHÔNG có video link.
 - Đổi header `x-locale: en` → name/description/cover/goals đổi sang en.
+
+## Update 2026-05-29
+
+### Tóm tắt
+Bổ sung `FileType::ProgramCover` + `FileType::LessonVideo` và entry `config/app_file.php` theo rule `12-file-upload.md`. Cập nhật seeder path khớp `prefix_path`. Không đổi API/DB schema.
+
+### Phụ thuộc
+- `app/Share/Enums/FileType.php` — thêm 2 const
+- `config/app_file.php` — thêm 2 entry
+- `database/seeders/ProgramsSeeder.php` — path mẫu `program/cover`, `lesson/video`
+
+### Verify
+- `config('app_file.program_cover')` và `config('app_file.lesson_video')` trả đủ 3 key
+- Seeder path khớp prefix

@@ -6,6 +6,7 @@ alwaysApply: false
 
 # File upload
 
+- Khi phân tích spec/DB: **tự nhận diện** field upload (ảnh/video/file) → bắt buộc thêm `FileType` const + entry `config/app_file.php` (mơ hồ `prefix_path`/mime/max size → `AskUserQuestion`, KHÔNG bịa).
 - Service: `app/Share/Services/File/FileUploadService.php`. CẤM tự sinh filename / gọi `Storage` thẳng.
 - Mỗi loại file = 1 const trong `FileType` enum (`app/Share/Enums/FileType.php`) + 1 entry trong `config/app_file.php` (`prefix_path`, `allow_mimetypes`, `allow_max_size`).
 - Validate mimetypes/max_size LUÔN lấy từ config, không hardcode.

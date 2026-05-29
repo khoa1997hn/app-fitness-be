@@ -67,3 +67,20 @@
 - [x] Chạy `pint` (PASS 116 files)
 - [x] Verify thủ công: endpoint trả đúng (7 program, locale, duration_minutes/course_count, không link video)
 - [ ] STOP — hỏi user commit/push
+
+## Update 2026-05-29 — FileType + app_file
+
+- [x] Thêm `FileType::ProgramCover` và `FileType::LessonVideo` vào `app/Share/Enums/FileType.php`
+- [x] Thêm 2 entry vào `config/app_file.php`
+- [x] Cập nhật path mẫu trong `ProgramsSeeder` khớp prefix (`program/cover`, `lesson/video`)
+
+## Update 2026-05-29 — Review & finalize
+
+- [x] reviewer-rules pass
+- [x] reviewer-smell pass
+- [x] reviewer-security pass
+- [x] reviewer-duplicate pass + fix
+- [x] cleaner pass
+- [x] docs-syncer pass (rule 12 đã cập nhật trước đó; spec/plan/task append)
+- [x] Chạy `pint` (PASS)
+- [ ] STOP — hỏi user commit/push

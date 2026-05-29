@@ -1,5 +1,45 @@
 # File upload
 
+## Bắt buộc khi phân tích spec / thiết kế DB
+
+Khi LLM đọc spec, mockup, hoặc thiết kế model/migration — **tự phân tích** field nào là dạng **upload file** (ảnh, video, tài liệu…). Nhận ra field upload → **KHÔNG chỉ** thêm cột `jsonb` + `FileCast`; phải **đồng thời** (hoặc trước khi code upload) hoàn tất 2 bước config:
+
+1. Thêm **1 const** vào `app/Share/Enums/FileType.php` (mỗi loại file / mỗi field upload logic khác nhau = 1 const).
+2. Thêm **1 entry** tương ứng vào `config/app_file.php` (`prefix_path`, `allow_mimetypes`, `allow_max_size`).
+
+### Cách nhận diện field upload
+
+- Spec/mockup mô tả: ảnh, cover, thumbnail, banner image, video, file đính kèm, upload…
+- Nghiệp vụ lưu metadata file (path, tên gốc, dung lượng, loại) — dùng cột `jsonb` + `File` / `FileCast` (xem mục Model bên dưới).
+- **Không** coi field chỉ là URL string thuần (`link_url` kiểu Banner) là upload — trừ khi spec yêu cầu upload file cho field đó.
+
+### Đặt tên `FileType`
+
+- Const **PascalCase**, value **snake_case** (giống `BannerImage` → `'banner_image'`).
+- Gợi ý: `<Entity><Field>` hoặc `<Entity><Purpose>` — ví dụ `ProgramCover`, `LessonVideo`.
+- Một const cho mỗi **cặp** (loại nội dung + rule validate khác nhau). Cùng rule (cùng mime/size/path) có thể tái dùng 1 const — ghi rõ trong spec/plan.
+
+### Khi nào hỏi user (`AskUserQuestion`)
+
+Mơ hồ → **BẮT BUỘC hỏi**, KHÔNG bịa `prefix_path` / mime / max size:
+
+| Thông tin | Hỏi khi |
+|-----------|---------|
+| `prefix_path` | Chưa rõ thư mục lưu trên disk (ví dụ `program/cover` vs `programs/cover`). |
+| `allow_mimetypes` | Chưa rõ ảnh vs video vs mix; hoặc spec không nêu định dạng. |
+| `allow_max_size` | Chưa có giới hạn dung lượng (KB) — đưa 2–3 option (ví dụ ảnh 5MB, video 100MB). |
+
+Có thể gom 1 lần hỏi (tối đa 4 câu theo `docs/guides/ask-protocol.md`). Sau khi user trả lời → ghi vào spec section **Quyết định**.
+
+### Checklist trước khi coi field upload “xong”
+
+- [ ] Đã thêm const `FileType::<Name>`.
+- [ ] Đã thêm entry `config/app_file.php` với đủ 3 key.
+- [ ] Migration: cột `jsonb` + Model Translation (nếu đa ngôn ngữ): cast `FileCast` + `@property File`.
+- [ ] Form upload (phase sau): validate lấy từ `config('app_file.<snake_value>.…')`, upload qua `FileUploadService::upload(..., FileType::<Name>)`.
+
+> Thiếu `FileType` hoặc thiếu entry `app_file.php` → coi là **vi phạm rule** (reviewer-rules / code-review-checklist).
+
 ## Stack
 
 - Service: `app/Share/Services/File/FileUploadService.php` (readonly).
@@ -112,6 +152,8 @@ Hoặc map từng field nếu chỉ cần URL:
 
 ## Cấm
 
+- CẤM thêm cột `jsonb` + `FileCast` cho field upload mà **không** thêm `FileType` + `config/app_file.php` tương ứng.
+- CẤM đoán `prefix_path` / `allow_mimetypes` / `allow_max_size` khi spec không rõ — phải `AskUserQuestion`.
 - CẤM tự sinh path filename — phải qua `FileUploadService::upload()` (random 40 ký tự + extension gốc).
 - CẤM dùng `Storage::disk('local')` cho file user upload — phải `public` để có URL truy cập.
 - CẤM hardcode mimetypes/max_size — luôn lấy từ `config/app_file.php`.

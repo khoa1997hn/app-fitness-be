@@ -20,6 +20,7 @@ Spec này tạo nền tảng DB cho Program/Lesson/Video **và** endpoint Web V1
 
 ### In-scope
 - Tạo model + migration: `Program` (+ `program_translations`), `ProgramGoal` (+ `program_goal_translations`), `Lesson` (+ `lesson_translations`), `Video` (+ `video_translations`).
+- **Update 2026-05-29**: Bổ sung `FileType` + `config/app_file.php` cho field upload đã có (`cover`, `file` video) theo `docs/rules/12-file-upload.md`.
 - Enum: `LessonType` (level/special/signature), `Level` (beginner/intermediate/advanced).
 - Endpoint Web V1 `GET /api/v1/programs` (auth Bearer JWT) — list program thông tin cơ bản cho Home, KHÔNG phân trang.
 - Seeder dữ liệu mẫu: 7 program + vài lesson/video mỗi program, cả `vi`/`en`.
@@ -42,7 +43,18 @@ Spec này tạo nền tảng DB cho Program/Lesson/Video **và** endpoint Web V1
 
 ## Mô hình dữ liệu (chốt)
 
-> Quy ước file: dùng pattern File hiện có (`app/Share/Attributes/File.php` + `FileCast` + cột `jsonb`) như Banner — đã đủ rõ (path/name/extension/size + url). KHÔNG đổi rule file.
+> Quy ước file: dùng pattern File hiện có (`app/Share/Attributes/File.php` + `FileCast` + cột `jsonb`) như Banner — đã đủ rõ (path/name/extension/size + url).
+> Mỗi field upload **bắt buộc** có `FileType` const + entry `config/app_file.php` (rule `12-file-upload.md`). Implement ban đầu thiếu — bổ sung trong update này.
+
+### File upload (FileType + app_file)
+
+| Field | Model / cột | FileType const | Ghi chú |
+|-------|-------------|----------------|---------|
+| Cover program | `program_translations.cover` | `ProgramCover` | Ảnh card Home |
+| Video bài học | `video_translations.file` | `LessonVideo` | Video tập (phase upload sau) |
+
+| `ProgramCover` | `program/cover` | jpeg, png, jpg, webp | 5120 KB |
+| `LessonVideo` | `lesson/video` | mp4, quicktime, x-m4v, 3gpp, 3gpp2, webm | 1048576 KB (1GB) |
 
 ### `programs` (shared)
 - `id`
@@ -158,6 +170,7 @@ Spec này tạo nền tảng DB cho Program/Lesson/Video **và** endpoint Web V1
 - [ ] Sort theo `sort` asc, `id` desc.
 - [ ] `duration_minutes`, `course_count` tính đúng từ lessons/videos.
 - [ ] Đổi `x-locale` vi↔en → name/description/cover/goals đổi theo.
+- [ ] **Update**: `FileType::ProgramCover` và `FileType::LessonVideo` tồn tại trong enum + có entry tương ứng trong `config/app_file.php`.
 
 ## Quyết định
 
@@ -178,9 +191,12 @@ Spec này tạo nền tảng DB cho Program/Lesson/Video **và** endpoint Web V1
 - 2026-05-29 — Lưu `goal`? → Bảng riêng `program_goals` + translation tách thành `program_goal_translations` (như model translatable khác).
 - 2026-05-29 — Cột file? → Bộ cột gồm cả `*_original_name`.
 - 2026-05-29 — Seeder? → Seed 7 program + vài lesson/video mỗi program, cả vi/en.
+- 2026-05-29 (update) — `FileType::ProgramCover` → prefix `program/cover`, mime `image/jpeg,image/png,image/jpg,image/webp`, max 5120 KB (5MB).
+- 2026-05-29 (update) — `FileType::LessonVideo` → prefix `lesson/video`, mime `video/mp4,video/quicktime,video/x-m4v,video/3gpp,video/3gpp2,video/webm`, max 1048576 KB (1GB). Hỗ trợ thêm định dạng Apple/Android.
 
 ## Liên quan
 
 - Mockup: [`figma/home.png`](../figma/home.png)
 - Project overview: `docs/project-overview.md`
 - Mẫu translatable: `app/Share/Models/Banner.php`, `BannerController`
+- File upload rule: `docs/rules/12-file-upload.md`

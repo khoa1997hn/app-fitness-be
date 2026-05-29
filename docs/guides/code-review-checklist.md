@@ -26,6 +26,7 @@ Dùng cho các reviewer agent. Mỗi reviewer chỉ check phần của mình.
 - [ ] Enum đặt ở `app/Share/Enums/`, extends base `Enum.php`, không suffix `Enum` — `11-enum.md`
 - [ ] Model có field enum: cast trong `casts()` + PHPDoc `@property <EnumClass>` — `11-enum.md`
 - [ ] Response JSON dùng `$model->field` (KHÔNG `->value`) cho field enum — `11-enum.md`
+- [ ] Field upload (ảnh/video/file) trong spec/diff: đã tự nhận diện và thêm `FileType` + `config/app_file.php` (prefix/mime/max_size đã hỏi user nếu mơ hồ) — `12-file-upload.md`
 - [ ] File upload qua `FileUploadService`, không tự `Storage::put` — `12-file-upload.md`
 - [ ] FileType enum + entry trong `config/app_file.php` cho mỗi loại file mới — `12-file-upload.md`
 - [ ] Migration file column dùng `jsonb`; Model cast qua `FileCast` + PHPDoc `@property File` — `12-file-upload.md`
