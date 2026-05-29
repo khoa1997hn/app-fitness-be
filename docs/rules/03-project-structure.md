@@ -2,17 +2,22 @@
 
 Trong `app/` chỉ có 3 folder: **Admin**, **Web**, **Share**.
 
-## Share
+## Share — folder CORE (dùng chung)
 
-Mọi thứ dùng chung giữa Admin và Web.
+`app/Share/` là folder **core/shared** của project — chứa MỌI code dùng chung giữa 2 module entry-point: `app/Web/` (API native app) và `app/Admin/` (web blade).
 
-- `app/Share/Models/` — TẤT CẢ Model đặt ở đây. Admin/Web KHÔNG có Model riêng.
-- `app/Share/Services/` — chỉ chứa service tái sử dụng/phức tạp.
-- `app/Share/Utils/` — utilities dùng chung.
-- `app/Share/Exceptions/` — domain exceptions.
+Quy ước: code logic / model / enum / service / exception nào dùng cả 2 nơi → đặt trong Share. Chỉ tách riêng vào `app/Web/` hoặc `app/Admin/` khi thật sự CHỈ 1 module dùng (controller, request, view).
+
+Layout:
+
+- `app/Share/Models/` — **TẤT CẢ Model đặt ở đây**. Admin/Web KHÔNG có Model riêng.
+- `app/Share/Enums/` — TẤT CẢ Enum dùng chung (xem `docs/rules/11-enum.md`).
+- `app/Share/Services/` — service tái sử dụng / phức tạp (xem `docs/rules/01-architecture.md`).
+- `app/Share/Exceptions/` — domain exceptions (xem `docs/rules/02-code-quality.md`).
+- `app/Share/Utils/` — utilities dùng chung (ví dụ `ResponseAPI`).
 - `app/Share/Providers/` — Service Providers dùng chung.
-- `app/Share/Enums/` — Enum dùng chung.
-- `app/Share/Casts/`, `app/Share/Attributes/`, `app/Share/Listeners/` — theo nhu cầu.
+- `app/Share/Listeners/` — Event listeners (ví dụ subscription webhook).
+- `app/Share/Casts/`, `app/Share/Attributes/`, `app/Share/Http/` — theo nhu cầu.
 
 ## Admin
 

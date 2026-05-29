@@ -1,0 +1,17 @@
+---
+description: Quy ước Enum (BenSampo) — vị trí, cast, PHPDoc, response.
+globs: app/Share/Enums/**/*.php,app/Share/Models/**/*.php
+alwaysApply: false
+---
+
+# Enum
+
+- Package: `bensampo/laravel-enum`. Vị trí: `app/Share/Enums/`. Base class chung: `app/Share/Enums/Enum.php`.
+- Tên class: PascalCase, KHÔNG suffix `Enum` (`Plan`, KHÔNG `PlanEnum`). Const PascalCase, value snake_case.
+- **Model**: BẮT BUỘC cast trong `casts()` (`'plan' => Plan::class`) + PHPDoc `@property Plan $plan`.
+- **Response JSON**: dùng `$model->field` — KHÔNG `$model->field->value` (BenSampo tự `__toString()`).
+- **So sánh**: ưu tiên `$enum->is(EnumClass::Value)` thay vì `->value === 'x'`.
+- **Method signature**: type-hint `string`, gọi vẫn truyền `EnumClass::Value`.
+- **Swagger**: trong attribute `enum: [...]` liệt kê raw value (snake_case), KHÔNG PascalCase const.
+
+Chi tiết: [`docs/rules/11-enum.md`](../../docs/rules/11-enum.md)

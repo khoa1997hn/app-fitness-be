@@ -16,12 +16,14 @@ return ResponseAPI::success(['subscription' => $subscription]);
 return ResponseAPI::success([
     'subscription' => [
         'id'     => $subscription->id,
-        'plan'   => $subscription->plan->value,
-        'status' => $subscription->status->value,
+        'plan'   => $subscription->plan,       // enum cast — không cần ->value
+        'status' => $subscription->status,     // enum cast — không cần ->value
         'expires_at' => $subscription->expires_at?->toIso8601String(),
     ],
 ]);
 ```
+
+> Enum field KHÔNG cần `->value` — BenSampo Enum tự convert qua `__toString()` khi JSON serialize. Xem `docs/rules/11-enum.md`.
 
 ## Format chuẩn
 

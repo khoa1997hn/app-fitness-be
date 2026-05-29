@@ -11,14 +11,18 @@
 - **Catch**: dùng `catch (\Throwable $e)`, KHÔNG `catch (\Exception $e)`.
 - **Throw**: tạo domain exception trong `app/Share/Exceptions/<Domain>/`, kế thừa base phù hợp (ví dụ `SubscriptionException`). KHÔNG `throw new \Exception(...)` ad-hoc.
 
-## Enum trong method signature
+## Enum
 
-- Type-hint là `string`, KHÔNG type-hint enum class (để linh hoạt).
-- Khi gọi method vẫn truyền enum trực tiếp:
+- Package: `bensampo/laravel-enum`. Vị trí: `app/Share/Enums/`.
+- Method signature: type-hint `string` (KHÔNG type-hint enum class), khi gọi vẫn truyền `EnumClass::Value`:
   ```php
   public function setStatus(string $status): void { ... }
   $svc->setStatus(SubscriptionStatus::Active);
   ```
+- Model: BẮT BUỘC cast + PHPDoc `@property`.
+- Response JSON: dùng `$model->field` (KHÔNG cần `->value`).
+
+Chi tiết: [`docs/rules/11-enum.md`](11-enum.md).
 
 ## Format
 

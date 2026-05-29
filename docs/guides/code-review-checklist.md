@@ -23,6 +23,9 @@ Dùng cho các reviewer agent. Mỗi reviewer chỉ check phần của mình.
 - [ ] Migration: field tối thiểu, không phòng xa (`created_by`/`deleted_at`/`status`/`order`/`meta`/`slug`...) — `10-database-design.md`
 - [ ] Migration: nullable đúng nghiệp vụ, type nhỏ nhất đủ dùng, tên column theo convention — `10-database-design.md`
 - [ ] Migration: chỉ index cột có query thực; FK kèm `onDelete()` quyết định rõ — `10-database-design.md`
+- [ ] Enum đặt ở `app/Share/Enums/`, extends base `Enum.php`, không suffix `Enum` — `11-enum.md`
+- [ ] Model có field enum: cast trong `casts()` + PHPDoc `@property <EnumClass>` — `11-enum.md`
+- [ ] Response JSON dùng `$model->field` (KHÔNG `->value`) cho field enum — `11-enum.md`
 
 ## Reviewer-smell
 
