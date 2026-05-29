@@ -34,7 +34,8 @@ Chạy tuần tự, mỗi agent đọc prompt template của nó:
 10. **reviewer-security** → `docs/agents/reviewer-security.md`
 11. **reviewer-duplicate** → `docs/agents/reviewer-duplicate.md`
 12. **cleaner** → `docs/agents/cleaner.md`
-13. **finalizer** → `docs/agents/finalizer.md`
+13. **docs-syncer** → `docs/agents/docs-syncer.md`
+14. **finalizer** → `docs/agents/finalizer.md`
 
 ## Ràng buộc
 

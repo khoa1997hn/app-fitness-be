@@ -50,5 +50,6 @@ Mỗi file là **prompt template** cho một vai trò chuyên biệt. Cursor com
 | `reviewer-security` | Review bảo mật |
 | `reviewer-duplicate` | Tìm + fix duplicate |
 | `cleaner` | Dọn rác (file/biến/hàm/env/route/view không dùng) |
+| `docs-syncer` | Update project-overview + rules + guides + agents khi state codebase đổi |
 | `bug-classifier` | Phân loại bug dễ/khó (chỉ /fix-bug) |
 | `finalizer` | Migration + pint + summary |

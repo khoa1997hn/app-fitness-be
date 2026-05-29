@@ -32,6 +32,7 @@ Cộng với code đã fix + review + format.
    - **openapi-writer** *(skip nếu không chạm Web V1)*
    - **reviewer-rules / smell / security / duplicate**
    - **cleaner**
+   - **docs-syncer**
    - **finalizer** (cập nhật `report.md` với "Cách fix" + "Files đã sửa")
 3. Nếu **KHÓ**:
    - **spec-analyzer** (tạo spec.md trong folder bug)
@@ -43,6 +44,7 @@ Cộng với code đã fix + review + format.
    - **openapi-writer** *(skip nếu không chạm Web V1)*
    - **reviewer-rules / smell / security / duplicate**
    - **cleaner**
+   - **docs-syncer**
    - **finalizer** (cập nhật `report.md`)
 
 ## Ràng buộc

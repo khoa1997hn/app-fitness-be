@@ -42,7 +42,7 @@ Sửa lại spec đã có (sau khi đã `/implement-spec` xong).
 
 ## Chuỗi vai trò
 
-Y hệt `/implement-spec` (13 vai trò, gồm `openapi-writer` sau implementer và `cleaner` sau 4 reviewer), chỉ thay đổi hành vi của spec-analyzer + planner + task-breaker như trên.
+Y hệt `/implement-spec` (14 vai trò, gồm `openapi-writer` sau implementer, `cleaner` sau 4 reviewer, `docs-syncer` trước finalizer), chỉ thay đổi hành vi của spec-analyzer + planner + task-breaker như trên.
 
 ## Ràng buộc
 

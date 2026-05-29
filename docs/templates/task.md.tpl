@@ -31,6 +31,12 @@
 - [ ] cleaner: `.env` ↔ `.env.example` đồng bộ key
 - [ ] cleaner: route / view / translation rác đã xóa hoặc đã hỏi user
 
+## Pha docs sync
+
+- [ ] docs-syncer: `project-overview.md` đã reflect module mới (nếu có)
+- [ ] docs-syncer: stack đã reflect package mới (nếu có)
+- [ ] docs-syncer: rules / guides / agents đã đồng bộ (user đã duyệt thay đổi interpretive)
+
 ## Pha finalize
 
 - [ ] Chạy migration (nếu có)

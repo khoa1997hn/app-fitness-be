@@ -4,7 +4,7 @@ Triển khai feature MỚI theo spec-driven workflow. Đọc `docs/commands/impl
 
 ## Bạn (Cursor) PHẢI làm
 
-Chạy tuần tự 13 vai trò sau. Với MỖI vai trò:
+Chạy tuần tự 14 vai trò sau. Với MỖI vai trò:
 1. Đọc file prompt template tương ứng.
 2. Đóng vai theo đúng mô tả trong file đó (Mục tiêu / Input / Output / Quy trình / Cấm).
 3. Hoàn thành Output rồi mới chuyển vai tiếp theo.
@@ -23,7 +23,8 @@ Chạy tuần tự 13 vai trò sau. Với MỖI vai trò:
 | 10 | reviewer-security | [`docs/agents/reviewer-security.md`](../../docs/agents/reviewer-security.md) |
 | 11 | reviewer-duplicate | [`docs/agents/reviewer-duplicate.md`](../../docs/agents/reviewer-duplicate.md) |
 | 12 | cleaner | [`docs/agents/cleaner.md`](../../docs/agents/cleaner.md) |
-| 13 | finalizer | [`docs/agents/finalizer.md`](../../docs/agents/finalizer.md) |
+| 13 | docs-syncer | [`docs/agents/docs-syncer.md`](../../docs/agents/docs-syncer.md) |
+| 14 | finalizer | [`docs/agents/finalizer.md`](../../docs/agents/finalizer.md) |
 
 ## Ràng buộc
 

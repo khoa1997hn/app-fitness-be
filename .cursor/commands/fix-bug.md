@@ -21,7 +21,8 @@ Chỉ tạo `report.md`. Chuỗi:
 | 6 | [`reviewer-security`](../../docs/agents/reviewer-security.md) |
 | 7 | [`reviewer-duplicate`](../../docs/agents/reviewer-duplicate.md) |
 | 8 | [`cleaner`](../../docs/agents/cleaner.md) |
-| 9 | [`finalizer`](../../docs/agents/finalizer.md) — kèm cập nhật `report.md` (Cách fix + Files đã sửa + Verify) |
+| 9 | [`docs-syncer`](../../docs/agents/docs-syncer.md) |
+| 10 | [`finalizer`](../../docs/agents/finalizer.md) — kèm cập nhật `report.md` (Cách fix + Files đã sửa + Verify) |
 
 ## Nhánh KHÓ
 
@@ -42,7 +43,8 @@ Tạo đủ `spec.md` + `plan.md` + `task.md` + `report.md`. Chuỗi:
 | 11 | [`reviewer-security`](../../docs/agents/reviewer-security.md) |
 | 12 | [`reviewer-duplicate`](../../docs/agents/reviewer-duplicate.md) |
 | 13 | [`cleaner`](../../docs/agents/cleaner.md) |
-| 14 | [`finalizer`](../../docs/agents/finalizer.md) — kèm cập nhật `report.md` |
+| 14 | [`docs-syncer`](../../docs/agents/docs-syncer.md) |
+| 15 | [`finalizer`](../../docs/agents/finalizer.md) — kèm cập nhật `report.md` |
 
 ## Ràng buộc
 
