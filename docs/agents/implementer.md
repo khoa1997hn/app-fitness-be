@@ -25,6 +25,7 @@ Thực thi từng task trong `task.md`. Tick checkbox khi hoàn tất.
 - `docs/rules/06-docker-sail.md`
 - `docs/rules/07-seeders.md` (nếu chạm seeder)
 - `docs/rules/09-magic-and-env.md` (khi thêm constant / env / config)
+- `docs/rules/10-database-design.md` (khi tạo migration / model)
 
 > Chỉ đọc file relevant theo task hiện tại.
 > Swagger annotation KHÔNG phải việc của implementer — `openapi-writer` chạy sau.

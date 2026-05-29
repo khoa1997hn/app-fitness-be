@@ -44,6 +44,7 @@ Báo cáo (text trả về cho orchestrator hoặc append vào plan.md):
 - `docs/rules/03-project-structure.md`
 - `docs/rules/04-api-response.md`
 - `docs/rules/08-swagger.md`
+- `docs/rules/10-database-design.md` (khi liệt kê migration/model)
 - File spec đang xử lý
 
 ## Quy trình

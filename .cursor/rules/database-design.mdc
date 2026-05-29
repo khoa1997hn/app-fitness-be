@@ -1,0 +1,21 @@
+---
+description: Thiết kế DB — field tối thiểu, không bịa, không phòng xa.
+globs: database/migrations/**/*.php,app/Share/Models/**/*.php
+alwaysApply: false
+---
+
+# Database design
+
+- **Field tối thiểu**: chỉ thêm field thực sự cần cho nghiệp vụ trong spec. Không có chỗ dùng → không thêm.
+- **Cấm phòng xa**: `created_by`, `deleted_at`, `status`, `order`, `meta`, `slug`, `uuid` — chỉ thêm khi spec yêu cầu.
+- **Giữ**: `id` + `timestamps()` (trừ khi spec yêu cầu bỏ).
+- **Nullable**: mặc định NOT NULL. Chỉ nullable khi nghiệp vụ cho phép.
+- **Type**: kiểu nhỏ nhất đủ dùng. Tiền dùng `decimal`, KHÔNG `float`. Boolean dùng `boolean()`.
+- **Index**: chỉ thêm cho cột có query thực. FK luôn kèm index.
+- **FK**: chỉ FK tới bảng tồn tại + có trong spec; `onDelete()` quyết định theo nghiệp vụ.
+- **Tên**: table số nhiều snake_case; FK `<singular>_id`; boolean `is_`/`has_`; datetime `_at`; date `_date`.
+- **Migration**: BẮT BUỘC `artisan make:migration`. 1 migration = 1 thay đổi logic.
+
+Mơ hồ về field → DỪNG, hỏi user.
+
+Chi tiết: [`docs/rules/10-database-design.md`](../../docs/rules/10-database-design.md)

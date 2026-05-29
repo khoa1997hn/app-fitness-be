@@ -20,6 +20,9 @@ Dùng cho các reviewer agent. Mỗi reviewer chỉ check phần của mình.
 - [ ] Env mới có prefix provider/module rõ ràng — `09-magic-and-env.md`
 - [ ] Env mới đồng bộ ở CẢ `.env` lẫn `.env.example` — `09-magic-and-env.md`
 - [ ] Env mới có mapping vào file config phù hợp (tạo file mới nếu cần) — `09-magic-and-env.md`
+- [ ] Migration: field tối thiểu, không phòng xa (`created_by`/`deleted_at`/`status`/`order`/`meta`/`slug`...) — `10-database-design.md`
+- [ ] Migration: nullable đúng nghiệp vụ, type nhỏ nhất đủ dùng, tên column theo convention — `10-database-design.md`
+- [ ] Migration: chỉ index cột có query thực; FK kèm `onDelete()` quyết định rõ — `10-database-design.md`
 
 ## Reviewer-smell
 
