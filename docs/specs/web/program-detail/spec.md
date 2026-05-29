@@ -32,7 +32,10 @@ Cần API trả **đầy đủ thông tin program** và **danh sách bài học*
   - `lessons.signature` — `type=signature`.
 - Nhóm rỗng → `[]`.
 - Sort trong mỗi nhóm: `name` A→Z (translation), tie-break `id` asc.
-- Mỗi lesson: `id`, `name`, `description`, `duration_seconds` (sum video theo locale). **Không** trả `file` video.
+- Mỗi lesson: `id`, `day`, `name`, `description`, `thumbnail`, `duration_seconds` (sum video theo locale). **Không** trả `file` video.
+- `day` (int) = thứ tự ngày tập (admin nhập). Sort trong nhóm theo `day` asc rồi `id` asc.
+- `thumbnail` = ảnh bài học (đa ngôn ngữ, File jsonb + `FileType::LessonThumbnail`). Hiển thị ở card figma.
+- Tiến độ xem (Replay/Continue/Start, tick hoàn thành) → **FE tự lưu local, BE không trả**.
 
 ## API Design
 
@@ -56,7 +59,7 @@ Cần API trả **đầy đủ thông tin program** và **danh sách bài học*
       "lessons": {
         "level": {
           "beginner": [
-            { "id": 1, "name": "Bài nhập môn", "description": "…", "duration_seconds": 600 }
+            { "id": 1, "day": 1, "name": "Bài nhập môn", "description": "…", "thumbnail": { "path": "…", "url": "…" }, "duration_seconds": 600 }
           ],
           "intermediate": [],
           "advanced": []
@@ -99,9 +102,13 @@ Cần API trả **đầy đủ thông tin program** và **danh sách bài học*
 - 2026-05-29 — Nhóm rỗng? → `[]`.
 - 2026-05-29 — Path? → `GET /api/v1/programs/{program}`.
 - 2026-05-29 (update) — Response shape? → Flatten: field program + `lessons` cùng cấp trong `data`, **không** key `program` bọc ngoài.
+- 2026-05-29 (update figma) — Lesson thumbnail? → CÓ. Thêm `thumbnail` (jsonb File) vào `lesson_translations` + `FileType::LessonThumbnail` (prefix `lesson/thumbnail`, image, 5MB). Trả trong lesson item.
+- 2026-05-29 (update figma) — Nhãn "Day N" + thứ tự? → Thêm cột `day` (unsignedInteger, NOT NULL, default 1) vào `lessons`. Sort nhóm theo `day` asc rồi `id` asc (bỏ sort theo tên). Trả `day` trong response.
+- 2026-05-29 (update figma) — Tiến độ xem video (Replay/Continue/Start)? → FE tự lưu local, BE không care.
 
 ## Liên quan
 
+- Mockup figma: [`program_detail_level.png`](../figma/program_detail_level.png), [`program_detail_special.png`](../figma/program_detail_special.png), [`program_detail_signature.png`](../figma/program_detail_signature.png)
 - [`program-list/spec.md`](../program-list/spec.md)
 - `app/Web/Http/Controllers/API/V1/ProgramController.php`
 - `docs/rules/04-api-response.md`, `docs/rules/14-translatable.md`

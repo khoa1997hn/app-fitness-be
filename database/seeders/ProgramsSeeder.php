@@ -85,20 +85,28 @@ class ProgramsSeeder extends Seeder
     private function seedLessons(Program $program): void
     {
         $lessons = [
-            ['type' => LessonType::Level, 'level' => Level::Beginner, 'vi' => 'Bài nhập môn', 'en' => 'Beginner lesson'],
-            ['type' => LessonType::Level, 'level' => Level::Intermediate, 'vi' => 'Bài trung cấp', 'en' => 'Intermediate lesson'],
-            ['type' => LessonType::Special, 'level' => null, 'vi' => 'Bài đặc biệt', 'en' => 'Special lesson'],
+            ['type' => LessonType::Level, 'level' => Level::Beginner, 'day' => 1, 'vi' => 'Bài nhập môn', 'en' => 'Beginner lesson'],
+            ['type' => LessonType::Level, 'level' => Level::Intermediate, 'day' => 2, 'vi' => 'Bài trung cấp', 'en' => 'Intermediate lesson'],
+            ['type' => LessonType::Special, 'level' => null, 'day' => 1, 'vi' => 'Bài đặc biệt', 'en' => 'Special lesson'],
         ];
 
         foreach ($lessons as $data) {
+            $thumbnail = [
+                'path' => 'lesson/thumbnail/sample.jpg',
+                'name' => 'sample.jpg',
+                'extension' => 'jpg',
+                'size' => 102400,
+            ];
+
             $lesson = new Lesson([
                 'program_id' => $program->id,
                 'type' => $data['type'],
                 'level' => $data['level'],
+                'day' => $data['day'],
             ]);
             $lesson->fill([
-                'vi' => ['name' => $data['vi'], 'description' => "Mô tả {$data['vi']}."],
-                'en' => ['name' => $data['en'], 'description' => "{$data['en']} description."],
+                'vi' => ['name' => $data['vi'], 'description' => "Mô tả {$data['vi']}.", 'thumbnail' => $thumbnail],
+                'en' => ['name' => $data['en'], 'description' => "{$data['en']} description.", 'thumbnail' => $thumbnail],
             ]);
             $lesson->save();
 

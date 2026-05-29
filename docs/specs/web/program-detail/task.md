@@ -39,4 +39,19 @@
 - [x] Cập nhật OpenAPI `data` flatten
 - [x] Cập nhật `spec.md`
 - [x] `l5-swagger:generate` + pint
+- [x] STOP — hỏi user commit/push
+
+## Update 2026-05-29 — Figma (thumbnail + day)
+
+- [x] Migration `add_day_to_lessons_table` (unsignedInteger, default 1)
+- [x] Migration `add_thumbnail_to_lesson_translations_table` (jsonb nullable)
+- [x] Lesson model: + `day` (fillable/cast/PHPDoc), + `thumbnail` (translated)
+- [x] LessonTranslation: + `thumbnail` FileCast
+- [x] `FileType::LessonThumbnail` + entry `config/app_file.php`
+- [x] Controller: `mapLesson` + day/thumbnail; `sortLessons` theo day asc → id asc
+- [x] OpenAPI cập nhật lesson item + generate
+- [x] Seeder: set day + thumbnail
+- [x] reviewer-rules / smell / security / duplicate pass
+- [x] cleaner / docs-syncer pass
+- [x] migrate + pint PASS, verify endpoint
 - [ ] STOP — hỏi user commit/push

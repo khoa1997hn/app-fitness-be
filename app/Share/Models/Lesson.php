@@ -2,6 +2,7 @@
 
 namespace App\Share\Models;
 
+use App\Share\Attributes\File;
 use App\Share\Enums\LessonType;
 use App\Share\Enums\Level;
 use Astrotomic\Translatable\Contracts\Translatable as TranslatableContract;
@@ -15,8 +16,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $program_id
  * @property LessonType $type
  * @property Level|null $level
+ * @property int $day
  * @property string $name
  * @property string|null $description
+ * @property File|null $thumbnail
  * @property \Carbon\Carbon $created_at
  * @property \Carbon\Carbon $updated_at
  * @property-read Program $program
@@ -30,11 +33,13 @@ class Lesson extends Model implements TranslatableContract
         'program_id',
         'type',
         'level',
+        'day',
     ];
 
     protected $translatedAttributes = [
         'name',
         'description',
+        'thumbnail',
     ];
 
     protected function casts(): array
@@ -42,6 +47,7 @@ class Lesson extends Model implements TranslatableContract
         return [
             'type' => LessonType::class,
             'level' => Level::class,
+            'day' => 'integer',
         ];
     }
 

@@ -38,3 +38,19 @@ Flatten response `show`: spread field program + `lessons` trong `data`, bỏ key
 
 ### Verify
 - `data.id`, `data.name`, … và `data.lessons` cùng cấp, không có `data.program`.
+
+## Update 2026-05-29 (figma program detail)
+
+### Tóm tắt
+Bổ sung theo 3 ảnh figma: thêm lesson `thumbnail` (File jsonb + FileType::LessonThumbnail) và cột `day` (int) cho lessons; đổi sort nhóm sang `day` asc → `id` asc; trả `thumbnail` + `day` trong lesson item. Tiến độ xem video do FE lưu local.
+
+### Phụ thuộc
+- Migration mới: `add_day_to_lessons_table`, `add_thumbnail_to_lesson_translations_table`
+- Model: Lesson (+ day, thumbnail), LessonTranslation (+ thumbnail FileCast)
+- Enum: `FileType::LessonThumbnail` + entry `config/app_file.php`
+- Controller: `mapLesson` thêm day/thumbnail; `sortLessons` theo day
+- Seeder: set day + thumbnail
+
+### Verify
+- lesson item: `id, day, name, description, thumbnail, duration_seconds`; không có `file`
+- Sort theo day asc

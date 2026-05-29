@@ -139,8 +139,10 @@ class ProgramController extends BaseAPIController
                                                     items: new OA\Items(
                                                         properties: [
                                                             new OA\Property(property: 'id', type: 'integer', example: 1),
+                                                            new OA\Property(property: 'day', description: 'Thứ tự ngày tập', type: 'integer', example: 1),
                                                             new OA\Property(property: 'name', type: 'string', example: 'Bài nhập môn'),
                                                             new OA\Property(property: 'description', type: 'string', nullable: true),
+                                                            new OA\Property(property: 'thumbnail', description: 'Ảnh thumbnail bài học (theo locale)', type: 'object', nullable: true),
                                                             new OA\Property(property: 'duration_seconds', type: 'integer', example: 600),
                                                         ],
                                                         type: 'object'
@@ -216,8 +218,10 @@ class ProgramController extends BaseAPIController
     {
         return [
             'id' => $lesson->id,
+            'day' => $lesson->day,
             'name' => $lesson->name,
             'description' => $lesson->description,
+            'thumbnail' => $lesson->thumbnail,
             'duration_seconds' => (int) $lesson->videos->sum('duration_seconds'),
         ];
     }
@@ -272,7 +276,7 @@ class ProgramController extends BaseAPIController
     private function sortLessons(Collection $lessons): Collection
     {
         return $lessons->sortBy([
-            fn (Lesson $lesson) => $lesson->name ?? '',
+            fn (Lesson $lesson) => $lesson->day,
             fn (Lesson $lesson) => $lesson->id,
         ])->values();
     }

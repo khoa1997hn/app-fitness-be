@@ -11,4 +11,6 @@ final class FileType extends Enum
     const ProgramCover = 'program_cover';
 
     const LessonVideo = 'lesson_video';
+
+    const LessonThumbnail = 'lesson_thumbnail';
 }

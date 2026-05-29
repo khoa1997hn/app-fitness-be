@@ -25,4 +25,9 @@ return [
         ],
         'allow_max_size' => 1048576, // KB (1GB)
     ],
+    FileType::LessonThumbnail => [
+        'prefix_path' => 'lesson/thumbnail',
+        'allow_mimetypes' => ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'],
+        'allow_max_size' => 5120, // KB (5MB)
+    ],
 ];
