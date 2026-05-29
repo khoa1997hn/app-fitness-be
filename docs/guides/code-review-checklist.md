@@ -15,7 +15,11 @@ Dùng cho các reviewer agent. Mỗi reviewer chỉ check phần của mình.
 - [ ] Models đặt trong `app/Share/Models/` — `03-project-structure.md`
 - [ ] API Web map field, không return full model — `04-api-response.md`
 - [ ] Admin view dùng tiếng Việt — `05-admin-blade.md`
-- [ ] Endpoint Web V1 có Swagger annotations — `08-swagger.md`
+- [ ] Endpoint Web V1 có Swagger attribute (style `#[OA\...]`) — `08-swagger.md`
+- [ ] Code logic KHÔNG gọi `env(...)` trực tiếp, đi qua `config(...)` — `09-magic-and-env.md`
+- [ ] Env mới có prefix provider/module rõ ràng — `09-magic-and-env.md`
+- [ ] Env mới đồng bộ ở CẢ `.env` lẫn `.env.example` — `09-magic-and-env.md`
+- [ ] Env mới có mapping vào file config phù hợp (tạo file mới nếu cần) — `09-magic-and-env.md`
 
 ## Reviewer-smell
 
@@ -24,7 +28,7 @@ Dùng cho các reviewer agent. Mỗi reviewer chỉ check phần của mình.
 - [ ] Có comment giải thích "WHAT" thay vì "WHY"? → xóa.
 - [ ] Có abstraction chỉ dùng 1 chỗ? → inline.
 - [ ] Có if lồng > 3 cấp? → early return.
-- [ ] Có magic number/string lặp lại? → hằng số hoặc enum.
+- [ ] Có magic text/số (status, plan, type, limit, retry…) → enum/config — `09-magic-and-env.md`.
 
 ## Reviewer-security
 
@@ -44,3 +48,13 @@ Dùng cho các reviewer agent. Mỗi reviewer chỉ check phần của mình.
 - [ ] Có Blade partial trùng → tách `@include`?
 
 **Quan trọng**: reviewer-duplicate khi phát hiện duplicate phải FIX luôn, không chỉ report.
+
+## Cleaner (sau 4 reviewer)
+
+Xem chi tiết quy trình trong `docs/agents/cleaner.md`. Tóm tắt 5 nhóm rác:
+
+- [ ] File rác (`*.bak`, `*Copy.php`, asset không reference)
+- [ ] Code rác (`use` không dùng, biến gán không đọc, method 0 reference, comment-out code)
+- [ ] Env rác (`.env` ↔ `.env.example` đồng bộ key; env có trong `.env` mà không gọi qua `env()` ở config thì đề xuất xóa)
+- [ ] Route / View rác (route trỏ method không tồn tại, Blade 0 reference)
+- [ ] Translation key rác (key trong `lang/` không gọi qua `__()`/`trans()`)

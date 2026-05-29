@@ -28,11 +28,13 @@ Chạy tuần tự, mỗi agent đọc prompt template của nó:
 4. **planner** → `docs/agents/planner.md`
 5. **task-breaker** → `docs/agents/task-breaker.md`
 6. **implementer** → `docs/agents/implementer.md`
-7. **reviewer-rules** → `docs/agents/reviewer-rules.md`
-8. **reviewer-smell** → `docs/agents/reviewer-smell.md`
-9. **reviewer-security** → `docs/agents/reviewer-security.md`
-10. **reviewer-duplicate** → `docs/agents/reviewer-duplicate.md`
-11. **finalizer** → `docs/agents/finalizer.md`
+7. **openapi-writer** → `docs/agents/openapi-writer.md` *(skip nếu không chạm Web V1)*
+8. **reviewer-rules** → `docs/agents/reviewer-rules.md`
+9. **reviewer-smell** → `docs/agents/reviewer-smell.md`
+10. **reviewer-security** → `docs/agents/reviewer-security.md`
+11. **reviewer-duplicate** → `docs/agents/reviewer-duplicate.md`
+12. **cleaner** → `docs/agents/cleaner.md`
+13. **finalizer** → `docs/agents/finalizer.md`
 
 ## Ràng buộc
 

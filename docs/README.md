@@ -6,10 +6,10 @@ Source of truth của bộ kit AI cho dự án. Áp dụng cho Cursor (qua `.cur
 
 | Folder | Nội dung |
 |---|---|
-| `rules/` | Rule code (kiến trúc, quality, structure...). 9 file nhỏ, mỗi file 1 chủ đề. |
+| `rules/` | Rule code (kiến trúc, quality, structure, swagger, magic+env...). 10 file nhỏ, mỗi file 1 chủ đề. |
 | `guides/` | Quy trình ngang (ASK protocol, code review checklist, commit protocol...). |
 | `templates/` | Template trống cho spec/plan/task/bug. |
-| `agents/` | Prompt template LLM-agnostic cho từng vai trò (spec-analyzer, planner, ...). |
+| `agents/` | Prompt template LLM-agnostic cho 14 vai trò (spec-analyzer, planner, openapi-writer, cleaner, ...). |
 | `commands/` | Đặc tả 3 workflow chính: `/implement-spec`, `/update-spec`, `/fix-bug`. |
 | `specs/` | Workspace cho specs/plans/tasks/bugs. Cấu trúc 2 cấp `<big>/<detail>/`. |
 

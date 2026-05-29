@@ -15,11 +15,13 @@ Chỉ tạo `report.md`. Chuỗi:
 |---|---|
 | 1 | [`bug-classifier`](../../docs/agents/bug-classifier.md) |
 | 2 | [`implementer`](../../docs/agents/implementer.md) |
-| 3 | [`reviewer-rules`](../../docs/agents/reviewer-rules.md) |
-| 4 | [`reviewer-smell`](../../docs/agents/reviewer-smell.md) |
-| 5 | [`reviewer-security`](../../docs/agents/reviewer-security.md) |
-| 6 | [`reviewer-duplicate`](../../docs/agents/reviewer-duplicate.md) |
-| 7 | [`finalizer`](../../docs/agents/finalizer.md) — kèm cập nhật `report.md` (Cách fix + Files đã sửa + Verify) |
+| 3 | [`openapi-writer`](../../docs/agents/openapi-writer.md) *(skip nếu không chạm Web V1)* |
+| 4 | [`reviewer-rules`](../../docs/agents/reviewer-rules.md) |
+| 5 | [`reviewer-smell`](../../docs/agents/reviewer-smell.md) |
+| 6 | [`reviewer-security`](../../docs/agents/reviewer-security.md) |
+| 7 | [`reviewer-duplicate`](../../docs/agents/reviewer-duplicate.md) |
+| 8 | [`cleaner`](../../docs/agents/cleaner.md) |
+| 9 | [`finalizer`](../../docs/agents/finalizer.md) — kèm cập nhật `report.md` (Cách fix + Files đã sửa + Verify) |
 
 ## Nhánh KHÓ
 
@@ -34,11 +36,13 @@ Tạo đủ `spec.md` + `plan.md` + `task.md` + `report.md`. Chuỗi:
 | 5 | [`planner`](../../docs/agents/planner.md) |
 | 6 | [`task-breaker`](../../docs/agents/task-breaker.md) |
 | 7 | [`implementer`](../../docs/agents/implementer.md) |
-| 8 | [`reviewer-rules`](../../docs/agents/reviewer-rules.md) |
-| 9 | [`reviewer-smell`](../../docs/agents/reviewer-smell.md) |
-| 10 | [`reviewer-security`](../../docs/agents/reviewer-security.md) |
-| 11 | [`reviewer-duplicate`](../../docs/agents/reviewer-duplicate.md) |
-| 12 | [`finalizer`](../../docs/agents/finalizer.md) — kèm cập nhật `report.md` |
+| 8 | [`openapi-writer`](../../docs/agents/openapi-writer.md) *(skip nếu không chạm Web V1)* |
+| 9 | [`reviewer-rules`](../../docs/agents/reviewer-rules.md) |
+| 10 | [`reviewer-smell`](../../docs/agents/reviewer-smell.md) |
+| 11 | [`reviewer-security`](../../docs/agents/reviewer-security.md) |
+| 12 | [`reviewer-duplicate`](../../docs/agents/reviewer-duplicate.md) |
+| 13 | [`cleaner`](../../docs/agents/cleaner.md) |
+| 14 | [`finalizer`](../../docs/agents/finalizer.md) — kèm cập nhật `report.md` |
 
 ## Ràng buộc
 

@@ -29,7 +29,9 @@ Cộng với code đã fix + review + format.
 1. **bug-classifier** → `docs/agents/bug-classifier.md`
 2. Nếu **DỄ**:
    - **implementer** (fix thẳng) → `docs/agents/implementer.md`
+   - **openapi-writer** *(skip nếu không chạm Web V1)*
    - **reviewer-rules / smell / security / duplicate**
+   - **cleaner**
    - **finalizer** (cập nhật `report.md` với "Cách fix" + "Files đã sửa")
 3. Nếu **KHÓ**:
    - **spec-analyzer** (tạo spec.md trong folder bug)
@@ -38,7 +40,9 @@ Cộng với code đã fix + review + format.
    - **planner** (tạo plan.md)
    - **task-breaker** (tạo task.md)
    - **implementer**
+   - **openapi-writer** *(skip nếu không chạm Web V1)*
    - **reviewer-rules / smell / security / duplicate**
+   - **cleaner**
    - **finalizer** (cập nhật `report.md`)
 
 ## Ràng buộc

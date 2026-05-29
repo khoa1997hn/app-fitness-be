@@ -1,0 +1,15 @@
+---
+description: Magic value, env naming, env → config, đồng bộ .env / .env.example.
+globs: app/**/*.php,config/**/*.php,.env,.env.example
+alwaysApply: false
+---
+
+# Magic value & env / config
+
+- KHÔNG magic text/số có nghĩa nghiệp vụ trong code logic. Status/plan/type → Enum. Limit/retry/timeout → config.
+- CẤM gọi `env(...)` trong code logic. `env()` chỉ dùng trong `config/*.php`. Code logic gọi `config(...)`.
+- Env BẮT BUỘC có prefix theo provider/module: `AWS_`, `GOOGLE_`, `APPSTORE_`, `PLAN_`, `PAYMENT_`, `JWT_`, `L5_SWAGGER_`, ...
+- Khi thêm env mới: thêm CẢ `.env` lẫn `.env.example`. Lệch key → fail review.
+- Khi đưa env vào config: chia file theo provider/module (`config/aws.php`, `config/google-play.php`, `config/payment.php`...). KHÔNG dồn vào `services.php`.
+
+Chi tiết: [`docs/rules/09-magic-and-env.md`](../../docs/rules/09-magic-and-env.md)

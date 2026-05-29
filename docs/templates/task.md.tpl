@@ -12,12 +12,24 @@
 - [ ] <Task 3>
 - [ ] <Task 4>
 
+## Pha OpenAPI (nếu chạm endpoint Web V1)
+
+- [ ] openapi-writer cập nhật `#[OA\...]` attribute khớp mapping field
+- [ ] `php artisan l5-swagger:generate` chạy thành công
+
 ## Pha review
 
 - [ ] reviewer-rules pass
 - [ ] reviewer-smell pass
 - [ ] reviewer-security pass
 - [ ] reviewer-duplicate pass + fix
+
+## Pha cleanup
+
+- [ ] cleaner: file rác đã xóa
+- [ ] cleaner: code rác (import/biến/method 0-reference) đã xóa
+- [ ] cleaner: `.env` ↔ `.env.example` đồng bộ key
+- [ ] cleaner: route / view / translation rác đã xóa hoặc đã hỏi user
 
 ## Pha finalize
 

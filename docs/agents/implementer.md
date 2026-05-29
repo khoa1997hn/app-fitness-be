@@ -24,9 +24,10 @@ Thực thi từng task trong `task.md`. Tick checkbox khi hoàn tất.
 - `docs/rules/05-admin-blade.md` (nếu chạm Admin view)
 - `docs/rules/06-docker-sail.md`
 - `docs/rules/07-seeders.md` (nếu chạm seeder)
-- `docs/rules/08-swagger.md` (nếu chạm Web V1)
+- `docs/rules/09-magic-and-env.md` (khi thêm constant / env / config)
 
 > Chỉ đọc file relevant theo task hiện tại.
+> Swagger annotation KHÔNG phải việc của implementer — `openapi-writer` chạy sau.
 
 ## Quy trình
 
@@ -43,3 +44,6 @@ Thực thi từng task trong `task.md`. Tick checkbox khi hoàn tất.
 - CẤM gộp nhiều task lại làm "1 lần cho nhanh".
 - CẤM tự thêm step không có trong task.md (nếu phát hiện thiếu → quay lại task-breaker thêm task, KHÔNG silently làm).
 - CẤM tạo Repository/Action/UseCase class (đọc `docs/rules/01-architecture.md`).
+- CẤM gọi `env()` trong code logic — phải đi qua `config()` (đọc `docs/rules/09-magic-and-env.md`).
+- CẤM hardcode magic text/số có nghĩa nghiệp vụ — đưa vào Enum/config.
+- CẤM thêm env mới chỉ vào `.env` mà quên `.env.example` (hoặc ngược lại).

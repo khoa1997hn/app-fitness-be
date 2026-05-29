@@ -1,19 +1,17 @@
 ---
-description: Swagger annotations bắt buộc cho endpoint Web V1.
+description: Swagger annotations bắt buộc cho endpoint Web V1, dùng PHP 8 Attributes.
 globs: app/Web/Http/Controllers/API/V1/**/*.php
 alwaysApply: false
 ---
 
 # Swagger / OpenAPI
 
-Mỗi endpoint trong `app/Web/Http/Controllers/API/V1` BẮT BUỘC có annotation:
-
-- Summary + Description.
-- Request body nested đầy đủ field.
-- Response nested đầy đủ field, khớp với map field thực tế trong controller.
-- Status codes có thể trả về (200, 400, 401, 403, 404, 422, 500...).
-- Security scheme Bearer token nếu cần auth.
-
-Khi đổi map field response trong controller → BẮT BUỘC đổi annotation cho khớp.
+- Package: `darkaonline/l5-swagger` v10.
+- **Style: PHP 8 Attributes** (`use OpenApi\Attributes as OA;` + `#[OA\Get(...)]`). KHÔNG dùng docblock `/** @OA\... */`.
+- Base controller đã định nghĩa `OA\Info`, `OA\Server`, `OA\SecurityScheme` — không lặp lại trong sub-controller.
+- Mỗi endpoint cần: `path`, `summary`, `description`, `tags`, `parameters` (nếu có), `requestBody` (nếu có), `responses` nested đầy đủ field theo mapping thực tế, status codes đầy đủ (200/4xx/500), `security` nếu cần auth.
+- Đổi mapping field response → BẮT BUỘC đổi attribute cho khớp.
+- Sau khi sửa: `sail exec --user sail laravel.test php artisan l5-swagger:generate`.
 
 Chi tiết: [`docs/rules/08-swagger.md`](../../docs/rules/08-swagger.md)
+Agent phụ trách: [`docs/agents/openapi-writer.md`](../../docs/agents/openapi-writer.md)
