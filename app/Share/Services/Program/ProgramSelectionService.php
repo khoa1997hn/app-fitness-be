@@ -6,6 +6,7 @@ namespace App\Share\Services\Program;
 
 use App\Share\Enums\LessonType;
 use App\Share\Enums\Plan;
+use App\Share\Enums\SubscriptionStatus;
 use App\Share\Models\Program;
 use App\Share\Models\Subscription;
 use App\Share\Models\SubscriptionProgramSelection;
@@ -63,6 +64,105 @@ class ProgramSelectionService
         }
 
         return $this->buildStatusPayload($subscription);
+    }
+
+    /**
+     * @return array{subscription: ?array<string, mixed>, programs: list<array<string, mixed>>}
+     */
+    public function getPurchased(User $user): array
+    {
+        $subscription = $user->subscription;
+
+        if ($subscription === null) {
+            return [
+                'subscription' => null,
+                'programs' => [],
+            ];
+        }
+
+        $subscription->loadMissing([
+            'programSelections' => fn ($query) => $query->with(['program' => fn ($q) => $q->withTranslation()]),
+        ]);
+
+        $limits = $this->getPlanLimits($subscription->plan);
+
+        return [
+            'subscription' => $this->mapPurchasedSubscription($subscription, $limits),
+            'programs' => $this->resolvePurchasedPrograms($subscription),
+        ];
+    }
+
+    public function canCancelRenewal(Subscription $subscription): bool
+    {
+        if ($subscription->cancelled_at !== null) {
+            return false;
+        }
+
+        if (! $subscription->auto_renew) {
+            return false;
+        }
+
+        return $subscription->status->in([
+            SubscriptionStatus::Trial,
+            SubscriptionStatus::Active,
+            SubscriptionStatus::GracePeriod,
+        ]);
+    }
+
+    public function canRenew(Subscription $subscription): bool
+    {
+        if ($subscription->cancelled_at !== null) {
+            return true;
+        }
+
+        return $subscription->status->in([
+            SubscriptionStatus::Cancelled,
+            SubscriptionStatus::Expired,
+        ]);
+    }
+
+    /**
+     * @param  array{requires_selection: bool, max_programs: ?int, allowed_lesson_types: list<string>}  $limits
+     * @return array<string, mixed>
+     */
+    private function mapPurchasedSubscription(Subscription $subscription, array $limits): array
+    {
+        return [
+            'id' => $subscription->id,
+            'plan' => $subscription->plan,
+            'status' => $subscription->status,
+            'provider' => $subscription->provider,
+            'amount' => (float) $subscription->amount,
+            'currency' => $subscription->currency,
+            'auto_renew' => $subscription->auto_renew,
+            'started_at' => $subscription->created_at?->toIso8601String(),
+            'expires_at' => $subscription->expires_at?->toIso8601String(),
+            'renews_at' => $this->resolveRenewsAt($subscription),
+            'cancelled_at' => $subscription->cancelled_at?->toIso8601String(),
+            'show_plan_ends_notice' => $this->shouldShowPlanEndsNotice($subscription),
+            'can_cancel_renewal' => $this->canCancelRenewal($subscription),
+            'can_renew' => $this->canRenew($subscription),
+            'requires_selection' => $limits['requires_selection'],
+            'max_programs' => $limits['max_programs'],
+            'allowed_lesson_types' => $limits['allowed_lesson_types'],
+        ];
+    }
+
+    private function shouldShowPlanEndsNotice(Subscription $subscription): bool
+    {
+        if ($subscription->auto_renew) {
+            return false;
+        }
+
+        if ($subscription->expires_at === null || $subscription->expires_at->isPast()) {
+            return false;
+        }
+
+        return $subscription->status->in([
+            SubscriptionStatus::Trial,
+            SubscriptionStatus::Active,
+            SubscriptionStatus::GracePeriod,
+        ]);
     }
 
     /**
@@ -150,5 +250,54 @@ class ProgramSelectionService
                 'selected_at' => $selection->created_at?->toIso8601String(),
             ])
             ->all();
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function resolvePurchasedPrograms(Subscription $subscription): array
+    {
+        if ($subscription->plan->is(Plan::All)) {
+            return Program::query()
+                ->withTranslation()
+                ->orderByTranslation('sort')
+                ->orderBy('id', 'desc')
+                ->get()
+                ->map(fn (Program $program) => [
+                    'id' => $program->id,
+                    'name' => $program->name,
+                    'cover' => $program->cover,
+                    'selected_at' => null,
+                ])
+                ->all();
+        }
+
+        return $subscription->programSelections
+            ->sortBy('created_at')
+            ->values()
+            ->map(fn (SubscriptionProgramSelection $selection) => [
+                'id' => $selection->program_id,
+                'name' => $selection->program->name,
+                'cover' => $selection->program->cover,
+                'selected_at' => $selection->created_at?->toIso8601String(),
+            ])
+            ->all();
+    }
+
+    private function resolveRenewsAt(Subscription $subscription): ?string
+    {
+        if (! $subscription->auto_renew) {
+            return null;
+        }
+
+        if (! $subscription->status->in([
+            SubscriptionStatus::Trial,
+            SubscriptionStatus::Active,
+            SubscriptionStatus::GracePeriod,
+        ])) {
+            return null;
+        }
+
+        return $subscription->expires_at?->toIso8601String();
     }
 }

@@ -26,3 +26,15 @@ API GET/POST `/api/v1/programs/selection` + bảng `subscription_program_selecti
 ## Rủi ro
 
 - User đổi plan giữa kỳ: selection cũ vẫn gắn subscription record — chấp nhận theo spec (out-of-scope auto reset).
+
+## Update 2026-05-29 — GET /programs/purchased
+
+- Thêm `ProgramSelectionService::getPurchased(User)` — subscription (mọi status) + programs.
+- `renews_at` = `expires_at` khi `auto_renew` + status hợp lệ.
+- Plan `all` → list toàn bộ program; basic/plus → selections.
+- Route + OpenAPI trên `ProgramSelectionController::purchased`.
+
+## Update 2026-05-29 — Figma purchased_program
+
+- Bổ sung GET /programs/purchased: amount, currency, expires_at, auto_renew, provider, show_plan_ends_notice, can_cancel_renewal, can_renew.
+- Thêm POST /subscriptions/cancel (SubscriptionManager, Google provider cancel).

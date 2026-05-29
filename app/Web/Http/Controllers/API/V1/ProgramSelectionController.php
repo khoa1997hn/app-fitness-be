@@ -17,6 +17,85 @@ class ProgramSelectionController extends BaseAPIController
     ) {}
 
     /**
+     * Danh sách program đã mua kèm thông tin subscription
+     */
+    #[OA\Get(
+        path: '/programs/purchased',
+        description: 'Lấy danh sách program đã mua của user kèm thông tin subscription (mọi trạng thái: active, cancelled, expired, ...). Trả started_at (created_at), renews_at (expires_at khi còn auto-renew), status. Plan All Access trả toàn bộ program.',
+        summary: 'Danh sách program đã mua',
+        security: [['bearerAuth' => []]],
+        tags: ['Programs'],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Lấy danh sách thành công',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'success', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'Success'),
+                        new OA\Property(
+                            property: 'data',
+                            properties: [
+                                new OA\Property(
+                                    property: 'subscription',
+                                    properties: [
+                                        new OA\Property(property: 'id', type: 'integer', example: 10),
+                                        new OA\Property(property: 'plan', type: 'string', example: 'plus'),
+                                        new OA\Property(property: 'status', type: 'string', example: 'active'),
+                                        new OA\Property(property: 'provider', type: 'string', example: 'google_iap'),
+                                        new OA\Property(property: 'amount', type: 'number', format: 'float', example: 1999000),
+                                        new OA\Property(property: 'currency', type: 'string', example: 'VND'),
+                                        new OA\Property(property: 'auto_renew', type: 'boolean', example: true),
+                                        new OA\Property(property: 'started_at', type: 'string', format: 'date-time', example: '2026-01-01T00:00:00+07:00'),
+                                        new OA\Property(property: 'expires_at', type: 'string', format: 'date-time', nullable: true),
+                                        new OA\Property(property: 'renews_at', type: 'string', format: 'date-time', nullable: true),
+                                        new OA\Property(property: 'cancelled_at', type: 'string', format: 'date-time', nullable: true),
+                                        new OA\Property(property: 'show_plan_ends_notice', type: 'boolean', example: false),
+                                        new OA\Property(property: 'can_cancel_renewal', type: 'boolean', example: true),
+                                        new OA\Property(property: 'can_renew', type: 'boolean', example: false),
+                                        new OA\Property(property: 'requires_selection', type: 'boolean', example: true),
+                                        new OA\Property(property: 'max_programs', type: 'integer', example: 2, nullable: true),
+                                        new OA\Property(
+                                            property: 'allowed_lesson_types',
+                                            type: 'array',
+                                            items: new OA\Items(type: 'string', example: 'level')
+                                        ),
+                                    ],
+                                    type: 'object',
+                                    nullable: true
+                                ),
+                                new OA\Property(
+                                    property: 'programs',
+                                    type: 'array',
+                                    items: new OA\Items(
+                                        properties: [
+                                            new OA\Property(property: 'id', type: 'integer', example: 1),
+                                            new OA\Property(property: 'name', type: 'string', example: 'Yoga'),
+                                            new OA\Property(property: 'cover', type: 'object', nullable: true),
+                                            new OA\Property(property: 'selected_at', type: 'string', format: 'date-time', nullable: true),
+                                        ],
+                                        type: 'object'
+                                    )
+                                ),
+                            ],
+                            type: 'object'
+                        ),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Chưa xác thực'),
+            new OA\Response(response: 500, description: 'Lỗi server'),
+        ]
+    )]
+    public function purchased(): JsonResponse
+    {
+        /** @var User $user */
+        $user = auth()->user();
+
+        return ResponseAPI::success($this->programSelectionService->getPurchased($user));
+    }
+
+    /**
      * Trạng thái chọn program theo gói subscription hiện tại
      */
     #[OA\Get(

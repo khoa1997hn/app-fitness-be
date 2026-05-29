@@ -39,4 +39,9 @@ return [
     'program_selection_invalid_count' => 'Số program chọn phải từ 1 đến :max.',
     'program_not_found' => 'Một hoặc nhiều program không tồn tại.',
 
+    // Subscription cancel renewal
+    'subscription_cancel_renewal_success' => 'Đã hủy gia hạn tự động. Bạn vẫn dùng được đến hết kỳ hiện tại.',
+    'subscription_cancel_apple_manual' => 'Vui lòng hủy gia hạn trong Cài đặt → Apple ID → Đăng ký trên thiết bị của bạn.',
+    'subscription_cannot_cancel_renewal' => 'Gói đăng ký không thể hủy gia hạn ở trạng thái hiện tại.',
+
 ];
