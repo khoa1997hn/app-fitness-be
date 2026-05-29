@@ -2,6 +2,11 @@
 
 > Checklist atomic. Mỗi task ≤ 1 đơn vị code (1 file / 1 method / 1 migration). Tick khi xong.
 
+## Pha pre-design
+
+- [ ] solution-reviewer: review proposal solution của user (hoặc note "no proposal")
+- [ ] api-designer: section "API Design" trong spec.md đã được user duyệt
+
 ## Pha 1 — <Tên>
 
 - [ ] <Task 1>

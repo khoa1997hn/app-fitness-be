@@ -33,18 +33,20 @@ Tạo đủ `spec.md` + `plan.md` + `task.md` + `report.md`. Chuỗi:
 | 1 | [`bug-classifier`](../../docs/agents/bug-classifier.md) |
 | 2 | [`spec-analyzer`](../../docs/agents/spec-analyzer.md) (tạo trong folder bug) |
 | 3 | [`question-asker`](../../docs/agents/question-asker.md) |
-| 4 | [`api-analyzer`](../../docs/agents/api-analyzer.md) |
-| 5 | [`planner`](../../docs/agents/planner.md) |
-| 6 | [`task-breaker`](../../docs/agents/task-breaker.md) |
-| 7 | [`implementer`](../../docs/agents/implementer.md) |
-| 8 | [`openapi-writer`](../../docs/agents/openapi-writer.md) *(skip nếu không chạm Web V1)* |
-| 9 | [`reviewer-rules`](../../docs/agents/reviewer-rules.md) |
-| 10 | [`reviewer-smell`](../../docs/agents/reviewer-smell.md) |
-| 11 | [`reviewer-security`](../../docs/agents/reviewer-security.md) |
-| 12 | [`reviewer-duplicate`](../../docs/agents/reviewer-duplicate.md) |
-| 13 | [`cleaner`](../../docs/agents/cleaner.md) |
-| 14 | [`docs-syncer`](../../docs/agents/docs-syncer.md) |
-| 15 | [`finalizer`](../../docs/agents/finalizer.md) — kèm cập nhật `report.md` |
+| 4 | [`solution-reviewer`](../../docs/agents/solution-reviewer.md) *(skip nếu user chưa propose solution)* |
+| 5 | [`api-designer`](../../docs/agents/api-designer.md) *(skip nếu fix không đụng endpoint)* |
+| 6 | [`api-analyzer`](../../docs/agents/api-analyzer.md) |
+| 7 | [`planner`](../../docs/agents/planner.md) |
+| 8 | [`task-breaker`](../../docs/agents/task-breaker.md) |
+| 9 | [`implementer`](../../docs/agents/implementer.md) |
+| 10 | [`openapi-writer`](../../docs/agents/openapi-writer.md) *(skip nếu không chạm Web V1)* |
+| 11 | [`reviewer-rules`](../../docs/agents/reviewer-rules.md) |
+| 12 | [`reviewer-smell`](../../docs/agents/reviewer-smell.md) |
+| 13 | [`reviewer-security`](../../docs/agents/reviewer-security.md) |
+| 14 | [`reviewer-duplicate`](../../docs/agents/reviewer-duplicate.md) |
+| 15 | [`cleaner`](../../docs/agents/cleaner.md) |
+| 16 | [`docs-syncer`](../../docs/agents/docs-syncer.md) |
+| 17 | [`finalizer`](../../docs/agents/finalizer.md) — kèm cập nhật `report.md` |
 
 ## Ràng buộc
 

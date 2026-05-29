@@ -24,18 +24,20 @@ Chạy tuần tự, mỗi agent đọc prompt template của nó:
 
 1. **spec-analyzer** → `docs/agents/spec-analyzer.md`
 2. **question-asker** → `docs/agents/question-asker.md`
-3. **api-analyzer** → `docs/agents/api-analyzer.md`
-4. **planner** → `docs/agents/planner.md`
-5. **task-breaker** → `docs/agents/task-breaker.md`
-6. **implementer** → `docs/agents/implementer.md`
-7. **openapi-writer** → `docs/agents/openapi-writer.md` *(skip nếu không chạm Web V1)*
-8. **reviewer-rules** → `docs/agents/reviewer-rules.md`
-9. **reviewer-smell** → `docs/agents/reviewer-smell.md`
-10. **reviewer-security** → `docs/agents/reviewer-security.md`
-11. **reviewer-duplicate** → `docs/agents/reviewer-duplicate.md`
-12. **cleaner** → `docs/agents/cleaner.md`
-13. **docs-syncer** → `docs/agents/docs-syncer.md`
-14. **finalizer** → `docs/agents/finalizer.md`
+3. **solution-reviewer** → `docs/agents/solution-reviewer.md` *(skip nếu user chưa propose solution)*
+4. **api-designer** → `docs/agents/api-designer.md`
+5. **api-analyzer** → `docs/agents/api-analyzer.md`
+6. **planner** → `docs/agents/planner.md`
+7. **task-breaker** → `docs/agents/task-breaker.md`
+8. **implementer** → `docs/agents/implementer.md`
+9. **openapi-writer** → `docs/agents/openapi-writer.md` *(skip nếu không chạm Web V1)*
+10. **reviewer-rules** → `docs/agents/reviewer-rules.md`
+11. **reviewer-smell** → `docs/agents/reviewer-smell.md`
+12. **reviewer-security** → `docs/agents/reviewer-security.md`
+13. **reviewer-duplicate** → `docs/agents/reviewer-duplicate.md`
+14. **cleaner** → `docs/agents/cleaner.md`
+15. **docs-syncer** → `docs/agents/docs-syncer.md`
+16. **finalizer** → `docs/agents/finalizer.md`
 
 ## Ràng buộc
 

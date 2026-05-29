@@ -37,6 +37,8 @@ Cộng với code đã fix + review + format.
 3. Nếu **KHÓ**:
    - **spec-analyzer** (tạo spec.md trong folder bug)
    - **question-asker**
+   - **solution-reviewer** *(skip nếu user chưa propose solution)*
+   - **api-designer** *(skip nếu fix không đụng endpoint)*
    - **api-analyzer**
    - **planner** (tạo plan.md)
    - **task-breaker** (tạo task.md)

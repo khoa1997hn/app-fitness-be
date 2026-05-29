@@ -40,7 +40,9 @@ Mỗi file là **prompt template** cho một vai trò chuyên biệt. Cursor com
 |---|---|
 | `spec-analyzer` | Đọc/tạo spec.md |
 | `question-asker` | Quét spec, hỏi user qua AskUserQuestion |
-| `api-analyzer` | Liệt kê endpoint/migration/model ảnh hưởng |
+| `solution-reviewer` | Review solution/architecture/DB user propose, suggest tối ưu qua ASK |
+| `api-designer` | Đề xuất design endpoint (method/path/request/response) từ spec |
+| `api-analyzer` | Liệt kê endpoint/migration/model ảnh hưởng (impact) |
 | `planner` | Viết plan.md |
 | `task-breaker` | Viết task.md checklist |
 | `implementer` | Code theo task.md |

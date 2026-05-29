@@ -29,18 +29,20 @@ Giống `/implement-spec` 100%.
 |---|---|---|
 | 1 | spec-analyzer (mode=update) | [`docs/agents/spec-analyzer.md`](../../docs/agents/spec-analyzer.md) |
 | 2 | question-asker | [`docs/agents/question-asker.md`](../../docs/agents/question-asker.md) |
-| 3 | api-analyzer | [`docs/agents/api-analyzer.md`](../../docs/agents/api-analyzer.md) |
-| 4 | planner (mode=append) | [`docs/agents/planner.md`](../../docs/agents/planner.md) |
-| 5 | task-breaker (mode=append) | [`docs/agents/task-breaker.md`](../../docs/agents/task-breaker.md) |
-| 6 | implementer | [`docs/agents/implementer.md`](../../docs/agents/implementer.md) |
-| 7 | openapi-writer *(skip nếu không chạm Web V1)* | [`docs/agents/openapi-writer.md`](../../docs/agents/openapi-writer.md) |
-| 8 | reviewer-rules | [`docs/agents/reviewer-rules.md`](../../docs/agents/reviewer-rules.md) |
-| 9 | reviewer-smell | [`docs/agents/reviewer-smell.md`](../../docs/agents/reviewer-smell.md) |
-| 10 | reviewer-security | [`docs/agents/reviewer-security.md`](../../docs/agents/reviewer-security.md) |
-| 11 | reviewer-duplicate | [`docs/agents/reviewer-duplicate.md`](../../docs/agents/reviewer-duplicate.md) |
-| 12 | cleaner | [`docs/agents/cleaner.md`](../../docs/agents/cleaner.md) |
-| 13 | docs-syncer | [`docs/agents/docs-syncer.md`](../../docs/agents/docs-syncer.md) |
-| 14 | finalizer | [`docs/agents/finalizer.md`](../../docs/agents/finalizer.md) |
+| 3 | solution-reviewer *(skip nếu user chưa propose solution)* | [`docs/agents/solution-reviewer.md`](../../docs/agents/solution-reviewer.md) |
+| 4 | api-designer | [`docs/agents/api-designer.md`](../../docs/agents/api-designer.md) |
+| 5 | api-analyzer | [`docs/agents/api-analyzer.md`](../../docs/agents/api-analyzer.md) |
+| 6 | planner (mode=append) | [`docs/agents/planner.md`](../../docs/agents/planner.md) |
+| 7 | task-breaker (mode=append) | [`docs/agents/task-breaker.md`](../../docs/agents/task-breaker.md) |
+| 8 | implementer | [`docs/agents/implementer.md`](../../docs/agents/implementer.md) |
+| 9 | openapi-writer *(skip nếu không chạm Web V1)* | [`docs/agents/openapi-writer.md`](../../docs/agents/openapi-writer.md) |
+| 10 | reviewer-rules | [`docs/agents/reviewer-rules.md`](../../docs/agents/reviewer-rules.md) |
+| 11 | reviewer-smell | [`docs/agents/reviewer-smell.md`](../../docs/agents/reviewer-smell.md) |
+| 12 | reviewer-security | [`docs/agents/reviewer-security.md`](../../docs/agents/reviewer-security.md) |
+| 13 | reviewer-duplicate | [`docs/agents/reviewer-duplicate.md`](../../docs/agents/reviewer-duplicate.md) |
+| 14 | cleaner | [`docs/agents/cleaner.md`](../../docs/agents/cleaner.md) |
+| 15 | docs-syncer | [`docs/agents/docs-syncer.md`](../../docs/agents/docs-syncer.md) |
+| 16 | finalizer | [`docs/agents/finalizer.md`](../../docs/agents/finalizer.md) |
 
 ## Ràng buộc
 
