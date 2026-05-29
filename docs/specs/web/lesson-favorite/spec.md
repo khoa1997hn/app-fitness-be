@@ -12,6 +12,7 @@ Model `Lesson` + program detail (`GET /api/v1/programs/{program}`) đã có (xem
 ## Ghi chú gốc từ user (raw, không xóa)
 
 - api yêu thích, bỏ yêu thích bài học (cần trả về thông tin auth đang yêu thích hay chưa ở list và detail)
+- không cần trả về thông tin program nhé. thumbnail là của lesson, title cũng là tên của lesson, số days học ko phải count gì cả chính là field day của lesson đó (design vẽ nhầm) *(Update 2026-05-29)*
 
 ## Phạm vi
 
@@ -52,8 +53,7 @@ Model `Lesson` + program detail (`GET /api/v1/programs/{program}`) đã có (xem
 ```
 
 #### GET lessons/favorites
-Flatten theo bài học, không group theo program. Mỗi item kèm thông tin program.
-KHÔNG trả link/file video.
+Flatten theo bài học. KHÔNG trả link/file video, KHÔNG trả thông tin program.
 ```json
 {
   "success": true,
@@ -64,17 +64,18 @@ KHÔNG trả link/file video.
         "id": 12,
         "name": "Day 1 - Warm up",
         "thumbnail": { "path": "...", "name": "...", "extension": "jpg", "size": 1024, "url": "http://..." },
+        "day": 1,
         "duration_seconds": 600,
-        "is_favorited": true,
-        "program": { "id": 1, "name": "7 Day Training Split", "days": 7 }
+        "is_favorited": true
       }
     ],
     "pagination": { "current_page": 1, "per_page": 10, "total": 3, "last_page": 1 }
   }
 }
 ```
-- `program.days` = **max `day`** của các lesson thuộc program đó (theo figma badge "7 days").
+- `day` = field `day` của chính lesson đó (figma badge "7 days" là day của lesson, design vẽ nhầm).
 - `is_favorited` luôn `true` trong list này (đều là bài đã yêu thích).
+- Không có `program` trong item (update 2026-05-29).
 
 #### Lesson item trong program detail
 Thêm field `is_favorited` (bool) vào mỗi lesson item (các nhóm level/special/signature).
@@ -84,7 +85,7 @@ Thêm field `is_favorited` (bool) vào mỗi lesson item (các nhóm level/speci
 - [ ] `POST /lessons/{lesson}/favorite` → lesson được đánh dấu; gọi lại vẫn 200, không trùng record.
 - [ ] `DELETE /lessons/{lesson}/favorite` → bỏ đánh dấu; gọi khi chưa favorite vẫn 200.
 - [ ] `GET /programs/{program}` → mỗi lesson item có `is_favorited` đúng theo user.
-- [ ] `GET /lessons/favorites` → trả các bài đã yêu thích (mới nhất trước), phân trang, mỗi item có `program:{id,name,days}`, `is_favorited=true`, không có link video.
+- [ ] `GET /lessons/favorites` → trả các bài đã yêu thích (mới nhất trước), phân trang, mỗi item có `id, name, thumbnail, day, duration_seconds, is_favorited=true`, không có `program`, không có link video.
 - [ ] Lesson không tồn tại → 404. Không token → 401.
 
 ## Quyết định (chốt qua ASK + figma)
@@ -94,7 +95,7 @@ Thêm field `is_favorited` (bool) vào mỗi lesson item (các nhóm level/speci
 - **Idempotent**: luôn 200 (`syncWithoutDetaching` / `detach`).
 - **Favorites list**: có; flatten theo lesson, phân trang, mới yêu thích trước.
 - **`is_favorited`**: chỉ ở program detail + favorites list (không ở home).
-- **Item favorites**: `id, name, thumbnail, duration_seconds, is_favorited, program:{id,name,days}`. `program.days` = max day của lesson trong program (figma `lesson_favourited_list.png`).
+- **Item favorites** *(update 2026-05-29)*: `id, name, thumbnail, day, duration_seconds, is_favorited`. `day` = field `day` của lesson (figma badge là day của lesson, không phải max day của program). Bỏ `program` khỏi item.
 - **Response favorite action**: `data: null` (chỉ success).
 - **Tên bảng pivot** (mình chọn): `lesson_favorites(user_id, lesson_id, timestamps)`, unique(user_id, lesson_id), FK cascade khi xóa user/lesson.
 - **Envelope phân trang** (mình chọn, chưa có convention V1): `data: { items, pagination:{current_page,per_page,total,last_page} }`.

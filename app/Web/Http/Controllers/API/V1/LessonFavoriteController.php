@@ -44,17 +44,9 @@ class LessonFavoriteController extends BaseAPIController
                                             new OA\Property(property: 'id', type: 'integer', example: 12),
                                             new OA\Property(property: 'name', description: 'Tên bài học (theo locale)', type: 'string', example: 'Day 1 - Warm up'),
                                             new OA\Property(property: 'thumbnail', description: 'Ảnh thumbnail (theo locale)', type: 'object', nullable: true),
+                                            new OA\Property(property: 'day', description: 'Ngày tập của bài học', type: 'integer', example: 1),
                                             new OA\Property(property: 'duration_seconds', type: 'integer', example: 600),
                                             new OA\Property(property: 'is_favorited', type: 'boolean', example: true),
-                                            new OA\Property(
-                                                property: 'program',
-                                                properties: [
-                                                    new OA\Property(property: 'id', type: 'integer', example: 1),
-                                                    new OA\Property(property: 'name', type: 'string', example: '7 Day Training Split'),
-                                                    new OA\Property(property: 'days', description: 'Số ngày của program (max day của lesson)', type: 'integer', example: 7),
-                                                ],
-                                                type: 'object'
-                                            ),
                                         ],
                                         type: 'object'
                                     )
@@ -88,10 +80,7 @@ class LessonFavoriteController extends BaseAPIController
 
         $favorites = $user->favoriteLessons()
             ->withTranslation()
-            ->with([
-                'videos',
-                'program' => fn ($query) => $query->withTranslation()->withMax('lessons', 'day'),
-            ])
+            ->with(['videos'])
             ->orderByPivot('created_at', 'desc')
             ->paginate($perPage);
 
@@ -195,13 +184,9 @@ class LessonFavoriteController extends BaseAPIController
             'id' => $lesson->id,
             'name' => $lesson->name,
             'thumbnail' => $lesson->thumbnail,
+            'day' => $lesson->day,
             'duration_seconds' => (int) $lesson->videos->sum('duration_seconds'),
             'is_favorited' => true,
-            'program' => [
-                'id' => $lesson->program->id,
-                'name' => $lesson->program->name,
-                'days' => (int) ($lesson->program->lessons_max_day ?? 0),
-            ],
         ];
     }
 }

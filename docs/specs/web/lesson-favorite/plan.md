@@ -42,3 +42,14 @@ Thêm quan hệ many-to-many user ↔ lesson qua bảng pivot `lesson_favorites`
 - `GET programs/{id}` → lesson item có `is_favorited` đúng
 - `GET lessons/favorites` → flatten, có `program.days`=max day, không có link video, phân trang đúng
 - Không token → 401; lesson không tồn tại → 404
+
+## Update 2026-05-29 — Bỏ program, thêm day vào item favorites
+
+### Tóm tắt
+Item favorites list: bỏ `program`, thêm `day` (lesson.day). Dọn eager load `program` khỏi query.
+
+### Thay đổi
+- `LessonFavoriteController::mapFavorite()`: bỏ `program`, thêm `day => $lesson->day`.
+- `LessonFavoriteController::index()`: bỏ eager load `program` (không cần nữa).
+- OpenAPI `#[OA\Get /lessons/favorites]`: cập nhật item properties.
+- `l5-swagger:generate`.

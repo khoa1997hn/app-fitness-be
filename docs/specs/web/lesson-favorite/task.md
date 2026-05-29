@@ -43,3 +43,11 @@
 - [x] docs-syncer: `project-overview.md`
 - [x] migrate + seed + pint PASS, verify endpoint (idempotent, days, favorited ids)
 - [ ] STOP — hỏi user commit/push
+
+## Update 2026-05-29 — Bỏ program, thêm day
+
+- [x] `mapFavorite()`: bỏ `program`, thêm `day`
+- [x] `index()`: bỏ eager load program
+- [x] OpenAPI + generate
+- [x] pint + verify
+- [ ] STOP — hỏi user commit/push
