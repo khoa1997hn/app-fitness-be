@@ -118,6 +118,7 @@ Giá cụ thể từng plan → env `PLAN_<TIER>_PRICE` (xem `.env.example`).
 - Subscription core: model + service + listener Apple/Google + IAP webhook.
 - Banner (list API + multi-language).
 - Program / Lesson / Video: model + migration + translatable (Lesson có enum `type`/`level`). API list program Home (`GET /api/v1/programs`) + chi tiết program + lessons grouped (`GET /api/v1/programs/{program}`, auth JWT).
+- Yêu thích bài học: pivot `lesson_favorites` (user ↔ lesson). API favorite/unfavorite (`POST|DELETE /api/v1/lessons/{lesson}/favorite`) + list yêu thích (`GET /api/v1/lessons/favorites`, flatten + phân trang) + cờ `is_favorited` trong program detail.
 
 ### CHƯA có (phase tiếp)
 - Admin CRUD: programs, lessons (kèm upload video), subscription/payment view.

@@ -4,6 +4,7 @@ use App\Web\Http\Controllers\API\V1\Auth\AuthController;
 use App\Web\Http\Controllers\API\V1\Auth\ProfileController;
 use App\Web\Http\Controllers\API\V1\Auth\RegistrationController;
 use App\Web\Http\Controllers\API\V1\BannerController;
+use App\Web\Http\Controllers\API\V1\LessonFavoriteController;
 use App\Web\Http\Controllers\API\V1\ProgramController;
 use App\Web\Http\Controllers\API\V1\Subscription\AppleIapController;
 use App\Web\Http\Controllers\API\V1\Subscription\GoogleIapController;
@@ -59,6 +60,10 @@ Route::as('api.')
             Route::middleware('auth:api')->group(function () {
                 Route::get('programs', [ProgramController::class, 'index'])->name('programs.index');
                 Route::get('programs/{program}', [ProgramController::class, 'show'])->name('programs.show');
+
+                Route::get('lessons/favorites', [LessonFavoriteController::class, 'index'])->name('lessons.favorites.index');
+                Route::post('lessons/{lesson}/favorite', [LessonFavoriteController::class, 'store'])->name('lessons.favorite.store');
+                Route::delete('lessons/{lesson}/favorite', [LessonFavoriteController::class, 'destroy'])->name('lessons.favorite.destroy');
             });
         });
     });

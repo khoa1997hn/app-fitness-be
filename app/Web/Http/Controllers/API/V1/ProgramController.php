@@ -6,6 +6,7 @@ use App\Share\Enums\LessonType;
 use App\Share\Enums\Level;
 use App\Share\Models\Lesson;
 use App\Share\Models\Program;
+use App\Share\Models\User;
 use App\Share\Utils\ResponseAPI;
 use App\Web\Http\Controllers\API\V1\APIController as BaseAPIController;
 use Illuminate\Http\JsonResponse;
@@ -144,6 +145,7 @@ class ProgramController extends BaseAPIController
                                                             new OA\Property(property: 'description', type: 'string', nullable: true),
                                                             new OA\Property(property: 'thumbnail', description: 'Ảnh thumbnail bài học (theo locale)', type: 'object', nullable: true),
                                                             new OA\Property(property: 'duration_seconds', type: 'integer', example: 600),
+                                                            new OA\Property(property: 'is_favorited', description: 'User hiện tại đã yêu thích bài học chưa', type: 'boolean', example: false),
                                                         ],
                                                         type: 'object'
                                                     )
@@ -173,9 +175,16 @@ class ProgramController extends BaseAPIController
     {
         $program->load($this->programRelations());
 
+        /** @var User $user */
+        $user = auth()->user();
+        $favoritedIds = $user->favoriteLessons()
+            ->whereIn('lessons.id', $program->lessons->pluck('id'))
+            ->pluck('lessons.id')
+            ->all();
+
         return ResponseAPI::success([
             ...$this->mapProgram($program),
-            'lessons' => $this->groupLessons($program->lessons),
+            'lessons' => $this->groupLessons($program->lessons, $favoritedIds),
         ]);
     }
 
@@ -212,9 +221,10 @@ class ProgramController extends BaseAPIController
     }
 
     /**
+     * @param  list<int>  $favoritedIds
      * @return array<string, mixed>
      */
-    private function mapLesson(Lesson $lesson): array
+    private function mapLesson(Lesson $lesson, array $favoritedIds): array
     {
         return [
             'id' => $lesson->id,
@@ -223,14 +233,16 @@ class ProgramController extends BaseAPIController
             'description' => $lesson->description,
             'thumbnail' => $lesson->thumbnail,
             'duration_seconds' => (int) $lesson->videos->sum('duration_seconds'),
+            'is_favorited' => in_array($lesson->id, $favoritedIds, true),
         ];
     }
 
     /**
      * @param  Collection<int, Lesson>  $lessons
+     * @param  list<int>  $favoritedIds
      * @return array<string, mixed>
      */
-    private function groupLessons(Collection $lessons): array
+    private function groupLessons(Collection $lessons, array $favoritedIds): array
     {
         $sorted = $this->sortLessons($lessons);
 
@@ -239,32 +251,38 @@ class ProgramController extends BaseAPIController
         return [
             'level' => [
                 'beginner' => $this->mapLessonsCollection(
-                    $levelLessons->filter(fn (Lesson $lesson) => $lesson->level?->is(Level::Beginner))
+                    $levelLessons->filter(fn (Lesson $lesson) => $lesson->level?->is(Level::Beginner)),
+                    $favoritedIds
                 ),
                 'intermediate' => $this->mapLessonsCollection(
-                    $levelLessons->filter(fn (Lesson $lesson) => $lesson->level?->is(Level::Intermediate))
+                    $levelLessons->filter(fn (Lesson $lesson) => $lesson->level?->is(Level::Intermediate)),
+                    $favoritedIds
                 ),
                 'advanced' => $this->mapLessonsCollection(
-                    $levelLessons->filter(fn (Lesson $lesson) => $lesson->level?->is(Level::Advanced))
+                    $levelLessons->filter(fn (Lesson $lesson) => $lesson->level?->is(Level::Advanced)),
+                    $favoritedIds
                 ),
             ],
             'special' => $this->mapLessonsCollection(
-                $sorted->filter(fn (Lesson $lesson) => $lesson->type->is(LessonType::Special))
+                $sorted->filter(fn (Lesson $lesson) => $lesson->type->is(LessonType::Special)),
+                $favoritedIds
             ),
             'signature' => $this->mapLessonsCollection(
-                $sorted->filter(fn (Lesson $lesson) => $lesson->type->is(LessonType::Signature))
+                $sorted->filter(fn (Lesson $lesson) => $lesson->type->is(LessonType::Signature)),
+                $favoritedIds
             ),
         ];
     }
 
     /**
      * @param  Collection<int, Lesson>  $lessons
+     * @param  list<int>  $favoritedIds
      * @return list<array<string, mixed>>
      */
-    private function mapLessonsCollection(Collection $lessons): array
+    private function mapLessonsCollection(Collection $lessons, array $favoritedIds): array
     {
         return $lessons
-            ->map(fn (Lesson $lesson) => $this->mapLesson($lesson))
+            ->map(fn (Lesson $lesson) => $this->mapLesson($lesson, $favoritedIds))
             ->values()
             ->all();
     }
