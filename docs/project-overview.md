@@ -117,9 +117,9 @@ Giá cụ thể từng plan → env `PLAN_<TIER>_PRICE` (xem `.env.example`).
 - Admin login, dashboard placeholder, Users list/delete/export CSV.
 - Subscription core: model + service + listener Apple/Google + IAP webhook.
 - Banner (list API + multi-language).
+- Program / Lesson / Video: model + migration + translatable (Lesson có enum `type`/`level`). API list program cho Home (`GET /api/v1/programs`, auth JWT) — `duration_minutes`/`course_count` tính động.
 
 ### CHƯA có (phase tiếp)
-- Model + migration cho `programs`, `lessons`.
 - Admin CRUD: programs, lessons (kèm upload video), subscription/payment view.
 - API endpoint: list program theo plan của user, list lesson theo program + level, video streaming.
 - Logic gate access video theo plan + program đã unlock.

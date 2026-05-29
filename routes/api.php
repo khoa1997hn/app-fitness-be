@@ -4,6 +4,7 @@ use App\Web\Http\Controllers\API\V1\Auth\AuthController;
 use App\Web\Http\Controllers\API\V1\Auth\ProfileController;
 use App\Web\Http\Controllers\API\V1\Auth\RegistrationController;
 use App\Web\Http\Controllers\API\V1\BannerController;
+use App\Web\Http\Controllers\API\V1\ProgramController;
 use App\Web\Http\Controllers\API\V1\Subscription\AppleIapController;
 use App\Web\Http\Controllers\API\V1\Subscription\GoogleIapController;
 use Illuminate\Support\Facades\Route;
@@ -54,5 +55,9 @@ Route::as('api.')
                 });
 
             Route::get('banners', [BannerController::class, 'index'])->name('banners.index');
+
+            Route::get('programs', [ProgramController::class, 'index'])
+                ->middleware('auth:api')
+                ->name('programs.index');
         });
     });
