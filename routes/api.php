@@ -42,6 +42,7 @@ Route::as('api.')
                         Route::post('logout', [AuthController::class, 'logout'])->name('logout');
                         Route::post('refresh', [AuthController::class, 'refresh'])->name('refresh');
                         Route::get('profile', [ProfileController::class, 'show'])->name('profile.show');
+                        Route::delete('me', [ProfileController::class, 'destroy'])->name('me.destroy');
                     });
                 });
 

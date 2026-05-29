@@ -7,6 +7,7 @@ use App\Share\Utils\ResponseAPI;
 use App\Web\Http\Controllers\API\V1\APIController as BaseAPIController;
 use Illuminate\Http\JsonResponse;
 use OpenApi\Attributes as OA;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class ProfileController extends BaseAPIController
 {
@@ -75,5 +76,42 @@ class ProfileController extends BaseAPIController
             'created_at' => $user->created_at,
             'updated_at' => $user->updated_at,
         ]);
+    }
+
+    /**
+     * Tự xóa tài khoản (soft delete)
+     */
+    #[OA\Delete(
+        path: '/auth/me',
+        description: 'Soft-delete tài khoản của user hiện tại. JWT hiện tại bị invalidate ngay sau khi xóa. Sau khi xóa user không thể đăng nhập lại. Dữ liệu liên quan (favorites, subscriptions) được giữ nguyên.',
+        summary: 'Tự xóa tài khoản',
+        security: [['bearerAuth' => []]],
+        tags: ['Authentication'],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Tài khoản đã được xóa thành công',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'success', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'Tài khoản đã được xóa thành công'),
+                        new OA\Property(property: 'data', type: 'object', nullable: true, example: null),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Chưa xác thực'),
+            new OA\Response(response: 500, description: 'Lỗi server'),
+        ]
+    )]
+    public function destroy(): JsonResponse
+    {
+        /** @var User $user */
+        $user = auth()->user();
+
+        JWTAuth::invalidate(JWTAuth::getToken());
+
+        $user->delete();
+
+        return ResponseAPI::success(null, 'Tài khoản đã được xóa thành công');
     }
 }

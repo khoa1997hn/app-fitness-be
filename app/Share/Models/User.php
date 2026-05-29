@@ -8,6 +8,7 @@ use App\Share\Enums\SubscriptionStatus;
 use App\Share\Models\Traits\User\ManagesSubscription;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Tymon\JWTAuth\Contracts\JWTSubject;
@@ -24,11 +25,12 @@ use Tymon\JWTAuth\Contracts\JWTSubject;
  * @property Plan|null $plan
  * @property-read Subscription|null $subscription
  * @property-read Subscription|null $validSubscription
+ * @property \Carbon\Carbon|null $deleted_at
  * @property-read \Illuminate\Database\Eloquent\Collection<int, Lesson> $favoriteLessons
  */
 class User extends Authenticatable implements JWTSubject
 {
-    use HasFactory, ManagesSubscription, Notifiable;
+    use HasFactory, ManagesSubscription, Notifiable, SoftDeletes;
 
     /**
      * Create a new factory instance for the model.

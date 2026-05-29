@@ -113,7 +113,7 @@ Giá cụ thể từng plan → env `PLAN_<TIER>_PRICE` (xem `.env.example`).
 ## Module hiện có vs chưa có
 
 ### Đã có
-- Auth (register / login / profile) — JWT.
+- Auth (register / login / profile / logout / refresh / delete account) — JWT. User soft-delete (`DELETE /api/v1/auth/me`); đăng nhập lại sau khi xóa bị chặn.
 - Admin login, dashboard placeholder, Users list/delete/export CSV.
 - Subscription core: model + service + listener Apple/Google + IAP webhook.
 - Banner (list API + multi-language).
