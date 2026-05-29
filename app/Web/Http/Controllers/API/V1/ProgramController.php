@@ -115,23 +115,17 @@ class ProgramController extends BaseAPIController
                         new OA\Property(
                             property: 'data',
                             properties: [
+                                new OA\Property(property: 'id', type: 'integer', example: 1),
+                                new OA\Property(property: 'name', type: 'string', example: 'Yoga'),
+                                new OA\Property(property: 'description', type: 'string', nullable: true),
+                                new OA\Property(property: 'cover', type: 'object', nullable: true),
+                                new OA\Property(property: 'rating', type: 'number', format: 'float', nullable: true),
+                                new OA\Property(property: 'duration_minutes', type: 'integer', example: 30),
+                                new OA\Property(property: 'course_count', type: 'integer', example: 3),
                                 new OA\Property(
-                                    property: 'program',
-                                    properties: [
-                                        new OA\Property(property: 'id', type: 'integer', example: 1),
-                                        new OA\Property(property: 'name', type: 'string', example: 'Yoga'),
-                                        new OA\Property(property: 'description', type: 'string', nullable: true),
-                                        new OA\Property(property: 'cover', type: 'object', nullable: true),
-                                        new OA\Property(property: 'rating', type: 'number', format: 'float', nullable: true),
-                                        new OA\Property(property: 'duration_minutes', type: 'integer', example: 30),
-                                        new OA\Property(property: 'course_count', type: 'integer', example: 3),
-                                        new OA\Property(
-                                            property: 'goals',
-                                            type: 'array',
-                                            items: new OA\Items(type: 'string')
-                                        ),
-                                    ],
-                                    type: 'object'
+                                    property: 'goals',
+                                    type: 'array',
+                                    items: new OA\Items(type: 'string')
                                 ),
                                 new OA\Property(
                                     property: 'lessons',
@@ -178,7 +172,7 @@ class ProgramController extends BaseAPIController
         $program->load($this->programRelations());
 
         return ResponseAPI::success([
-            'program' => $this->mapProgram($program),
+            ...$this->mapProgram($program),
             'lessons' => $this->groupLessons($program->lessons),
         ]);
     }

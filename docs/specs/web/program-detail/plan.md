@@ -30,3 +30,11 @@ Thêm `ProgramController@show` với route model binding, map `program` (tái d�
 - `GET /api/v1/programs/1` có token → 200, structure đúng
 - `GET /api/v1/programs/99999` → 404
 - Không có `file` trong lesson items
+
+## Update 2026-05-29
+
+### Tóm tắt
+Flatten response `show`: spread field program + `lessons` trong `data`, bỏ key `program`.
+
+### Verify
+- `data.id`, `data.name`, … và `data.lessons` cùng cấp, không có `data.program`.

@@ -15,7 +15,7 @@ Cần API trả **đầy đủ thông tin program** và **danh sách bài học*
 
 ### In-scope
 - Endpoint `GET /api/v1/programs/{program}` — route model binding `Program`, auth JWT.
-- Response: object `program` (field giống list) + `lessons` grouped.
+- Response **flatten**: field program (giống list) + `lessons` grouped **cùng cấp** trong `data` — không bọc key `program`.
 - Tái dùng model/DB hiện có. Không migration mới.
 
 ### Out-of-scope
@@ -45,16 +45,14 @@ Cần API trả **đầy đủ thông tin program** và **danh sách bài học*
     "success": true,
     "message": "Success",
     "data": {
-      "program": {
-        "id": 1,
-        "name": "Yoga",
-        "description": "…",
-        "cover": { "path": "…", "name": "…", "extension": "jpg", "size": 102400, "url": "…" },
-        "rating": 4.5,
-        "duration_minutes": 30,
-        "course_count": 3,
-        "goals": ["…"]
-      },
+      "id": 1,
+      "name": "Yoga",
+      "description": "…",
+      "cover": { "path": "…", "name": "…", "extension": "jpg", "size": 102400, "url": "…" },
+      "rating": 4.5,
+      "duration_minutes": 30,
+      "course_count": 3,
+      "goals": ["…"],
       "lessons": {
         "level": {
           "beginner": [
@@ -79,7 +77,7 @@ Cần API trả **đầy đủ thông tin program** và **danh sách bài học*
 - Route param `{program}` — id program.
 
 ### Output
-- `data.program` — giống 1 phần tử list programs.
+- `data` — flatten: `id`, `name`, `description`, `cover`, `rating`, `duration_minutes`, `course_count`, `goals` (giống list) + `lessons`.
 - `data.lessons.level.beginner|intermediate|advanced` — array lesson.
 - `data.lessons.special` / `data.lessons.signature` — array lesson.
 
@@ -100,6 +98,7 @@ Cần API trả **đầy đủ thông tin program** và **danh sách bài học*
 - 2026-05-29 — Field lesson? → id, name, description, duration_seconds. Không trả file/url video.
 - 2026-05-29 — Nhóm rỗng? → `[]`.
 - 2026-05-29 — Path? → `GET /api/v1/programs/{program}`.
+- 2026-05-29 (update) — Response shape? → Flatten: field program + `lessons` cùng cấp trong `data`, **không** key `program` bọc ngoài.
 
 ## Liên quan
 

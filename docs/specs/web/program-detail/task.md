@@ -31,4 +31,12 @@
 - [x] cleaner pass
 - [x] docs-syncer: `project-overview.md`
 - [x] pint PASS
+- [x] STOP — hỏi user commit/push
+
+## Update 2026-05-29 — Flatten response
+
+- [x] Sửa `show()` spread `mapProgram` + `lessons`
+- [x] Cập nhật OpenAPI `data` flatten
+- [x] Cập nhật `spec.md`
+- [x] `l5-swagger:generate` + pint
 - [ ] STOP — hỏi user commit/push
