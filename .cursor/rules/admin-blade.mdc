@@ -1,0 +1,14 @@
+---
+description: Admin Blade — tiếng Việt, template Dashcode.
+globs: app/Admin/**/*.php,resources/views/admin/**/*.blade.php,routes/admin.php
+alwaysApply: false
+---
+
+# Admin Blade
+
+- Mọi label, message, button, validation text trong Admin **dùng tiếng Việt**. Không cần đa ngôn ngữ.
+- HTML mẫu nằm trong `resources/dashcode/` — Blade build theo mẫu này.
+- Asset đã có ở `public/dashcode/`. Gọi qua `asset('dashcode/...')`.
+- Route file: `routes/admin.php`, prefix `/admin`, name pattern `admin.<feature>.<action>`.
+
+Chi tiết: [`docs/rules/05-admin-blade.md`](../../docs/rules/05-admin-blade.md)

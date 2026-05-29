@@ -1,0 +1,15 @@
+---
+description: Mọi lệnh PHP/Composer/Artisan phải chạy qua Laravel Sail.
+alwaysApply: false
+---
+
+# Sail commands
+
+Áp dụng khi cần chạy bất kỳ lệnh PHP/Composer/Artisan/Pint.
+
+- Sail chưa chạy → `sail up -d` trước.
+- Mẫu: `sail exec --user sail laravel.test <command>`.
+- Migration: BẮT BUỘC `php artisan make:migration ...` qua Sail.
+- Pint sau khi xong task: `sail exec --user sail laravel.test vendor/bin/pint`.
+
+Chi tiết: [`docs/rules/06-docker-sail.md`](../../docs/rules/06-docker-sail.md)

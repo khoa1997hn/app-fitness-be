@@ -1,0 +1,15 @@
+---
+description: Code quality — query(), Throwable, domain exception, enum-as-string.
+globs: app/**/*.php
+alwaysApply: false
+---
+
+# Code quality
+
+- Eloquent: luôn `Model::query()->...` để IDE auto-complete.
+- Catch: `catch (\Throwable $e)` — KHÔNG `\Exception`.
+- Throw: dùng domain exception trong `app/Share/Exceptions/<Domain>/`. KHÔNG `throw new \Exception(...)`.
+- Enum trong method signature: type-hint là `string`, không type-hint enum class. Khi gọi vẫn truyền enum trực tiếp.
+- Migration/Model/Controller: BẮT BUỘC `php artisan make:...` qua Sail. Cấm tự tạo file.
+
+Chi tiết: [`docs/rules/02-code-quality.md`](../../docs/rules/02-code-quality.md)

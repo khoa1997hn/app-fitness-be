@@ -1,0 +1,19 @@
+---
+description: Swagger annotations bắt buộc cho endpoint Web V1.
+globs: app/Web/Http/Controllers/API/V1/**/*.php
+alwaysApply: false
+---
+
+# Swagger / OpenAPI
+
+Mỗi endpoint trong `app/Web/Http/Controllers/API/V1` BẮT BUỘC có annotation:
+
+- Summary + Description.
+- Request body nested đầy đủ field.
+- Response nested đầy đủ field, khớp với map field thực tế trong controller.
+- Status codes có thể trả về (200, 400, 401, 403, 404, 422, 500...).
+- Security scheme Bearer token nếu cần auth.
+
+Khi đổi map field response trong controller → BẮT BUỘC đổi annotation cho khớp.
+
+Chi tiết: [`docs/rules/08-swagger.md`](../../docs/rules/08-swagger.md)

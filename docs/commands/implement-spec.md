@@ -1,0 +1,50 @@
+# Command: /implement-spec
+
+Triển khai feature MỚI theo spec-driven.
+
+## Khi nào dùng
+
+- User mô tả feature mới (có thể kèm path spec sẵn hoặc không).
+- KHÔNG dùng để sửa spec đã code xong → dùng `/update-spec`.
+- KHÔNG dùng để fix bug → dùng `/fix-bug`.
+
+## Input
+
+- Mô tả feature từ user (text + optional path spec).
+
+## Output
+
+- File trong `docs/specs/<big>/<detail>/`: `spec.md`, `plan.md`, `task.md`.
+- Code đã được implement + review + format.
+- DỪNG trước commit, hỏi user.
+
+## Chuỗi vai trò
+
+Chạy tuần tự, mỗi agent đọc prompt template của nó:
+
+1. **spec-analyzer** → `docs/agents/spec-analyzer.md`
+2. **question-asker** → `docs/agents/question-asker.md`
+3. **api-analyzer** → `docs/agents/api-analyzer.md`
+4. **planner** → `docs/agents/planner.md`
+5. **task-breaker** → `docs/agents/task-breaker.md`
+6. **implementer** → `docs/agents/implementer.md`
+7. **reviewer-rules** → `docs/agents/reviewer-rules.md`
+8. **reviewer-smell** → `docs/agents/reviewer-smell.md`
+9. **reviewer-security** → `docs/agents/reviewer-security.md`
+10. **reviewer-duplicate** → `docs/agents/reviewer-duplicate.md`
+11. **finalizer** → `docs/agents/finalizer.md`
+
+## Ràng buộc
+
+- Không skip agent nào trừ khi user yêu cầu.
+- Agent sau chỉ chạy khi agent trước báo cáo OK.
+- Nếu bất kỳ agent nào gặp mơ hồ → DỪNG, AskUserQuestion, KHÔNG bịa.
+- Finalizer DỪNG trước commit, hỏi user (xem `docs/guides/commit-protocol.md`).
+
+## Báo cáo cuối
+
+Trả về cho user:
+- Path spec.md / plan.md / task.md
+- Summary thay đổi code (file, endpoint, migration)
+- Kết quả từng reviewer
+- Đề xuất commit message

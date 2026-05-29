@@ -1,0 +1,15 @@
+---
+description: Kiến trúc Laravel — Controller-first, không Repository.
+globs: app/**/*.php
+alwaysApply: false
+---
+
+# Architecture
+
+- Logic CRUD/business → viết thẳng trong Controller.
+- Service chỉ tạo khi dùng lại ≥ 2 chỗ HOẶC logic > ~30 dòng có nhánh rõ.
+- **KHÔNG dùng Repository pattern**. Eloquent gọi trực tiếp.
+- Không tự tạo Action/UseCase/Manager layer.
+- Validation: form đơn giản → `$request->validate([...])`. Form phức tạp/dùng lại → `FormRequest`.
+
+Chi tiết: [`docs/rules/01-architecture.md`](../../docs/rules/01-architecture.md)

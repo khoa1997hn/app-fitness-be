@@ -1,0 +1,14 @@
+---
+description: Seeder — DatabaseSeeder (bắt buộc) vs FakeDatabaseSeeder (fake data).
+globs: database/seeders/**/*.php
+alwaysApply: false
+---
+
+# Seeders
+
+- `DatabaseSeeder` — chỉ chứa seeder **bắt buộc** khi hệ thống chạy (ví dụ `AdminsSeeder`).
+- `FakeDatabaseSeeder` — chứa seeder **fake data** cho dev/test (ví dụ `UsersSeeder`).
+- KHÔNG đăng ký 1 seeder vào cả hai.
+- Chạy fake data: `sail exec --user sail laravel.test php artisan db:seed --class=FakeDatabaseSeeder`.
+
+Chi tiết: [`docs/rules/07-seeders.md`](../../docs/rules/07-seeders.md)

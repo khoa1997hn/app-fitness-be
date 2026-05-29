@@ -1,0 +1,23 @@
+---
+description: Response API Web — bắt buộc map từng field, không return full model.
+globs: app/Web/Http/Controllers/**/*.php
+alwaysApply: false
+---
+
+# API response (Web)
+
+- CẤM return thẳng object/Collection. Phải map từng field vào array.
+- Kể cả khi trả về đầy đủ field — vẫn liệt kê rõ từng key.
+- Helper: `ResponseAPI::success()` / `ResponseAPI::error()`.
+- Cấu trúc: `{ success, message, data, errors? }`.
+
+```php
+// ❌ Sai
+return ResponseAPI::success(['x' => $model]);
+
+// ✅ Đúng
+return ResponseAPI::success(['x' => ['id' => $model->id, ...]]);
+```
+
+Chi tiết: [`docs/rules/04-api-response.md`](../../docs/rules/04-api-response.md)
+Swagger: [`docs/rules/08-swagger.md`](../../docs/rules/08-swagger.md)

@@ -1,0 +1,14 @@
+---
+description: Rule cốt lõi luôn áp dụng. KHÔNG BỊA, ASK-FIRST, KHÔNG OVERKILL.
+alwaysApply: true
+---
+
+# Core rules (HIGH)
+
+1. **KHÔNG BỊA** — Cấm tự suy diễn nghiệp vụ/field/validation/behavior không có trong spec. Mơ hồ → hỏi.
+2. **ASK-FIRST** — Khi có ≥ 2 cách hiểu hoặc thiếu input, BẮT BUỘC dùng AskUserQuestion trước khi code.
+3. **KHÔNG OVERKILL** — Code đơn giản nhất chạy được. Không tạo abstraction phòng xa. Không thêm validation/fallback cho case không xảy ra.
+
+Chi tiết: [`docs/rules/00-core.md`](../../docs/rules/00-core.md)
+
+Quy trình hỏi: [`docs/guides/ask-protocol.md`](../../docs/guides/ask-protocol.md)
