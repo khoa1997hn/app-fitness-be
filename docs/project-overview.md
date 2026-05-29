@@ -1,0 +1,130 @@
+# Project overview
+
+File này MỌI LLM phải đọc TRƯỚC khi làm bất kỳ task nào trên dự án.
+
+## Sản phẩm
+
+Backend API cho **native app tập thể thao tại nhà qua video**.
+
+- **End-user (app)**: người dùng cuối, mở app, mua gói subscription để unlock video bài tập.
+- **Admin (web)**: nhân viên vận hành — quản lý nội dung (program, bài học, banner), user, thanh toán.
+
+## Nghiệp vụ cốt lõi
+
+### Hai khái niệm chính
+
+- **Program** (bộ môn) — chuyên ngành tập (Yoga, Pilates, ...).
+- **Lesson** (bài học) — 1 video trong 1 program.
+
+### 7 program (giai đoạn hiện tại)
+
+Cố định trong giai đoạn đầu, nhưng PHẢI lưu DB vì phase sau có thể thêm:
+
+1. Yoga
+2. Mat Pilates
+3. Reformer Pilates
+4. Sculpt
+5. Breathwork
+6. Wellness
+7. Barre
+
+### Phân loại bài học trong 1 program
+
+- **Theo level** — luôn có 3 level: `Beginner`, `Intermediate`, `Advanced`.
+- **Special** — bài đặc biệt (không thuộc level).
+- **Signature** — bài cao cấp nhất, chỉ user gói Plus và All Access mới truy cập được.
+
+### Subscription plans
+
+| Plan | Số program unlock | Bài tập unlock |
+|---|---|---|
+| Basic | 1 program (user chọn) | 3 level + Special |
+| Plus | 2 program (user chọn) | 3 level + Special + Signature |
+| All Access | Tất cả program | Tất cả loại bài |
+
+Giá cụ thể từng plan → env `PLAN_<TIER>_PRICE` (xem `.env.example`).
+
+### Admin quản lý
+
+- User (xem, xóa, export CSV).
+- Subscription / thanh toán (ai mua gói gì, lúc nào, còn hạn không) — xem lịch sử.
+- Program (CRUD + ảnh/cover).
+- Lesson (CRUD + upload video).
+- Banner (CRUD đa ngôn ngữ vi/en).
+
+## Stack thực tế
+
+### Backend
+- **PHP** `^8.2`
+- **Laravel** `^12.0`
+- **MySQL 8.0** (qua Sail trong Docker)
+- **Redis** (cache/queue tùy chọn)
+
+### Authentication
+- **End-user (API)**: JWT qua `tymon/jwt-auth`. Token gửi qua header `Authorization: Bearer <token>`.
+- **Admin (web)**: session-based, guard `auth:admin` riêng (KHÔNG dùng guard `web` mặc định).
+
+### Admin UI
+- Laravel Blade (KHÔNG dùng Filament / Nova / Backpack).
+- HTML template mẫu trong `resources/dashcode/`. Asset đã build sẵn ở `public/dashcode/`.
+- Toàn bộ label/message/button — tiếng Việt.
+
+### API
+- Web API V1 nằm trong `app/Web/Http/Controllers/API/V1/`.
+- Response format chuẩn `ResponseAPI::success() / ::error()` — `{ success, message, data, errors? }`.
+- KHÔNG return full model — phải map từng field (xem `docs/rules/04-api-response.md`).
+- OpenAPI docs qua `darkaonline/l5-swagger` v10 + PHP 8 Attributes (`#[OA\...]`).
+- Multi-language qua header `x-locale` (`vi` / `en`), package `astrotomic/laravel-translatable`.
+
+### Payment / IAP
+
+**Phạm vi hiện tại**: Google Play (Android) + Apple App Store (iOS). KHÔNG có bên thứ 3 (Stripe/Paypal) trong phase này.
+
+**Package**: `imdhemy/laravel-purchases` — handle webhook + receipt verification.
+
+**Kiến trúc service** (`app/Share/Services/Subscription/`):
+
+- `SubscriptionService` — logic chung (kích hoạt, hết hạn, gia hạn ở mức nghiệp vụ).
+- `AppleService`, `GoogleService` — logic RIÊNG cho từng provider.
+- `TrialService` — xử lý trial.
+- → Khi thêm provider mới (Stripe, in-house...) → thêm service mới + ghép vào `SubscriptionService`.
+
+**Listeners** (`app/Share/Listeners/Subscriptions/`):
+- Google: 7 event (Purchased, Renewed, Canceled, Expired, GracePeriod, Revoked, ...).
+- Apple: 8 event (InitialBuy, DidRenew, DidFailToRenew, Cancel, Expired, GracePeriodExpired, Refund, ...).
+- Mỗi nhóm có `BaseGoogleListener` / `BaseAppleListener` để share logic chung.
+
+**DB**:
+- `subscriptions` — bảng master, 1 record / lần mua gói.
+- `apple_subscriptions`, `google_subscriptions` — chi tiết per-provider.
+- User có cột subscription được join sẵn.
+
+**Lưu ý log/audit**: hiện chưa có table `payment_logs` raw payload. Khi cần trace ngược raw webhook → cân nhắc thêm 1 bảng append-only (đề xuất ở phase sau, hỏi user trước khi thêm).
+
+## Module hiện có vs chưa có
+
+### Đã có
+- Auth (register / login / profile) — JWT.
+- Admin login, dashboard placeholder, Users list/delete/export CSV.
+- Subscription core: model + service + listener Apple/Google + IAP webhook.
+- Banner (list API + multi-language).
+
+### CHƯA có (phase tiếp)
+- Model + migration cho `programs`, `lessons`.
+- Admin CRUD: programs, lessons (kèm upload video), subscription/payment view.
+- API endpoint: list program theo plan của user, list lesson theo program + level, video streaming.
+- Logic gate access video theo plan + program đã unlock.
+
+> LLM thực hiện task: nếu task chạm các module **CHƯA có**, dùng `/implement-spec`. Nếu chạm module **đã có** mà phải đổi, dùng `/update-spec`.
+
+## Quy ước nghiệp vụ quan trọng
+
+- "Program" trong code/DB = "bộ môn" trong giao tiếp với user/PO.
+- "Lesson" = "bài học" = "video".
+- "Level" là phân loại của Lesson trong 1 Program. Luôn 3 giá trị: `Beginner`, `Intermediate`, `Advanced` → BẮT BUỘC Enum (`docs/rules/02-code-quality.md`).
+- "Special", "Signature" là 2 loại bài học tách riêng level. Khi mô hình hóa, cân nhắc Enum loại bài tập: `Level`, `Special`, `Signature` (1 lesson thuộc đúng 1 loại).
+- Quyền access: tính theo `(user.plan, lesson.program, lesson.type)`.
+
+## Khi mơ hồ
+
+Đọc `docs/rules/00-core.md`. Mơ hồ về nghiệp vụ Program/Lesson/Plan/Payment → DỪNG, hỏi user qua AskUserQuestion. KHÔNG bịa.

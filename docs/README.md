@@ -2,6 +2,10 @@
 
 Source of truth của bộ kit AI cho dự án. Áp dụng cho Cursor (qua `.cursor/`) và Claude Code (qua `.claude/` — sẽ ánh xạ sau).
 
+## ĐỌC TRƯỚC TIÊN
+
+[**`project-overview.md`**](project-overview.md) — sản phẩm là gì, nghiệp vụ, stack, module hiện có vs chưa có. MỌI LLM bắt buộc đọc trước khi làm task.
+
 ## Cấu trúc
 
 | Folder | Nội dung |
