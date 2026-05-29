@@ -8,6 +8,7 @@ use App\Share\Enums\SubscriptionProvider;
 use App\Share\Enums\SubscriptionStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
@@ -100,5 +101,13 @@ class Subscription extends Model
     public function appleSubscription(): HasOne
     {
         return $this->hasOne(AppleSubscription::class);
+    }
+
+    /**
+     * @return HasMany<SubscriptionProgramSelection>
+     */
+    public function programSelections(): HasMany
+    {
+        return $this->hasMany(SubscriptionProgramSelection::class);
     }
 }

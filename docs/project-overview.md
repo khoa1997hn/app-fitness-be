@@ -119,11 +119,11 @@ Giá cụ thể từng plan → env `PLAN_<TIER>_PRICE` (xem `.env.example`).
 - Banner (list API + multi-language).
 - Program / Lesson / Video: model + migration + translatable (Lesson có enum `type`/`level`). API list program Home (`GET /api/v1/programs`) + chi tiết program + lessons grouped (`GET /api/v1/programs/{program}`, auth JWT).
 - Yêu thích bài học: pivot `lesson_favorites` (user ↔ lesson). API favorite/unfavorite (`POST|DELETE /api/v1/lessons/{lesson}/favorite`) + list yêu thích (`GET /api/v1/lessons/favorites`, flatten + phân trang) + cờ `is_favorited` trong program detail.
+- Chọn program theo gói: bảng `subscription_program_selections` (subscription ↔ program). API `GET|POST /api/v1/programs/selection` — trạng thái chọn + xác nhận program (Basic 1, Plus 2, All Access không cần chọn); trả `allowed_lesson_types` theo plan.
 
 ### CHƯA có (phase tiếp)
 - Admin CRUD: programs, lessons (kèm upload video), subscription/payment view.
-- API endpoint: list program theo plan của user, video streaming / gate access.
-- Logic gate access video theo plan + program đã unlock.
+- Video streaming / gate access theo plan + program đã chọn.
 
 > LLM thực hiện task: nếu task chạm các module **CHƯA có**, dùng `/implement-spec`. Nếu chạm module **đã có** mà phải đổi, dùng `/update-spec`.
 

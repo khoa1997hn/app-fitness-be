@@ -33,4 +33,10 @@ return [
     'purchase_verified_successfully' => 'Xác thực purchase thành công.',
     'invalid_receipt' => 'Receipt không hợp lệ (:detail).',
 
+    // Program selection
+    'no_active_subscription' => 'Bạn chưa có gói đăng ký đang hoạt động.',
+    'program_selection_not_required' => 'Gói All Access không cần chọn program.',
+    'program_selection_invalid_count' => 'Số program chọn phải từ 1 đến :max.',
+    'program_not_found' => 'Một hoặc nhiều program không tồn tại.',
+
 ];

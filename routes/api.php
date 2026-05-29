@@ -6,6 +6,7 @@ use App\Web\Http\Controllers\API\V1\Auth\RegistrationController;
 use App\Web\Http\Controllers\API\V1\BannerController;
 use App\Web\Http\Controllers\API\V1\LessonFavoriteController;
 use App\Web\Http\Controllers\API\V1\ProgramController;
+use App\Web\Http\Controllers\API\V1\ProgramSelectionController;
 use App\Web\Http\Controllers\API\V1\Subscription\AppleIapController;
 use App\Web\Http\Controllers\API\V1\Subscription\GoogleIapController;
 use Illuminate\Support\Facades\Route;
@@ -60,6 +61,8 @@ Route::as('api.')
 
             Route::middleware('auth:api')->group(function () {
                 Route::get('programs', [ProgramController::class, 'index'])->name('programs.index');
+                Route::get('programs/selection', [ProgramSelectionController::class, 'show'])->name('programs.selection.show');
+                Route::post('programs/selection', [ProgramSelectionController::class, 'store'])->name('programs.selection.store');
                 Route::get('programs/{program}', [ProgramController::class, 'show'])->name('programs.show');
 
                 Route::get('lessons/favorites', [LessonFavoriteController::class, 'index'])->name('lessons.favorites.index');
