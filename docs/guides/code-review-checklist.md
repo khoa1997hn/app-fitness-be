@@ -26,6 +26,15 @@ Dùng cho các reviewer agent. Mỗi reviewer chỉ check phần của mình.
 - [ ] Enum đặt ở `app/Share/Enums/`, extends base `Enum.php`, không suffix `Enum` — `11-enum.md`
 - [ ] Model có field enum: cast trong `casts()` + PHPDoc `@property <EnumClass>` — `11-enum.md`
 - [ ] Response JSON dùng `$model->field` (KHÔNG `->value`) cho field enum — `11-enum.md`
+- [ ] File upload qua `FileUploadService`, không tự `Storage::put` — `12-file-upload.md`
+- [ ] FileType enum + entry trong `config/app_file.php` cho mỗi loại file mới — `12-file-upload.md`
+- [ ] Migration file column dùng `jsonb`; Model cast qua `FileCast` + PHPDoc `@property File` — `12-file-upload.md`
+- [ ] Subscription: logic chung qua `SubscriptionService`; provider riêng qua Google/Apple service — `13-subscription-iap.md`
+- [ ] Subscription thao tác đụng `subscriptions` table có `DB::transaction()` + `lockForUpdate()` — `13-subscription-iap.md`
+- [ ] Subscription log qua `Log::channel('subscription')`; throw qua domain exception (`SubscriptionException`...) — `13-subscription-iap.md`
+- [ ] Entity Web có content đa ngôn ngữ → có table `<entity>_translations` + model Translation — `14-translatable.md`
+- [ ] Model translation chứa cast (File/enum), `timestamps = false`, không có ở model chính — `14-translatable.md`
+- [ ] Không hardcode locale `'vi'` / `'en'`, lấy từ `app()->getLocale()` — `14-translatable.md`
 
 ## Reviewer-smell
 

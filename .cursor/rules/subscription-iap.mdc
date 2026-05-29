@@ -1,0 +1,19 @@
+---
+description: Subscription & IAP — logic chung qua SubscriptionService, riêng provider qua Google/AppleService, DB transaction + lock, log channel riêng.
+globs: app/Share/Services/Subscription/**/*.php,app/Share/Listeners/Subscriptions/**/*.php,app/Share/Models/Subscription.php,app/Share/Models/AppleSubscription.php,app/Share/Models/GoogleSubscription.php
+alwaysApply: false
+---
+
+# Subscription & IAP
+
+- Package: `imdhemy/laravel-purchases`. Service chung: `SubscriptionService`. Per-provider: `GoogleService`, `AppleService`. Trial: `TrialService`.
+- Logic CHUNG (activate/renew/cancel/expire/refund) ở `SubscriptionService` — KHÔNG lặp ở provider service.
+- Provider service chỉ: verify token/receipt qua imdhemy, parse plan từ config, tạo/update record per-provider, gọi `SubscriptionService` cho phần chung.
+- BẮT BUỘC `DB::transaction()` + `lockForUpdate()` cho mọi thao tác `subscriptions` table.
+- BẮT BUỘC update đồng thời `users.subscription_status` + `users.plan` khi đổi subscription.
+- Log: `Log::channel('subscription')` với context `user_id` + identifier provider (`purchase_token` / `receipt_id`).
+- Exception: `app/Share/Exceptions/Subscription/` (base `SubscriptionException`). CẤM throw `\Exception` raw.
+- Plan price + provider ID: `config('app_payment.plans.<key>')`. CẤM hardcode.
+- Listener: mỗi event 1 file, extends `BaseGoogleListener` / `BaseAppleListener`.
+
+Chi tiết: [`docs/rules/13-subscription-iap.md`](../../docs/rules/13-subscription-iap.md)

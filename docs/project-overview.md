@@ -74,7 +74,16 @@ Giá cụ thể từng plan → env `PLAN_<TIER>_PRICE` (xem `.env.example`).
 - Response format chuẩn `ResponseAPI::success() / ::error()` — `{ success, message, data, errors? }`.
 - KHÔNG return full model — phải map từng field (xem `docs/rules/04-api-response.md`).
 - OpenAPI docs qua `darkaonline/l5-swagger` v10 + PHP 8 Attributes (`#[OA\...]`).
-- Multi-language qua header `x-locale` (`vi` / `en`), package `astrotomic/laravel-translatable`.
+
+### Đa ngôn ngữ (BẮT BUỘC cho Web API)
+
+**Project ĐA NGÔN NGỮ CẢ CONTENT, không chỉ label.** Tức là 1 banner / lesson / program có thể có ảnh, mô tả, link, sort order khác nhau giữa `vi` và `en`.
+
+- Package: `astrotomic/laravel-translatable`.
+- Locales: `vi` (default), `en`. Config: `config/translatable.php`.
+- Header API: `x-locale` (optional, default từ `config('app.locale')`).
+- Pattern: 2 table (`<entities>` + `<entity>_translations`). Xem `docs/rules/14-translatable.md` và mẫu [`Banner`](app/Share/Models/Banner.php) + [`BannerTranslation`](app/Share/Models/BannerTranslation.php).
+- **Khi thiết kế DB cho entity mới** (Program, Lesson, ...): tự hỏi "Tiếng Nhật field này có khác không?" CÓ → bảng translation. Nghi ngờ → hỏi user, KHÔNG bịa.
 
 ### Payment / IAP
 

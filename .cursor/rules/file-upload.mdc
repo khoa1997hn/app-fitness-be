@@ -1,0 +1,17 @@
+---
+description: Upload file — luôn qua FileUploadService, config theo FileType enum, model dùng FileCast + PHPDoc.
+globs: app/Share/Services/File/**/*.php,app/Share/Attributes/File.php,app/Share/Casts/FileCast.php,config/app_file.php,app/Share/Enums/FileType.php
+alwaysApply: false
+---
+
+# File upload
+
+- Service: `app/Share/Services/File/FileUploadService.php`. CẤM tự sinh filename / gọi `Storage` thẳng.
+- Mỗi loại file = 1 const trong `FileType` enum (`app/Share/Enums/FileType.php`) + 1 entry trong `config/app_file.php` (`prefix_path`, `allow_mimetypes`, `allow_max_size`).
+- Validate mimetypes/max_size LUÔN lấy từ config, không hardcode.
+- Migration: dùng `jsonb` cho cột file (KHÔNG `string`).
+- Model: cast field qua `FileCast::class` + PHPDoc `@property File $field` (`App\Share\Attributes\File`).
+- Response: `$model->file_field` tự serialize (`{ path, name, extension, size, url }`).
+- Disk: `public` (filesystem default).
+
+Chi tiết: [`docs/rules/12-file-upload.md`](../../docs/rules/12-file-upload.md)

@@ -1,0 +1,20 @@
+---
+description: Đa ngôn ngữ — Astrotomic Translatable, pattern 2-table (main + translations).
+globs: app/Share/Models/**/*.php,database/migrations/**/*.php,app/Web/Http/Controllers/**/*.php
+alwaysApply: false
+---
+
+# Đa ngôn ngữ (Translatable)
+
+- Package: **`astrotomic/laravel-translatable`**. Locales: `vi`, `en` (`config/translatable.php`). Header: `x-locale`.
+- Project bắt buộc đa ngôn ngữ CẢ content. Khi thiết kế field, tự hỏi: "Tiếng Nhật field này có khác không?" CÓ → bảng translation.
+- Pattern: 2 table. Main `<entities>` (field dùng chung) + `<entity>_translations` (field theo locale, có `locale` index + unique `<singular>_id + locale`, `cascadeOnDelete()`, KHÔNG timestamps).
+- Model chính: `implements TranslatableContract`, `use Translatable`, khai báo `$translatedAttributes`. `$fillable` chỉ chứa field dùng chung. PHPDoc `@property` ở model chính (kể cả field translated).
+- Model translation: cast (File/enum/datetime) đặt ở ĐÂY, không ở model chính. `public $timestamps = false`.
+- Query: `withTranslation()`, `whereTranslation()`, `orderByTranslation()`.
+- CẤM lưu dạng JSON `{"vi":"x","en":"y"}` trong 1 cột — phải dùng translation table.
+- CẤM hardcode `'vi'` / `'en'` — lấy từ `app()->getLocale()`.
+
+Tham khảo: [`Banner`](../../app/Share/Models/Banner.php), [`BannerTranslation`](../../app/Share/Models/BannerTranslation.php).
+
+Chi tiết: [`docs/rules/14-translatable.md`](../../docs/rules/14-translatable.md)
