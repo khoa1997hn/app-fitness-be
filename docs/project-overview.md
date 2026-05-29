@@ -117,11 +117,11 @@ Giá cụ thể từng plan → env `PLAN_<TIER>_PRICE` (xem `.env.example`).
 - Admin login, dashboard placeholder, Users list/delete/export CSV.
 - Subscription core: model + service + listener Apple/Google + IAP webhook.
 - Banner (list API + multi-language).
-- Program / Lesson / Video: model + migration + translatable (Lesson có enum `type`/`level`). API list program cho Home (`GET /api/v1/programs`, auth JWT) — `duration_minutes`/`course_count` tính động.
+- Program / Lesson / Video: model + migration + translatable (Lesson có enum `type`/`level`). API list program Home (`GET /api/v1/programs`) + chi tiết program + lessons grouped (`GET /api/v1/programs/{program}`, auth JWT).
 
 ### CHƯA có (phase tiếp)
 - Admin CRUD: programs, lessons (kèm upload video), subscription/payment view.
-- API endpoint: list program theo plan của user, list lesson theo program + level, video streaming.
+- API endpoint: list program theo plan của user, video streaming / gate access.
 - Logic gate access video theo plan + program đã unlock.
 
 > LLM thực hiện task: nếu task chạm các module **CHƯA có**, dùng `/implement-spec`. Nếu chạm module **đã có** mà phải đổi, dùng `/update-spec`.

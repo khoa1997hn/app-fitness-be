@@ -56,8 +56,9 @@ Route::as('api.')
 
             Route::get('banners', [BannerController::class, 'index'])->name('banners.index');
 
-            Route::get('programs', [ProgramController::class, 'index'])
-                ->middleware('auth:api')
-                ->name('programs.index');
+            Route::middleware('auth:api')->group(function () {
+                Route::get('programs', [ProgramController::class, 'index'])->name('programs.index');
+                Route::get('programs/{program}', [ProgramController::class, 'show'])->name('programs.show');
+            });
         });
     });

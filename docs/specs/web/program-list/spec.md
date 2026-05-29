@@ -29,7 +29,7 @@ Spec này tạo nền tảng DB cho Program/Lesson/Video **và** endpoint Web V1
 - Admin CRUD program/lesson/video (phase sau).
 - Upload / convert video thực tế (chỉ định nghĩa cột, seeder set giá trị mẫu).
 - Logic gate access video theo subscription plan.
-- Endpoint chi tiết program / list lesson theo level / streaming video (phase sau).
+- Endpoint chi tiết program → xem [`program-detail/spec.md`](../program-detail/spec.md). Streaming video / gate access (phase sau).
 
 ## Nghiệp vụ
 
