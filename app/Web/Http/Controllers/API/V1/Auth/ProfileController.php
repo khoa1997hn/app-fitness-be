@@ -3,6 +3,7 @@
 namespace App\Web\Http\Controllers\API\V1\Auth;
 
 use App\Share\Models\User;
+use App\Share\Services\Subscription\SubscriptionManager;
 use App\Share\Utils\ResponseAPI;
 use App\Web\Http\Controllers\API\V1\APIController as BaseAPIController;
 use Illuminate\Http\JsonResponse;
@@ -11,6 +12,8 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 
 class ProfileController extends BaseAPIController
 {
+    public function __construct(private readonly SubscriptionManager $subscriptionManager) {}
+
     /**
      * Lấy thông tin user đang đăng nhập
      */
@@ -83,7 +86,7 @@ class ProfileController extends BaseAPIController
      */
     #[OA\Delete(
         path: '/auth/me',
-        description: 'Soft-delete tài khoản của user hiện tại. JWT hiện tại bị invalidate ngay sau khi xóa. Sau khi xóa user không thể đăng nhập lại. Dữ liệu liên quan (favorites, subscriptions) được giữ nguyên.',
+        description: 'Soft-delete tài khoản của user hiện tại. Nếu có subscription Google Play đang active: hủy phía Google trước (dừng auto-renew, user vẫn dùng đến hết kỳ) — nếu Google API fail thì trả 500, không xóa account. Apple subscription: bỏ qua (user hủy thủ công qua App Store). Sau khi provider cancel xong: JWT bị invalidate rồi soft-delete user. DB subscription được cập nhật qua webhook từ Google.',
         summary: 'Tự xóa tài khoản',
         security: [['bearerAuth' => []]],
         tags: ['Authentication'],
@@ -107,6 +110,13 @@ class ProfileController extends BaseAPIController
     {
         /** @var User $user */
         $user = auth()->user();
+
+        $subscription = $user->validSubscription()->with('googleSubscription')->first();
+
+        if ($subscription) {
+            // Throws on Google failure → 500, JWT still valid, user not deleted
+            $this->subscriptionManager->cancelProvider($subscription);
+        }
 
         JWTAuth::invalidate(JWTAuth::getToken());
 

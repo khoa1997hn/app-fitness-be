@@ -152,8 +152,9 @@ class SubscriptionService
             // Update subscription theo dữ liệu từ event
             $subscription->update($subscriptionData);
 
-            // Update user subscription status and plan
-            $subscription->user->update([
+            // Update user subscription status and plan.
+            // Use withTrashed() to handle soft-deleted users (e.g., account deletion flow).
+            $subscription->user()->withTrashed()->first()?->update([
                 'subscription_status' => $userStatus,
                 'plan' => $subscription->plan,
             ]);

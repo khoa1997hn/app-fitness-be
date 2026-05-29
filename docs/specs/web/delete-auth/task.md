@@ -36,4 +36,16 @@
 - [x] cleaner: pint PASS (4 files)
 - [x] docs-syncer: `project-overview.md`
 - [x] verify: soft-delete OK, withTrashed thấy record, User::find sau delete trả null
+- [x] STOP — đã commit/push (4ffccc5)
+
+## Update 2026-05-29 — Cancel subscription khi xóa
+
+- [x] `ProfileController`: inject `SubscriptionService`, cancel `validSubscription` trước khi delete
+- [x] reviewer-rules pass (spec-driven; dùng service đã có; không bịa)
+- [x] reviewer-smell pass (null-guard trước cancel; constructor injection)
+- [x] reviewer-security pass (user-scoped; subscription load từ chính user; không leak)
+- [x] reviewer-duplicate pass (tái dùng `SubscriptionService::cancel` + `validSubscription`)
+- [x] cleaner: pint PASS (1 file fixed)
+- [x] swagger regenerated
+- [x] verify: status=cancelled, cancelled_at set, deleted_at set — tất cả OK
 - [ ] STOP — hỏi user commit/push

@@ -145,6 +145,40 @@ class GoogleService
     }
 
     /**
+     * Cancel subscription on Google Play (stops auto-renewal, user retains access until end of billing period).
+     * DB status is NOT updated here — wait for the SubscriptionCanceled webhook.
+     *
+     * @throws \RuntimeException when google subscription record is missing
+     * @throws \GuzzleHttp\Exception\GuzzleException when Google Play API call fails
+     */
+    public function cancelSubscription(Subscription $subscriptionModel): void
+    {
+        $googleSubscription = $subscriptionModel->googleSubscription;
+
+        if (! $googleSubscription) {
+            throw new \RuntimeException(
+                '[Google] Cannot cancel: no GoogleSubscription record for subscription '.$subscriptionModel->id
+            );
+        }
+
+        $this->logger->info('[Google] Cancelling subscription via API', [
+            'subscription_id' => $subscriptionModel->id,
+            'user_id' => $subscriptionModel->user_id,
+            'item_id' => $googleSubscription->item_id,
+        ]);
+
+        ImdhemySubscription::googlePlay()
+            ->id($googleSubscription->item_id)
+            ->token($googleSubscription->purchase_token)
+            ->cancel();
+
+        $this->logger->info('[Google] Subscription cancelled via API successfully', [
+            'subscription_id' => $subscriptionModel->id,
+            'user_id' => $subscriptionModel->user_id,
+        ]);
+    }
+
+    /**
      * Get plan from item ID
      */
     protected function getPlanFromItemId(string $itemId): ?Plan

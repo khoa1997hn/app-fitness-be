@@ -35,3 +35,16 @@ Thêm soft-delete vào `users` (migration + SoftDeletes trait). Thêm action `de
 - Token cũ gọi lại → 401
 - Đăng nhập bằng email đã xóa → 401
 - `lesson_favorites` của user vẫn còn
+
+## Update 2026-05-29 — Cancel subscription khi xóa
+
+### Tóm tắt
+Inject `SubscriptionService` vào `ProfileController@destroy`. Trước khi soft-delete: load `validSubscription`, nếu có thì gọi `$subscriptionService->cancel($subscription)`. Không có thì bỏ qua. Không thay đổi endpoint/response/migration.
+
+### Phụ thuộc
+- Service: `SubscriptionService` (đã có, inject qua constructor)
+- Relation: `User::validSubscription()` (đã có)
+
+### Verify bổ sung
+- User có subscription active → sau khi xóa: `subscriptions.status=cancelled`, `cancelled_at` set
+- User không có subscription → xóa bình thường, không lỗi
