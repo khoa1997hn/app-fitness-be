@@ -27,6 +27,7 @@ class VideoWatchProgressService
 
         $progress->watched_seconds = max((int) ($progress->watched_seconds ?? 0), $watchedSeconds);
         $progress->is_completed = $progress->is_completed || $isCompleted;
+        $progress->last_watched_at = now();
         $progress->save();
 
         $video->loadMissing(['lesson.program']);

@@ -155,6 +155,7 @@ WHERE v.lesson_id=? (hoặc l.program_id=?)
 - **2026-05-30** — `watch-progress` trả `{ video, lesson, program }` mỗi level object riêng. `play` thêm `lesson` + `program`.
 - **2026-05-30** — Performance: `videoPercentMapForUser(Collection)` → `allProgressForUser()` (no filter, cho list) + `progressMapForProgram()` (subquery theo program_id).
 - **2026-05-30** — Bỏ `is_completed`; chỉ trả `watched_percent`. Bỏ `mapProgressFields`. Tính lesson/program percent qua SQL (không load collection videos/lessons vào memory).
+- **2026-05-30 — last_watched_at** — Thêm column `last_watched_at` (timestamp, nullable) vào `user_video_progress`. Set `= now()` mỗi khi `record()` được gọi. Mục đích: sau này query program/lesson đang học dở (gần nhất). Không expose ra response API.
 
 ## Liên quan
 

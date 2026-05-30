@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $video_id
  * @property int $watched_seconds
  * @property bool $is_completed
+ * @property ?\Carbon\Carbon $last_watched_at
  * @property \Carbon\Carbon $created_at
  * @property \Carbon\Carbon $updated_at
  * @property-read User $user
@@ -25,6 +26,7 @@ class UserVideoProgress extends Model
         'video_id',
         'watched_seconds',
         'is_completed',
+        'last_watched_at',
     ];
 
     protected function casts(): array
@@ -32,6 +34,7 @@ class UserVideoProgress extends Model
         return [
             'watched_seconds' => 'integer',
             'is_completed' => 'boolean',
+            'last_watched_at' => 'datetime',
         ];
     }
 
