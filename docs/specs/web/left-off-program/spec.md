@@ -131,7 +131,12 @@ Figma: `docs/specs/web/figma/left_off_program.png`
 - **Response 200** (không có watch history): `data: null`
 - **Errors**: 401
 
-## Update 2026-05-30 — Trả về toàn bộ programs đã học (thay vì 1)
+## Update 2026-05-30 — Bỏ video và thumbnail khỏi last_lesson
+
+`last_lesson` chỉ cần trả về `id`, `name`, `day`. Bỏ `thumbnail` và `video`.
+
+### Quyết định
+- **2026-05-30** — `last_lesson` response: chỉ `{ id, name, day }`. Không cần `thumbnail`, không cần `video`.
 
 ### Thay đổi phạm vi
 

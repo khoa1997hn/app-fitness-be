@@ -68,27 +68,6 @@ class ProgramLeftOffController extends BaseAPIController
                                             new OA\Property(property: 'id', type: 'integer', example: 12),
                                             new OA\Property(property: 'name', type: 'string', example: 'Glutes & Core'),
                                             new OA\Property(property: 'day', description: 'Ngày thứ N trong program', type: 'integer', example: 12),
-                                            new OA\Property(
-                                                property: 'thumbnail',
-                                                properties: [
-                                                    new OA\Property(property: 'path', type: 'string', example: 'lessons/thumbnail.jpg'),
-                                                    new OA\Property(property: 'name', type: 'string', example: 'thumbnail.jpg'),
-                                                    new OA\Property(property: 'extension', type: 'string', example: 'jpg', nullable: true),
-                                                    new OA\Property(property: 'size', type: 'integer', example: 51200, nullable: true),
-                                                    new OA\Property(property: 'url', type: 'string', example: 'http://localhost/storage/lessons/thumbnail.jpg'),
-                                                ],
-                                                type: 'object',
-                                                nullable: true
-                                            ),
-                                            new OA\Property(
-                                                property: 'video',
-                                                description: 'Video được xem gần nhất trong bài học này',
-                                                properties: [
-                                                    new OA\Property(property: 'id', type: 'integer', example: 45),
-                                                    new OA\Property(property: 'duration_seconds', type: 'integer', example: 600),
-                                                ],
-                                                type: 'object'
-                                            ),
                                         ],
                                         type: 'object'
                                     ),

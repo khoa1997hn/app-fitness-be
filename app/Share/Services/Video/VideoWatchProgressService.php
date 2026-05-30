@@ -197,7 +197,6 @@ class VideoWatchProgressService
 
         $programIds = array_column($latestRows, 'program_id');
         $lessonIds = array_column($latestRows, 'lesson_id');
-        $videoIds = array_column($latestRows, 'video_id');
 
         // Batch: progress + total duration per program
         $statsRows = DB::table('videos as v')
@@ -223,12 +222,10 @@ class VideoWatchProgressService
         // Batch load models
         $programs = Program::withTranslation()->whereIn('id', $programIds)->get()->keyBy('id');
         $lessons = Lesson::withTranslation()->whereIn('id', $lessonIds)->get()->keyBy('id');
-        $videos = Video::withTranslation()->whereIn('id', $videoIds)->get()->keyBy('id');
 
-        return array_map(function ($row) use ($programs, $lessons, $videos, $statsRows) {
+        return array_map(function ($row) use ($programs, $lessons, $statsRows) {
             $program = $programs[$row->program_id];
             $lesson = $lessons[$row->lesson_id];
-            $video = $videos[$row->video_id];
             $stats = $statsRows[$row->program_id] ?? null;
 
             return [
@@ -244,11 +241,6 @@ class VideoWatchProgressService
                     'id' => $lesson->id,
                     'name' => $lesson->name,
                     'day' => $lesson->day,
-                    'thumbnail' => $lesson->thumbnail,
-                    'video' => [
-                        'id' => $video->id,
-                        'duration_seconds' => (int) $video->duration_seconds,
-                    ],
                 ],
             ];
         }, $latestRows);
