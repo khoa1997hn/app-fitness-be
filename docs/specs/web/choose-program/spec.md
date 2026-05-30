@@ -21,7 +21,7 @@ Về thông tin plan nào được chọn bao nhiêu program, loại program: do
 api show ấy, mình làm thành api này có hợp lý hơn ko? Hay tách 1 api mới nhỉ?
 api lấy danh sách program đã mua (kể cả đang active lẫn cancel nói chung toàn bộ trạng thái, cần bổ sung thêm ngày bắt đầu, ngày gia hạn tiếp theo so với design, trạng thái của subcription ấy) *(Update 2026-05-29)*
 
-cần check figma purchased_program_1/2 để biết field và api cần thêm *(Update 2026-05-29)*
+cần check figma purchased_plan_1/2 để biết field và api cần thêm *(Update 2026-05-29; ảnh purchased_plan thay thế purchased_program — Update 2026-05-30)*
 
 ## Phạm vi
 
@@ -29,7 +29,7 @@ cần check figma purchased_program_1/2 để biết field và api cần thêm *
 - DB: bảng `subscription_program_selections` (subscription ↔ program, kèm `user_id` denormalize).
 - `GET /api/v1/programs/selection` — trạng thái chọn program + quyền lesson types theo plan **subscription hợp lệ** (màn chọn program).
 - `POST /api/v1/programs/selection` — xác nhận / cập nhật danh sách program đã chọn (replace theo subscription hiện tại).
-- `GET /api/v1/programs/purchased` — danh sách program đã mua kèm thông tin subscription (mọi status: active, cancelled, expired, …) *(Update 2026-05-29)*.
+- `GET /api/v1/subscriptions/me` — thông tin subscription hiện tại (mọi status) + danh sách program đã chọn (Basic/Plus); All Access không trả programs *(Update 2026-05-30 — thay `GET /programs/purchased`)*.
 - `POST /api/v1/subscriptions/cancel` — hủy gia hạn tự động (nút **CANCEL RENEWAL** trên Figma); Google gọi provider API, Apple no-op *(Update 2026-05-29)*.
 - Enum/logic map plan → `max_programs`, `allowed_lesson_types` (không lưu DB — tính từ plan).
 
@@ -105,67 +105,48 @@ cần check figma purchased_program_1/2 để biết field và api cần thêm *
 #### POST /programs/selection
 Trả cùng shape `data` như GET (sau khi lưu).
 
-#### GET /programs/purchased *(Update 2026-05-29, bổ sung Figma 2026-05-29)*
+#### GET /programs/purchased *(Update 2026-05-29, superseded 2026-05-30 — xem GET /subscriptions/me)*
 
-Màn **Purchased program** ([`purchased_program_1.png`](../figma/purchased_program_1.png) cancelled, [`purchased_program_2.png`](../figma/purchased_program_2.png) cancel renewal).
+~~API này đã bị xóa và thay thế bởi `GET /subscriptions/me`.~~
 
-Một subscription / user + danh sách program (card: thumbnail, tên program, badge plan, giá, status).
+#### GET /subscriptions/me *(Update 2026-05-30 — thay GET /programs/purchased)*
+
+Màn **Purchased program** ([`purchased_plan_1.png`](../figma/purchased_plan_1.png) active, [`purchased_plan_2.png`](../figma/purchased_plan_2.png) cancelled).
+
+Subscription hiện tại (latest, mọi status) + programs đã chọn (chỉ Basic/Plus).
 
 ```json
 {
   "success": true,
   "message": "Success",
   "data": {
-    "subscription": {
-      "id": 10,
-      "plan": "plus",
-      "status": "active",
-      "provider": "google_iap",
-      "amount": 1999000,
-      "currency": "VND",
-      "auto_renew": true,
-      "started_at": "2026-01-01T00:00:00+07:00",
-      "expires_at": "2026-06-01T00:00:00+07:00",
-      "renews_at": "2026-06-01T00:00:00+07:00",
-      "cancelled_at": null,
-      "show_plan_ends_notice": false,
-      "can_cancel_renewal": true,
-      "can_renew": false,
-      "requires_selection": true,
-      "max_programs": 2,
-      "allowed_lesson_types": ["level", "special", "signature"]
-    },
-    "programs": [
-      {
-        "id": 1,
-        "name": "7 Day Training Split",
-        "cover": { "path": "...", "url": "..." },
-        "selected_at": "2026-05-29T10:00:00+07:00"
-      }
+    "id": 10,
+    "plan": "basic",
+    "status": "active",
+    "provider": "google_iap",
+    "amount": 1999000,
+    "currency": "VND",
+    "auto_renew": true,
+    "started_at": "2026-01-01T00:00:00+07:00",
+    "expires_at": "2026-06-01T00:00:00+07:00",
+    "renews_at": "2026-06-01T00:00:00+07:00",
+    "cancelled_at": null,
+    "show_plan_ends_notice": false,
+    "can_cancel_renewal": true,
+    "can_renew": false,
+    "requires_selection": true,
+    "max_programs": 1,
+    "allowed_lesson_types": ["level", "special"],
+    "selected_programs": [
+      { "id": 7, "name": "Barre", "selected_at": "2026-05-29T10:00:00+07:00" }
     ]
   }
 }
 ```
 
-**Field subscription (theo Figma):**
-
-| Field | Nguồn / logic |
-|-------|----------------|
-| `plan` | enum `basic` / `plus` / `all` — FE map label marketing (Platinum, …) |
-| `status` | `subscriptions.status` — hiển thị "Canceled" trên card khi `cancelled` hoặc đã hủy gia hạn |
-| `amount`, `currency` | `subscriptions` — giá hiển thị card |
-| `started_at` | `created_at` |
-| `expires_at` | `expires_at` — hết kỳ billing (banner "plan ends at the end of your billing period") |
-| `renews_at` | `expires_at` khi `auto_renew=true` và status hợp lệ; else `null` |
-| `cancelled_at` | `cancelled_at` |
-| `auto_renew` | `auto_renew` |
-| `show_plan_ends_notice` | `true` khi `auto_renew=false`, `expires_at` > now, status ∈ {trial, active, grace_period} |
-| `can_cancel_renewal` | subscription hợp lệ + `auto_renew=true` + `cancelled_at` null → nút **CANCEL RENEWAL** |
-| `can_renew` | `status` ∈ {cancelled, expired} hoặc đã có `cancelled_at` → nút **RENEW SUBSCRIPTION** (FE mở IAP) |
-
-- Không có subscription → `subscription: null`, `programs: []` (200).
-- Plan `all`: `programs` = toàn bộ program; `selected_at` có thể `null`.
-- Plan `basic`/`plus`: `programs` từ `subscription_program_selections`.
+- Không có subscription → `data: null` (200).
+- Plan `all` → `selected_programs: null` (không cần, unlock toàn bộ).
+- Plan `basic`/`plus` → `selected_programs` từ `subscription_program_selections` của subscription đó.
 
 #### POST /subscriptions/cancel *(Update 2026-05-29 — Figma CANCEL RENEWAL)*
 
@@ -198,9 +179,9 @@ Một subscription / user + danh sách program (card: thumbnail, tên program, b
 - [ ] `program_ids` trùng / program không tồn tại → 422.
 - [ ] POST lại trong cùng subscription → replace selection cũ.
 - [ ] Response có `allowed_lesson_types` đúng theo plan.
-- [ ] `GET /programs/purchased` trả subscription (mọi status) + programs; dates đúng mapping.
-- [ ] User cancelled/expired vẫn GET purchased → 200 (không 403).
-- [ ] GET purchased trả đủ field Figma: amount, currency, expires_at, flags notice/actions.
+- [ ] `GET /subscriptions/me` trả subscription (mọi status) + selected_programs; All Access: selected_programs null.
+- [ ] User chưa có subscription → data: null (200).
+- [ ] GET subscription/me trả đủ field Figma: amount, currency, expires_at, flags notice/actions.
 - [ ] POST /subscriptions/cancel: Google hủy auto-renew; Apple trả message; invalid → 422.
 
 ## Quyết định
@@ -210,7 +191,12 @@ Một subscription / user + danh sách program (card: thumbnail, tên program, b
 - **All Access**: không POST; GET vẫn trả quyền lesson types.
 - **`allowed_lesson_types`**: tính từ plan, không persist DB.
 - **Subscription hợp lệ**: trial | active | grace_period (giống `validSubscription`).
-- **2026-05-29 — API purchased vs selection** → Tách `GET /programs/purchased` (màn đã mua, mọi status subscription). Giữ `GET|POST /programs/selection` cho flow chọn program (chỉ subscription hợp lệ).
+- **2026-05-30 — SubscriptionController phân tách đúng service** → `show()` orchestrate: `SubscriptionService::getSubscriptionData()` (subscription data + flags) + `ProgramSelectionService::getSelectedPrograms()` (program selection). `cancel()` chỉ dùng `SubscriptionService`. `ProgramSelectionService` không còn subscription mapping logic, chỉ lo program selection (getStatus, syncSelection, getSelectedPrograms).
+- **2026-05-30 — getPlanLimits chuyển sang SubscriptionService** → Plan limits là subscription/plan domain logic; `ProgramSelectionService` delegate qua `subscriptionService->getPlanLimits()`.
+- **2026-05-30 — store() → cancel()** → Đổi tên method `SubscriptionController@store` thành `cancel` (semantics rõ hơn).
+- **2026-05-30 — Renew không tạo subscription mới** → `SubscriptionService::activate()` dùng `updateOrCreate(['user_id' => $user->id])` — 1 subscription per user duy nhất. Renew chỉ update cùng record → `subscription_program_selections.subscription_id` giữ nguyên → **program selections tự động preserved, không cần copy**.
+- **2026-05-30 — GET /programs/purchased → GET /subscriptions/me** → Đổi shape: subscription + `selected_programs` flat trong 1 object thay vì `{subscription, programs[]}`. Controller: `SubscriptionController@show` (đổi tên từ `SubscriptionCancelController`). All Access → `selected_programs: null`.
+- **2026-05-30 — purchased_program_1/2.png** → Xóa, thay bằng `purchased_plan_1/2.png`.
 - **2026-05-29 — Ngày subscription** → `started_at` = `created_at`; `renews_at` = `expires_at` khi còn auto-renew và status hợp lệ, else `null`.
 - **2026-05-29 — Figma purchased_program** → Không API renew mới; bổ sung field purchased + `POST /subscriptions/cancel`. Badge plan: FE map từ `plan` enum.
 - **2026-05-29 — Cancel renewal** → Cùng semantics `subscription-provider-cancel` (Google provider + webhook DB).
@@ -220,5 +206,5 @@ Một subscription / user + danh sách program (card: thumbnail, tên program, b
 - [`docs/specs/plan_program.md`](../../plan_program.md)
 - [`program-list/spec.md`](../program-list/spec.md)
 - `app/Share/Models/Subscription.php`, `app/Share/Enums/Plan.php`, `app/Share/Enums/LessonType.php`
-- Figma: `docs/specs/web/figma/purchased_program_1.png`, `purchased_program_2.png`
+- Figma: [`purchased_plan_1.png`](../figma/purchased_plan_1.png), [`purchased_plan_2.png`](../figma/purchased_plan_2.png) *(thay thế purchased_program_1/2 — Update 2026-05-30)*
 - [`subscription-provider-cancel/spec.md`](../subscription-provider-cancel/spec.md)

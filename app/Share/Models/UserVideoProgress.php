@@ -9,7 +9,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $id
  * @property int $user_id
  * @property int $video_id
- * @property int $watched_percent
+ * @property int $watched_seconds
+ * @property bool $is_completed
  * @property \Carbon\Carbon $created_at
  * @property \Carbon\Carbon $updated_at
  * @property-read User $user
@@ -22,13 +23,15 @@ class UserVideoProgress extends Model
     protected $fillable = [
         'user_id',
         'video_id',
-        'watched_percent',
+        'watched_seconds',
+        'is_completed',
     ];
 
     protected function casts(): array
     {
         return [
-            'watched_percent' => 'integer',
+            'watched_seconds' => 'integer',
+            'is_completed' => 'boolean',
         ];
     }
 

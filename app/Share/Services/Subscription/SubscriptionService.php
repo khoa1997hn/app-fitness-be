@@ -3,6 +3,7 @@
 namespace App\Share\Services\Subscription;
 
 use App\Share\Enums\BillingCycle;
+use App\Share\Enums\LessonType;
 use App\Share\Enums\Plan;
 use App\Share\Enums\SubscriptionStatus;
 use App\Share\Exceptions\Subscription\SubscriptionNotFoundException;
@@ -82,6 +83,145 @@ class SubscriptionService
             ],
             SubscriptionStatus::Active
         );
+    }
+
+    public function canCancelRenewal(Subscription $subscription): bool
+    {
+        if ($subscription->cancelled_at !== null) {
+            return false;
+        }
+
+        if (! $subscription->auto_renew) {
+            return false;
+        }
+
+        return $subscription->status->in([
+            SubscriptionStatus::Trial,
+            SubscriptionStatus::Active,
+            SubscriptionStatus::GracePeriod,
+        ]);
+    }
+
+    public function canRenew(Subscription $subscription): bool
+    {
+        if ($subscription->cancelled_at !== null) {
+            return true;
+        }
+
+        return $subscription->status->in([
+            SubscriptionStatus::Cancelled,
+            SubscriptionStatus::Expired,
+        ]);
+    }
+
+    /**
+     * @return array{requires_selection: bool, max_programs: ?int, allowed_lesson_types: list<string>}
+     */
+    public function getPlanLimits(Plan $plan): array
+    {
+        if ($plan->is(Plan::All)) {
+            return [
+                'requires_selection' => false,
+                'max_programs' => null,
+                'allowed_lesson_types' => [
+                    LessonType::Level,
+                    LessonType::Special,
+                    LessonType::Signature,
+                ],
+            ];
+        }
+
+        if ($plan->is(Plan::Plus)) {
+            return [
+                'requires_selection' => true,
+                'max_programs' => 2,
+                'allowed_lesson_types' => [
+                    LessonType::Level,
+                    LessonType::Special,
+                    LessonType::Signature,
+                ],
+            ];
+        }
+
+        return [
+            'requires_selection' => true,
+            'max_programs' => 1,
+            'allowed_lesson_types' => [
+                LessonType::Level,
+                LessonType::Special,
+            ],
+        ];
+    }
+
+    /**
+     * Subscription data for GET /subscriptions/me response (without selected_programs).
+     * Controller is responsible for appending selected_programs via ProgramSelectionService.
+     *
+     * @return ?array<string, mixed>
+     */
+    public function getSubscriptionData(User $user): ?array
+    {
+        $subscription = $user->subscription;
+
+        if ($subscription === null) {
+            return null;
+        }
+
+        $limits = $this->getPlanLimits($subscription->plan);
+
+        return [
+            'id' => $subscription->id,
+            'plan' => $subscription->plan,
+            'status' => $subscription->status,
+            'provider' => $subscription->provider,
+            'amount' => (float) $subscription->amount,
+            'currency' => $subscription->currency,
+            'auto_renew' => $subscription->auto_renew,
+            'started_at' => $subscription->created_at?->toIso8601String(),
+            'expires_at' => $subscription->expires_at?->toIso8601String(),
+            'renews_at' => $this->resolveRenewsAt($subscription),
+            'cancelled_at' => $subscription->cancelled_at?->toIso8601String(),
+            'show_plan_ends_notice' => $this->shouldShowPlanEndsNotice($subscription),
+            'can_cancel_renewal' => $this->canCancelRenewal($subscription),
+            'can_renew' => $this->canRenew($subscription),
+            'requires_selection' => $limits['requires_selection'],
+            'max_programs' => $limits['max_programs'],
+            'allowed_lesson_types' => $limits['allowed_lesson_types'],
+        ];
+    }
+
+    private function shouldShowPlanEndsNotice(Subscription $subscription): bool
+    {
+        if ($subscription->auto_renew) {
+            return false;
+        }
+
+        if ($subscription->expires_at === null || $subscription->expires_at->isPast()) {
+            return false;
+        }
+
+        return $subscription->status->in([
+            SubscriptionStatus::Trial,
+            SubscriptionStatus::Active,
+            SubscriptionStatus::GracePeriod,
+        ]);
+    }
+
+    private function resolveRenewsAt(Subscription $subscription): ?string
+    {
+        if (! $subscription->auto_renew) {
+            return null;
+        }
+
+        if (! $subscription->status->in([
+            SubscriptionStatus::Trial,
+            SubscriptionStatus::Active,
+            SubscriptionStatus::GracePeriod,
+        ])) {
+            return null;
+        }
+
+        return $subscription->expires_at?->toIso8601String();
     }
 
     /**

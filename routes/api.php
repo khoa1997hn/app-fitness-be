@@ -9,7 +9,7 @@ use App\Web\Http\Controllers\API\V1\ProgramController;
 use App\Web\Http\Controllers\API\V1\ProgramSelectionController;
 use App\Web\Http\Controllers\API\V1\Subscription\AppleIapController;
 use App\Web\Http\Controllers\API\V1\Subscription\GoogleIapController;
-use App\Web\Http\Controllers\API\V1\Subscription\SubscriptionCancelController;
+use App\Web\Http\Controllers\API\V1\Subscription\SubscriptionController;
 use App\Web\Http\Controllers\API\V1\VideoPlayController;
 use App\Web\Http\Controllers\API\V1\VideoWatchProgressController;
 use Illuminate\Support\Facades\Route;
@@ -58,7 +58,9 @@ Route::as('api.')
                         ->name('iap.google.verify');
                     Route::post('iap/apple/verify', [AppleIapController::class, 'verify'])
                         ->name('iap.apple.verify');
-                    Route::post('cancel', [SubscriptionCancelController::class, 'store'])
+                    Route::get('me', [SubscriptionController::class, 'show'])
+                        ->name('me');
+                    Route::post('cancel', [SubscriptionController::class, 'cancel'])
                         ->name('cancel');
                 });
 
@@ -66,7 +68,6 @@ Route::as('api.')
 
             Route::middleware('auth:api')->group(function () {
                 Route::get('programs', [ProgramController::class, 'index'])->name('programs.index');
-                Route::get('programs/purchased', [ProgramSelectionController::class, 'purchased'])->name('programs.purchased');
                 Route::get('programs/selection', [ProgramSelectionController::class, 'show'])->name('programs.selection.show');
                 Route::post('programs/selection', [ProgramSelectionController::class, 'store'])->name('programs.selection.store');
                 Route::get('programs/{program}', [ProgramController::class, 'show'])->name('programs.show');

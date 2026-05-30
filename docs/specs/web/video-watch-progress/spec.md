@@ -93,7 +93,52 @@ Ngoài `stream_url` + metadata *(Update 2026-05-30)*:
 }
 ```
 
-## Acceptance criteria
+## Update 2026-05-30 — watched_seconds + is_completed + progress object
+
+### Thay đổi cơ chế
+
+**Bỏ**: `watched_percent` (int 0-100) trong DB và request/response.
+
+**Client gửi**:
+- `watched_seconds` (int ≥ 0): số giây đã xem.
+- `is_completed` (bool): flag hoàn thành do FE tự quyết (không liên quan đến số giây). Một khi đã `true` thì không giảm xuống `false`.
+
+**DB** (`user_video_progress`):
+- Thay `watched_percent` bằng `watched_seconds` (unsignedInt, default 0) + `is_completed` (bool, default false).
+- `watched_seconds` upsert: `max(stored, new)`.
+- `is_completed` upsert: `stored OR new`.
+
+**Response** — thay `watched_percent: int` ở mọi nơi bằng object `progress`:
+```json
+{
+  "progress": {
+    "watched_seconds": 120,
+    "completed_percent": 75
+  }
+}
+```
+- Video: `completed_percent = is_completed ? 100 : 0`.
+- Lesson: `completed_percent = ROUND(COUNT(is_completed=true) / COUNT(videos) * 100)`.
+- Program: `completed_percent = ROUND(COUNT(is_completed=true) / COUNT(all_videos) * 100)`.
+- `watched_seconds` cho lesson/program: `SUM(watched_seconds)` của videos.
+- Default khi chưa có progress: `{ watched_seconds: 0, completed_percent: 0 }`.
+
+**Service methods** (tên mới):
+- `videoProgress(User, Video): array`
+- `lessonProgress(User, Lesson): array`
+- `programProgress(User, Program): array`
+- `lessonProgressMapForUser(User, array $lessonIds): array<int, array{watched_seconds, completed_percent}>`
+- `programProgressMapForUser(User, array $programIds): array<int, array{watched_seconds, completed_percent}>`
+
+SQL (tất cả không dùng `duration_seconds` vì completion dựa vào flag, không cần weight):
+```sql
+-- Lesson/Program
+SELECT SUM(COALESCE(uvp.watched_seconds, 0)) as watched_seconds,
+       ROUND(COUNT(CASE WHEN uvp.is_completed THEN 1 END) * 100.0 / NULLIF(COUNT(v.id), 0)) as completed_percent
+FROM videos v
+LEFT JOIN user_video_progress uvp ON uvp.video_id=v.id AND uvp.user_id=?
+WHERE v.lesson_id=? (hoặc l.program_id=?)
+```
 
 - [ ] POST progress với JWT → lưu DB, trả `{ video, lesson, program }` mỗi cái có `watched_percent`.
 - [ ] Gọi lại với % thấp hơn → không giảm % đã lưu.
@@ -117,3 +162,4 @@ Ngoài `stream_url` + metadata *(Update 2026-05-30)*:
 - [`program-list/spec.md`](../program-list/spec.md)
 - [`play-video/spec.md`](../play-video/spec.md)
 - [`lesson-favorite/spec.md`](../lesson-favorite/spec.md)
+- **2026-05-30 — watched_seconds + is_completed** → Client truyền `watched_seconds` + `is_completed` (flag FE tự quyết). DB không còn `watched_percent`. Response thay `watched_percent: int` → `progress: {watched_seconds, completed_percent}` cho video/lesson/program ở tất cả các API có progress.

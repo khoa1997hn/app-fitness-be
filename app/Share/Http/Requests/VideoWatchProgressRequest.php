@@ -19,7 +19,8 @@ class VideoWatchProgressRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'watched_percent' => ['required', 'integer', 'min:0', 'max:100'],
+            'watched_seconds' => ['required', 'integer', 'min:0'],
+            'is_completed' => ['required', 'boolean'],
         ];
     }
 }

@@ -38,3 +38,11 @@ API GET/POST `/api/v1/programs/selection` + bảng `subscription_program_selecti
 
 - Bổ sung GET /programs/purchased: amount, currency, expires_at, auto_renew, provider, show_plan_ends_notice, can_cancel_renewal, can_renew.
 - Thêm POST /subscriptions/cancel (SubscriptionManager, Google provider cancel).
+
+## Update 2026-05-30 — GET /subscriptions/me thay GET /programs/purchased
+
+- Bỏ `GET /programs/purchased` (ProgramSelectionController@purchased) + route.
+- Đổi tên `SubscriptionCancelController` → `SubscriptionController`; thêm `show()` method cho `GET /subscriptions/me`.
+- `ProgramSelectionService`: thêm `getSubscriptionInfo(User)` → trả subscription + selected_programs (reuse logic hiện có); All Access → `selected_programs: null`.
+- Xóa file `purchased_program_1/2.png` và references trong spec.
+- OpenAPI: thêm `GET /subscriptions/me`, xóa `GET /programs/purchased`.

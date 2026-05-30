@@ -67,7 +67,15 @@ class ProgramController extends BaseAPIController
                                         type: 'array',
                                         items: new OA\Items(type: 'string', example: 'Cải thiện sức khỏe')
                                     ),
-                                    new OA\Property(property: 'watched_percent', description: 'Phần trăm hoàn thành program (0-100)', type: 'integer', example: 30),
+                                    new OA\Property(
+                                        property: 'progress',
+                                        description: 'Tiến độ hoàn thành program',
+                                        properties: [
+                                            new OA\Property(property: 'watched_seconds', type: 'integer', example: 1800),
+                                            new OA\Property(property: 'completed_percent', type: 'integer', example: 30),
+                                        ],
+                                        type: 'object'
+                                    ),
                                 ],
                                 type: 'object'
                             )
@@ -92,13 +100,13 @@ class ProgramController extends BaseAPIController
             ->get();
 
         $programIds = $programs->pluck('id')->all();
-        $programPercentMap = $this->videoWatchProgressService->programPercentMapForUser($user, $programIds);
+        $programProgressMap = $this->videoWatchProgressService->programProgressMapForUser($user, $programIds);
 
         return ResponseAPI::success(
             $programs
                 ->map(fn (Program $program) => [
                     ...$this->mapProgram($program),
-                    'watched_percent' => $programPercentMap[$program->id] ?? 0,
+                    'progress' => $programProgressMap[$program->id] ?? ['watched_seconds' => 0, 'completed_percent' => 0],
                 ])
                 ->toArray()
         );
@@ -157,7 +165,15 @@ class ProgramController extends BaseAPIController
                                     type: 'array',
                                     items: new OA\Items(type: 'string')
                                 ),
-                                new OA\Property(property: 'watched_percent', description: 'Phần trăm hoàn thành program (0-100)', type: 'integer', example: 20),
+                                new OA\Property(
+                                    property: 'progress',
+                                    description: 'Tiến độ hoàn thành program',
+                                    properties: [
+                                        new OA\Property(property: 'watched_seconds', type: 'integer', example: 1800),
+                                        new OA\Property(property: 'completed_percent', type: 'integer', example: 20),
+                                    ],
+                                    type: 'object'
+                                ),
                                 new OA\Property(
                                     property: 'lessons',
                                     properties: [
@@ -188,7 +204,14 @@ class ProgramController extends BaseAPIController
                                                             ),
                                                             new OA\Property(property: 'duration_seconds', type: 'integer', example: 600),
                                                             new OA\Property(property: 'is_favorited', description: 'User hiện tại đã yêu thích bài học chưa', type: 'boolean', example: false),
-                                                            new OA\Property(property: 'watched_percent', description: 'Phần trăm hoàn thành lesson (0-100)', type: 'integer', example: 50),
+                                                            new OA\Property(
+                                                                property: 'progress',
+                                                                properties: [
+                                                                    new OA\Property(property: 'watched_seconds', type: 'integer', example: 450),
+                                                                    new OA\Property(property: 'completed_percent', type: 'integer', example: 50),
+                                                                ],
+                                                                type: 'object'
+                                                            ),
                                                         ],
                                                         type: 'object'
                                                     )
@@ -217,7 +240,14 @@ class ProgramController extends BaseAPIController
                                                             ),
                                                             new OA\Property(property: 'duration_seconds', type: 'integer', example: 900),
                                                             new OA\Property(property: 'is_favorited', description: 'User hiện tại đã yêu thích bài học chưa', type: 'boolean', example: false),
-                                                            new OA\Property(property: 'watched_percent', description: 'Phần trăm hoàn thành lesson (0-100)', type: 'integer', example: 0),
+                                                            new OA\Property(
+                                                                property: 'progress',
+                                                                properties: [
+                                                                    new OA\Property(property: 'watched_seconds', type: 'integer', example: 450),
+                                                                    new OA\Property(property: 'completed_percent', type: 'integer', example: 0),
+                                                                ],
+                                                                type: 'object'
+                                                            ),
                                                         ],
                                                         type: 'object'
                                                     )
@@ -246,7 +276,14 @@ class ProgramController extends BaseAPIController
                                                             ),
                                                             new OA\Property(property: 'duration_seconds', type: 'integer', example: 1200),
                                                             new OA\Property(property: 'is_favorited', description: 'User hiện tại đã yêu thích bài học chưa', type: 'boolean', example: false),
-                                                            new OA\Property(property: 'watched_percent', description: 'Phần trăm hoàn thành lesson (0-100)', type: 'integer', example: 0),
+                                                            new OA\Property(
+                                                                property: 'progress',
+                                                                properties: [
+                                                                    new OA\Property(property: 'watched_seconds', type: 'integer', example: 450),
+                                                                    new OA\Property(property: 'completed_percent', type: 'integer', example: 0),
+                                                                ],
+                                                                type: 'object'
+                                                            ),
                                                         ],
                                                         type: 'object'
                                                     )
@@ -278,7 +315,14 @@ class ProgramController extends BaseAPIController
                                                     ),
                                                     new OA\Property(property: 'duration_seconds', type: 'integer', example: 600),
                                                     new OA\Property(property: 'is_favorited', description: 'User hiện tại đã yêu thích bài học chưa', type: 'boolean', example: false),
-                                                    new OA\Property(property: 'watched_percent', description: 'Phần trăm hoàn thành lesson (0-100)', type: 'integer', example: 0),
+                                                    new OA\Property(
+                                                        property: 'progress',
+                                                        properties: [
+                                                            new OA\Property(property: 'watched_seconds', type: 'integer', example: 450),
+                                                            new OA\Property(property: 'completed_percent', type: 'integer', example: 0),
+                                                        ],
+                                                        type: 'object'
+                                                    ),
                                                 ],
                                                 type: 'object'
                                             )
@@ -307,7 +351,14 @@ class ProgramController extends BaseAPIController
                                                     ),
                                                     new OA\Property(property: 'duration_seconds', type: 'integer', example: 600),
                                                     new OA\Property(property: 'is_favorited', description: 'User hiện tại đã yêu thích bài học chưa', type: 'boolean', example: false),
-                                                    new OA\Property(property: 'watched_percent', description: 'Phần trăm hoàn thành lesson (0-100)', type: 'integer', example: 0),
+                                                    new OA\Property(
+                                                        property: 'progress',
+                                                        properties: [
+                                                            new OA\Property(property: 'watched_seconds', type: 'integer', example: 450),
+                                                            new OA\Property(property: 'completed_percent', type: 'integer', example: 0),
+                                                        ],
+                                                        type: 'object'
+                                                    ),
                                                 ],
                                                 type: 'object'
                                             )
@@ -339,13 +390,13 @@ class ProgramController extends BaseAPIController
             ->all();
 
         $lessonIds = $program->lessons->pluck('id')->all();
-        $lessonPercentMap = $this->videoWatchProgressService->lessonPercentMapForUser($user, $lessonIds);
-        $programPercent = $this->videoWatchProgressService->programWatchedPercent($user, $program);
+        $lessonProgressMap = $this->videoWatchProgressService->lessonProgressMapForUser($user, $lessonIds);
+        $programProgressData = $this->videoWatchProgressService->programProgress($user, $program);
 
         return ResponseAPI::success([
             ...$this->mapProgram($program),
-            'watched_percent' => $programPercent,
-            'lessons' => $this->groupLessons($program->lessons, $favoritedIds, $lessonPercentMap),
+            'progress' => $programProgressData,
+            'lessons' => $this->groupLessons($program->lessons, $favoritedIds, $lessonProgressMap),
         ]);
     }
 
@@ -380,10 +431,10 @@ class ProgramController extends BaseAPIController
 
     /**
      * @param  list<int>  $favoritedIds
-     * @param  array<int, int>  $lessonPercentMap  lessonId => watched_percent
+     * @param  array<int, array{watched_seconds: int, completed_percent: int}>  $lessonProgressMap
      * @return array<string, mixed>
      */
-    private function mapLesson(Lesson $lesson, array $favoritedIds, array $lessonPercentMap): array
+    private function mapLesson(Lesson $lesson, array $favoritedIds, array $lessonProgressMap): array
     {
         return [
             'id' => $lesson->id,
@@ -393,17 +444,17 @@ class ProgramController extends BaseAPIController
             'thumbnail' => $lesson->thumbnail,
             'duration_seconds' => (int) $lesson->videos->sum('duration_seconds'),
             'is_favorited' => in_array($lesson->id, $favoritedIds, true),
-            'watched_percent' => $lessonPercentMap[$lesson->id] ?? 0,
+            'progress' => $lessonProgressMap[$lesson->id] ?? ['watched_seconds' => 0, 'completed_percent' => 0],
         ];
     }
 
     /**
      * @param  Collection<int, Lesson>  $lessons
      * @param  list<int>  $favoritedIds
-     * @param  array<int, int>  $lessonPercentMap
+     * @param  array<int, array{watched_seconds: int, completed_percent: int}>  $lessonProgressMap
      * @return array<string, mixed>
      */
-    private function groupLessons(Collection $lessons, array $favoritedIds, array $lessonPercentMap): array
+    private function groupLessons(Collection $lessons, array $favoritedIds, array $lessonProgressMap): array
     {
         $sorted = $this->sortLessons($lessons);
 
@@ -414,28 +465,28 @@ class ProgramController extends BaseAPIController
                 'beginner' => $this->mapLessonsCollection(
                     $levelLessons->filter(fn (Lesson $lesson) => $lesson->level?->is(Level::Beginner)),
                     $favoritedIds,
-                    $lessonPercentMap
+                    $lessonProgressMap
                 ),
                 'intermediate' => $this->mapLessonsCollection(
                     $levelLessons->filter(fn (Lesson $lesson) => $lesson->level?->is(Level::Intermediate)),
                     $favoritedIds,
-                    $lessonPercentMap
+                    $lessonProgressMap
                 ),
                 'advanced' => $this->mapLessonsCollection(
                     $levelLessons->filter(fn (Lesson $lesson) => $lesson->level?->is(Level::Advanced)),
                     $favoritedIds,
-                    $lessonPercentMap
+                    $lessonProgressMap
                 ),
             ],
             'special' => $this->mapLessonsCollection(
                 $sorted->filter(fn (Lesson $lesson) => $lesson->type->is(LessonType::Special)),
                 $favoritedIds,
-                $lessonPercentMap
+                $lessonProgressMap
             ),
             'signature' => $this->mapLessonsCollection(
                 $sorted->filter(fn (Lesson $lesson) => $lesson->type->is(LessonType::Signature)),
                 $favoritedIds,
-                $lessonPercentMap
+                $lessonProgressMap
             ),
         ];
     }
@@ -443,13 +494,13 @@ class ProgramController extends BaseAPIController
     /**
      * @param  Collection<int, Lesson>  $lessons
      * @param  list<int>  $favoritedIds
-     * @param  array<int, int>  $lessonPercentMap
+     * @param  array<int, array{watched_seconds: int, completed_percent: int}>  $lessonProgressMap
      * @return list<array<string, mixed>>
      */
-    private function mapLessonsCollection(Collection $lessons, array $favoritedIds, array $lessonPercentMap): array
+    private function mapLessonsCollection(Collection $lessons, array $favoritedIds, array $lessonProgressMap): array
     {
         return $lessons
-            ->map(fn (Lesson $lesson) => $this->mapLesson($lesson, $favoritedIds, $lessonPercentMap))
+            ->map(fn (Lesson $lesson) => $this->mapLesson($lesson, $favoritedIds, $lessonProgressMap))
             ->values()
             ->all();
     }

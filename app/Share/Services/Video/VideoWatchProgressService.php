@@ -14,20 +14,19 @@ use Illuminate\Support\Facades\DB;
 class VideoWatchProgressService
 {
     /**
-     * Record progress and return video + lesson + program watched_percent.
+     * Record progress and return video + lesson + program progress objects.
      *
      * @return array{video: array<string, mixed>, lesson: array<string, mixed>, program: array<string, mixed>}
      */
-    public function record(User $user, Video $video, int $watchedPercent): array
+    public function record(User $user, Video $video, int $watchedSeconds, bool $isCompleted): array
     {
-        $watchedPercent = max(0, min(100, $watchedPercent));
-
         $progress = UserVideoProgress::query()->firstOrNew([
             'user_id' => $user->id,
             'video_id' => $video->id,
         ]);
 
-        $progress->watched_percent = max((int) ($progress->watched_percent ?? 0), $watchedPercent);
+        $progress->watched_seconds = max((int) ($progress->watched_seconds ?? 0), $watchedSeconds);
+        $progress->is_completed = $progress->is_completed || $isCompleted;
         $progress->save();
 
         $video->loadMissing(['lesson.program']);
@@ -39,72 +38,96 @@ class VideoWatchProgressService
                 'id' => $video->id,
                 'lesson_id' => $video->lesson_id,
                 'duration_seconds' => (int) $video->duration_seconds,
-                'watched_percent' => $progress->watched_percent,
+                'progress' => [
+                    'watched_seconds' => $progress->watched_seconds,
+                    'completed_percent' => $progress->is_completed ? 100 : 0,
+                ],
             ],
             'lesson' => [
                 'id' => $lesson->id,
-                'watched_percent' => $this->lessonWatchedPercent($user, $lesson),
+                'progress' => $this->lessonProgress($user, $lesson),
             ],
             'program' => [
                 'id' => $program->id,
-                'watched_percent' => $this->programWatchedPercent($user, $program),
+                'progress' => $this->programProgress($user, $program),
             ],
         ];
     }
 
     /**
-     * Weighted watched percent for a video.
+     * Progress object for a single video.
+     *
+     * @return array{watched_seconds: int, completed_percent: int}
      */
-    public function videoWatchedPercent(User $user, Video $video): int
+    public function videoProgress(User $user, Video $video): array
     {
-        return (int) (UserVideoProgress::query()
+        $row = UserVideoProgress::query()
             ->where('user_id', $user->id)
             ->where('video_id', $video->id)
-            ->value('watched_percent') ?? 0);
+            ->first(['watched_seconds', 'is_completed']);
+
+        return [
+            'watched_seconds' => (int) ($row?->watched_seconds ?? 0),
+            'completed_percent' => $row?->is_completed ? 100 : 0,
+        ];
     }
 
     /**
-     * Weighted watched percent for a lesson — calculated via SQL (no collection loading).
+     * Progress object for a single lesson — calculated via SQL (no collection loading).
+     *
+     * @return array{watched_seconds: int, completed_percent: int}
      */
-    public function lessonWatchedPercent(User $user, Lesson $lesson): int
+    public function lessonProgress(User $user, Lesson $lesson): array
     {
-        $result = DB::table('videos as v')
+        $row = DB::table('videos as v')
             ->leftJoin('user_video_progress as uvp', function ($join) use ($user) {
                 $join->on('uvp.video_id', '=', 'v.id')->where('uvp.user_id', '=', $user->id);
             })
             ->where('v.lesson_id', $lesson->id)
-            ->where('v.duration_seconds', '>', 0)
-            ->selectRaw('COALESCE(ROUND(SUM(COALESCE(uvp.watched_percent, 0) * v.duration_seconds) / NULLIF(SUM(v.duration_seconds), 0)), 0) AS watched_percent')
-            ->value('watched_percent');
+            ->selectRaw('
+                COALESCE(SUM(COALESCE(uvp.watched_seconds, 0)), 0) AS watched_seconds,
+                COALESCE(ROUND(COUNT(CASE WHEN uvp.is_completed THEN 1 END) * 100.0 / NULLIF(COUNT(v.id), 0)), 0) AS completed_percent
+            ')
+            ->first();
 
-        return (int) ($result ?? 0);
+        return [
+            'watched_seconds' => (int) ($row?->watched_seconds ?? 0),
+            'completed_percent' => (int) ($row?->completed_percent ?? 0),
+        ];
     }
 
     /**
-     * Weighted watched percent for a program — calculated via SQL (no collection loading).
+     * Progress object for a single program — calculated via SQL (no collection loading).
+     *
+     * @return array{watched_seconds: int, completed_percent: int}
      */
-    public function programWatchedPercent(User $user, Program $program): int
+    public function programProgress(User $user, Program $program): array
     {
-        $result = DB::table('videos as v')
+        $row = DB::table('videos as v')
             ->join('lessons as l', 'l.id', '=', 'v.lesson_id')
             ->leftJoin('user_video_progress as uvp', function ($join) use ($user) {
                 $join->on('uvp.video_id', '=', 'v.id')->where('uvp.user_id', '=', $user->id);
             })
             ->where('l.program_id', $program->id)
-            ->where('v.duration_seconds', '>', 0)
-            ->selectRaw('COALESCE(ROUND(SUM(COALESCE(uvp.watched_percent, 0) * v.duration_seconds) / NULLIF(SUM(v.duration_seconds), 0)), 0) AS watched_percent')
-            ->value('watched_percent');
+            ->selectRaw('
+                COALESCE(SUM(COALESCE(uvp.watched_seconds, 0)), 0) AS watched_seconds,
+                COALESCE(ROUND(COUNT(CASE WHEN uvp.is_completed THEN 1 END) * 100.0 / NULLIF(COUNT(v.id), 0)), 0) AS completed_percent
+            ')
+            ->first();
 
-        return (int) ($result ?? 0);
+        return [
+            'watched_seconds' => (int) ($row?->watched_seconds ?? 0),
+            'completed_percent' => (int) ($row?->completed_percent ?? 0),
+        ];
     }
 
     /**
-     * Batch watched percent for multiple programs — one SQL query.
+     * Batch progress for multiple programs — one SQL query.
      *
      * @param  array<int>  $programIds
-     * @return array<int, int> programId => watched_percent
+     * @return array<int, array{watched_seconds: int, completed_percent: int}>
      */
-    public function programPercentMapForUser(User $user, array $programIds): array
+    public function programProgressMapForUser(User $user, array $programIds): array
     {
         if ($programIds === []) {
             return [];
@@ -116,26 +139,33 @@ class VideoWatchProgressService
                 $join->on('uvp.video_id', '=', 'v.id')->where('uvp.user_id', '=', $user->id);
             })
             ->whereIn('l.program_id', $programIds)
-            ->where('v.duration_seconds', '>', 0)
             ->groupBy('l.program_id')
-            ->selectRaw('l.program_id, COALESCE(ROUND(SUM(COALESCE(uvp.watched_percent, 0) * v.duration_seconds) / NULLIF(SUM(v.duration_seconds), 0)), 0) AS watched_percent')
+            ->selectRaw('
+                l.program_id,
+                COALESCE(SUM(COALESCE(uvp.watched_seconds, 0)), 0) AS watched_seconds,
+                COALESCE(ROUND(COUNT(CASE WHEN uvp.is_completed THEN 1 END) * 100.0 / NULLIF(COUNT(v.id), 0)), 0) AS completed_percent
+            ')
             ->get();
 
-        $map = array_fill_keys($programIds, 0);
+        $default = ['watched_seconds' => 0, 'completed_percent' => 0];
+        $map = array_fill_keys($programIds, $default);
         foreach ($rows as $row) {
-            $map[$row->program_id] = (int) $row->watched_percent;
+            $map[$row->program_id] = [
+                'watched_seconds' => (int) $row->watched_seconds,
+                'completed_percent' => (int) $row->completed_percent,
+            ];
         }
 
         return $map;
     }
 
     /**
-     * Batch watched percent for multiple lessons — one SQL query.
+     * Batch progress for multiple lessons — one SQL query.
      *
      * @param  array<int>  $lessonIds
-     * @return array<int, int> lessonId => watched_percent
+     * @return array<int, array{watched_seconds: int, completed_percent: int}>
      */
-    public function lessonPercentMapForUser(User $user, array $lessonIds): array
+    public function lessonProgressMapForUser(User $user, array $lessonIds): array
     {
         if ($lessonIds === []) {
             return [];
@@ -146,14 +176,21 @@ class VideoWatchProgressService
                 $join->on('uvp.video_id', '=', 'v.id')->where('uvp.user_id', '=', $user->id);
             })
             ->whereIn('v.lesson_id', $lessonIds)
-            ->where('v.duration_seconds', '>', 0)
             ->groupBy('v.lesson_id')
-            ->selectRaw('v.lesson_id, COALESCE(ROUND(SUM(COALESCE(uvp.watched_percent, 0) * v.duration_seconds) / NULLIF(SUM(v.duration_seconds), 0)), 0) AS watched_percent')
+            ->selectRaw('
+                v.lesson_id,
+                COALESCE(SUM(COALESCE(uvp.watched_seconds, 0)), 0) AS watched_seconds,
+                COALESCE(ROUND(COUNT(CASE WHEN uvp.is_completed THEN 1 END) * 100.0 / NULLIF(COUNT(v.id), 0)), 0) AS completed_percent
+            ')
             ->get();
 
-        $map = array_fill_keys($lessonIds, 0);
+        $default = ['watched_seconds' => 0, 'completed_percent' => 0];
+        $map = array_fill_keys($lessonIds, $default);
         foreach ($rows as $row) {
-            $map[$row->lesson_id] = (int) $row->watched_percent;
+            $map[$row->lesson_id] = [
+                'watched_seconds' => (int) $row->watched_seconds,
+                'completed_percent' => (int) $row->completed_percent,
+            ];
         }
 
         return $map;

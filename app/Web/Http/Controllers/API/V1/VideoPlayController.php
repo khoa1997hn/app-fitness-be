@@ -60,13 +60,28 @@ class VideoPlayController extends BaseAPIController
                                     type: 'object'
                                 ),
                                 new OA\Property(property: 'stream_url', type: 'string', example: 'https://s3.amazonaws.com/...'),
-                                new OA\Property(property: 'watched_percent', description: 'Phần trăm đã xem video (0-100)', type: 'integer', example: 42),
+                                new OA\Property(
+                                    property: 'progress',
+                                    description: 'Tiến độ video này',
+                                    properties: [
+                                        new OA\Property(property: 'watched_seconds', type: 'integer', example: 120),
+                                        new OA\Property(property: 'completed_percent', description: '0 hoặc 100', type: 'integer', example: 0),
+                                    ],
+                                    type: 'object'
+                                ),
                                 new OA\Property(
                                     property: 'lesson',
                                     description: 'Tiến độ lesson chứa video này',
                                     properties: [
                                         new OA\Property(property: 'id', type: 'integer', example: 10),
-                                        new OA\Property(property: 'watched_percent', description: 'Phần trăm hoàn thành lesson (0-100)', type: 'integer', example: 35),
+                                        new OA\Property(
+                                            property: 'progress',
+                                            properties: [
+                                                new OA\Property(property: 'watched_seconds', type: 'integer', example: 450),
+                                                new OA\Property(property: 'completed_percent', type: 'integer', example: 25),
+                                            ],
+                                            type: 'object'
+                                        ),
                                     ],
                                     type: 'object'
                                 ),
@@ -75,7 +90,14 @@ class VideoPlayController extends BaseAPIController
                                     description: 'Tiến độ program chứa video này',
                                     properties: [
                                         new OA\Property(property: 'id', type: 'integer', example: 1),
-                                        new OA\Property(property: 'watched_percent', description: 'Phần trăm hoàn thành program (0-100)', type: 'integer', example: 12),
+                                        new OA\Property(
+                                            property: 'progress',
+                                            properties: [
+                                                new OA\Property(property: 'watched_seconds', type: 'integer', example: 1800),
+                                                new OA\Property(property: 'completed_percent', type: 'integer', example: 12),
+                                            ],
+                                            type: 'object'
+                                        ),
                                     ],
                                     type: 'object'
                                 ),
@@ -117,14 +139,14 @@ class VideoPlayController extends BaseAPIController
             'duration_seconds' => (int) $video->duration_seconds,
             'file' => $video->file,
             'stream_url' => $streamUrl,
-            'watched_percent' => $this->videoWatchProgressService->videoWatchedPercent($user, $video),
+            'progress' => $this->videoWatchProgressService->videoProgress($user, $video),
             'lesson' => [
                 'id' => $lesson->id,
-                'watched_percent' => $this->videoWatchProgressService->lessonWatchedPercent($user, $lesson),
+                'progress' => $this->videoWatchProgressService->lessonProgress($user, $lesson),
             ],
             'program' => [
                 'id' => $program->id,
-                'watched_percent' => $this->videoWatchProgressService->programWatchedPercent($user, $program),
+                'progress' => $this->videoWatchProgressService->programProgress($user, $program),
             ],
         ]);
     }

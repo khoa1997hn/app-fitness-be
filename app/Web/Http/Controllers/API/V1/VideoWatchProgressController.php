@@ -20,12 +20,13 @@ class VideoWatchProgressController extends BaseAPIController
     /**
      * Ghi tiến độ xem video.
      *
-     * App gọi định kỳ (start / heartbeat / end). Chỉ cần truyền phần trăm đã xem.
-     * Không giảm % nếu tua lại. Trả video + lesson + program watched_percent.
+     * App gọi định kỳ (start / heartbeat / end).
+     * Truyền số giây đã xem và flag hoàn thành (FE tự quyết).
+     * Trả progress object cho video + lesson + program.
      */
     #[OA\Post(
         path: '/videos/{video}/watch-progress',
-        description: 'Lưu phần trăm đã xem video cho user đăng nhập. Chỉ tăng, không giảm. Trả video, lesson, program mỗi object riêng với watched_percent.',
+        description: 'Lưu tiến độ xem video cho user đăng nhập. watched_seconds chỉ tăng (max). is_completed một khi true không giảm. Trả progress object cho video, lesson, program.',
         summary: 'Cập nhật tiến độ xem video',
         security: [['bearerAuth' => []]],
         tags: ['Videos'],
@@ -35,9 +36,10 @@ class VideoWatchProgressController extends BaseAPIController
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                required: ['watched_percent'],
+                required: ['watched_seconds', 'is_completed'],
                 properties: [
-                    new OA\Property(property: 'watched_percent', description: 'Phần trăm đã xem (0-100)', type: 'integer', example: 45),
+                    new OA\Property(property: 'watched_seconds', description: 'Số giây đã xem (≥ 0)', type: 'integer', example: 120),
+                    new OA\Property(property: 'is_completed', description: 'Flag hoàn thành do FE tự quyết', type: 'boolean', example: false),
                 ]
             )
         ),
@@ -58,7 +60,14 @@ class VideoWatchProgressController extends BaseAPIController
                                         new OA\Property(property: 'id', type: 'integer', example: 5),
                                         new OA\Property(property: 'lesson_id', type: 'integer', example: 10),
                                         new OA\Property(property: 'duration_seconds', type: 'integer', example: 600),
-                                        new OA\Property(property: 'watched_percent', description: 'Phần trăm đã xem video (0-100)', type: 'integer', example: 45),
+                                        new OA\Property(
+                                            property: 'progress',
+                                            properties: [
+                                                new OA\Property(property: 'watched_seconds', type: 'integer', example: 120),
+                                                new OA\Property(property: 'completed_percent', description: '0 hoặc 100 cho từng video', type: 'integer', example: 0),
+                                            ],
+                                            type: 'object'
+                                        ),
                                     ],
                                     type: 'object'
                                 ),
@@ -66,7 +75,14 @@ class VideoWatchProgressController extends BaseAPIController
                                     property: 'lesson',
                                     properties: [
                                         new OA\Property(property: 'id', type: 'integer', example: 10),
-                                        new OA\Property(property: 'watched_percent', description: 'Phần trăm hoàn thành lesson (0-100)', type: 'integer', example: 35),
+                                        new OA\Property(
+                                            property: 'progress',
+                                            properties: [
+                                                new OA\Property(property: 'watched_seconds', type: 'integer', example: 450),
+                                                new OA\Property(property: 'completed_percent', type: 'integer', example: 25),
+                                            ],
+                                            type: 'object'
+                                        ),
                                     ],
                                     type: 'object'
                                 ),
@@ -74,7 +90,14 @@ class VideoWatchProgressController extends BaseAPIController
                                     property: 'program',
                                     properties: [
                                         new OA\Property(property: 'id', type: 'integer', example: 1),
-                                        new OA\Property(property: 'watched_percent', description: 'Phần trăm hoàn thành program (0-100)', type: 'integer', example: 12),
+                                        new OA\Property(
+                                            property: 'progress',
+                                            properties: [
+                                                new OA\Property(property: 'watched_seconds', type: 'integer', example: 1800),
+                                                new OA\Property(property: 'completed_percent', type: 'integer', example: 12),
+                                            ],
+                                            type: 'object'
+                                        ),
                                     ],
                                     type: 'object'
                                 ),
@@ -97,7 +120,8 @@ class VideoWatchProgressController extends BaseAPIController
         $payload = $this->videoWatchProgressService->record(
             $user,
             $video,
-            (int) $request->integer('watched_percent'),
+            (int) $request->integer('watched_seconds'),
+            (bool) $request->boolean('is_completed'),
         );
 
         return ResponseAPI::success($payload);

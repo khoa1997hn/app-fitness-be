@@ -64,7 +64,15 @@ class LessonFavoriteController extends BaseAPIController
                                             new OA\Property(property: 'day', description: 'Ngày tập của bài học', type: 'integer', example: 1),
                                             new OA\Property(property: 'duration_seconds', type: 'integer', example: 600),
                                             new OA\Property(property: 'is_favorited', type: 'boolean', example: true),
-                                            new OA\Property(property: 'watched_percent', description: 'Phần trăm hoàn thành lesson (0-100)', type: 'integer', example: 50),
+                                            new OA\Property(
+                                                property: 'progress',
+                                                description: 'Tiến độ hoàn thành lesson',
+                                                properties: [
+                                                    new OA\Property(property: 'watched_seconds', type: 'integer', example: 450),
+                                                    new OA\Property(property: 'completed_percent', type: 'integer', example: 50),
+                                                ],
+                                                type: 'object'
+                                            ),
                                         ],
                                         type: 'object'
                                     )
@@ -104,11 +112,11 @@ class LessonFavoriteController extends BaseAPIController
 
         $lessons = collect($favorites->items());
         $lessonIds = $lessons->pluck('id')->all();
-        $lessonPercentMap = $this->videoWatchProgressService->lessonPercentMapForUser($user, $lessonIds);
+        $lessonProgressMap = $this->videoWatchProgressService->lessonProgressMapForUser($user, $lessonIds);
 
         return ResponseAPI::success([
             'items' => $lessons
-                ->map(fn (Lesson $lesson) => $this->mapFavorite($lesson, $lessonPercentMap))
+                ->map(fn (Lesson $lesson) => $this->mapFavorite($lesson, $lessonProgressMap))
                 ->all(),
             'pagination' => [
                 'current_page' => $favorites->currentPage(),
@@ -198,10 +206,10 @@ class LessonFavoriteController extends BaseAPIController
     }
 
     /**
-     * @param  array<int, int>  $lessonPercentMap  lessonId => watched_percent
+     * @param  array<int, array{watched_seconds: int, completed_percent: int}>  $lessonProgressMap
      * @return array<string, mixed>
      */
-    private function mapFavorite(Lesson $lesson, array $lessonPercentMap): array
+    private function mapFavorite(Lesson $lesson, array $lessonProgressMap): array
     {
         return [
             'id' => $lesson->id,
@@ -210,7 +218,7 @@ class LessonFavoriteController extends BaseAPIController
             'day' => $lesson->day,
             'duration_seconds' => (int) $lesson->videos->sum('duration_seconds'),
             'is_favorited' => true,
-            'watched_percent' => $lessonPercentMap[$lesson->id] ?? 0,
+            'progress' => $lessonProgressMap[$lesson->id] ?? ['watched_seconds' => 0, 'completed_percent' => 0],
         ];
     }
 }
