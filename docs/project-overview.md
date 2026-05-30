@@ -120,10 +120,10 @@ Giá cụ thể từng plan → env `PLAN_<TIER>_PRICE` (xem `.env.example`).
 - Program / Lesson / Video: model + migration + translatable (Lesson có enum `type`/`level`). API list program Home (`GET /api/v1/programs`) + chi tiết program + lessons grouped (`GET /api/v1/programs/{program}`, auth JWT).
 - Yêu thích bài học: pivot `lesson_favorites` (user ↔ lesson). API favorite/unfavorite (`POST|DELETE /api/v1/lessons/{lesson}/favorite`) + list yêu thích (`GET /api/v1/lessons/favorites`, flatten + phân trang) + cờ `is_favorited` trong program detail.
 - Chọn program theo gói: bảng `subscription_program_selections` (subscription ↔ program). API `GET|POST /api/v1/programs/selection` — trạng thái chọn + xác nhận program (Basic 1, Plus 2, All Access không cần chọn); `GET /api/v1/programs/purchased` — program đã mua + subscription (giá, ngày, flags UI Figma); `POST /api/v1/subscriptions/cancel` — hủy auto-renew (Google provider).
+- Phát video: `POST /api/v1/videos/{video}/play` — kiểm tra subscription + program/lesson type, trả metadata video + presigned GET (`VideoPlayService`); FE gọi lại `play` khi URL hết hạn.
 
 ### CHƯA có (phase tiếp)
 - Admin CRUD: programs, lessons (kèm upload video), subscription/payment view.
-- Video streaming / gate access theo plan + program đã chọn.
 
 > LLM thực hiện task: nếu task chạm các module **CHƯA có**, dùng `/implement-spec`. Nếu chạm module **đã có** mà phải đổi, dùng `/update-spec`.
 

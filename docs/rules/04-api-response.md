@@ -31,6 +31,12 @@ return ResponseAPI::success([
 - Cấu trúc: `{ success: bool, message: string, data: mixed, errors?: array }`.
 - Base controller: `app/Web/Http/Controllers/API/V1/APIController.php`.
 
+## Auth trong controller Web API
+
+- Route đã bọc `middleware('auth:api')` → default guard là `api` (`config/auth.php`).
+- Trong action: dùng `auth()->user()` — **CẤM** `auth('api')->user()` trừ khi có lý do đặc biệt.
+- Chỉ **login / logout / refresh token** mới gọi trực tiếp guard `auth('api')` (`attempt`, `logout`, `refresh`, `factory()`).
+
 ## Bắt buộc dùng ResponseAPI
 
 - **Web API** (`app/Web/Http/Controllers/API/V1/*`): CẤM `return response()->json([...])` trực tiếp — luôn `ResponseAPI::success()` / `ResponseAPI::error()`.

@@ -11,6 +11,7 @@ alwaysApply: false
 - Helper: `ResponseAPI::success()` / `ResponseAPI::error()`.
 - Cấu trúc: `{ success, message, data, errors? }`.
 - CẤM `response()->json()` trực tiếp ở Web API và Admin JSON endpoints — luôn qua `ResponseAPI`.
+- Web API đã `auth:api`: dùng `auth()->user()` — CẤM `auth('api')->user()` (chỉ login/logout/refresh dùng `auth('api')`).
 
 ```php
 // ❌ Sai

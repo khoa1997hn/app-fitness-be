@@ -10,6 +10,7 @@ use App\Web\Http\Controllers\API\V1\ProgramSelectionController;
 use App\Web\Http\Controllers\API\V1\Subscription\AppleIapController;
 use App\Web\Http\Controllers\API\V1\Subscription\GoogleIapController;
 use App\Web\Http\Controllers\API\V1\Subscription\SubscriptionCancelController;
+use App\Web\Http\Controllers\API\V1\VideoPlayController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -72,6 +73,8 @@ Route::as('api.')
                 Route::get('lessons/favorites', [LessonFavoriteController::class, 'index'])->name('lessons.favorites.index');
                 Route::post('lessons/{lesson}/favorite', [LessonFavoriteController::class, 'store'])->name('lessons.favorite.store');
                 Route::delete('lessons/{lesson}/favorite', [LessonFavoriteController::class, 'destroy'])->name('lessons.favorite.destroy');
+
+                Route::post('videos/{video}/play', [VideoPlayController::class, 'play'])->name('videos.play');
             });
         });
     });

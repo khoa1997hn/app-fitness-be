@@ -51,4 +51,10 @@ return [
     'file_size_exceeded' => 'Dung lượng file vượt quá :max_kb KB.',
     'file_extension_required' => 'Tên file phải có phần mở rộng.',
 
+    // Video play
+    'video_access_denied' => 'Bạn không có quyền xem video này.',
+    'video_program_not_selected' => 'Vui lòng chọn program trước khi xem bài học.',
+    'video_lesson_type_not_allowed' => 'Loại bài học này không thuộc gói đăng ký của bạn.',
+    'video_file_not_available' => 'Video chưa sẵn sàng cho ngôn ngữ này.',
+
 ];
