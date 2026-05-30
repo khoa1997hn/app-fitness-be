@@ -21,3 +21,10 @@
 - [x] FormRequest validation + InvalidFileInputException
 - [x] Rules 02/04 + cursor rules
 - [x] LocalStack docker + env.example
+
+## Update 2026-05-29 — Bỏ Web upload API
+
+- [x] Xóa Web `FileController` + route
+- [x] Spec/plan/rules sync
+- [x] `l5-swagger:generate`
+- [ ] STOP — hỏi user commit/push

@@ -21,3 +21,9 @@
 - Validation → FormRequest; Service → InvalidFileInputException
 - Rules: no ValidationException in Service, ResponseAPI mandatory
 - docker-compose localstack + init bucket script
+
+## Update 2026-05-29 — Bỏ Web presigned-upload
+
+- Xóa `app/Web/Http/Controllers/API/V1/FileController.php` + route `POST /api/v1/files/presigned-upload`.
+- Giữ Admin upload + `FileUploadService::getUrl()` cho response Web (GET).
+- Cập nhật `docs/rules/12-file-upload.md`; regenerate OpenAPI.

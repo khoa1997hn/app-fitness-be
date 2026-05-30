@@ -52,8 +52,8 @@ Có thể gom 1 lần hỏi (tối đa 4 câu theo `docs/guides/ask-protocol.md`
 
 ## Upload qua S3 presigned (bắt buộc)
 
-### Flow
-1. Client `POST /api/v1/files/presigned-upload` (Web JWT) hoặc `POST /admin/files/presigned-upload` (Admin session) với body:
+### Flow (upload — Admin only)
+1. Admin client `POST /admin/files/presigned-upload` (session) với body:
    ```json
    { "type": "program_cover", "filename": "cover.jpg", "mimetype": "image/jpeg", "size": 204800 }
    ```
@@ -66,8 +66,9 @@ Có thể gom 1 lần hỏi (tối đa 4 câu theo `docs/guides/ask-protocol.md`
 - Script: `public/js/admin/s3-presigned-upload.js` (load trong `admin/layouts/app.blade.php`).
 - API: `await AdminS3Upload.upload(fileInput.files[0], 'program_cover')` → trả `{ path, name, extension, size }`.
 
-### Get URL
+### Get URL (Web + Admin)
 - `File::url()` / JSON serialize → `FileUploadService::getUrl(path)` → presigned GET S3.
+- Web API **không** có endpoint presigned-upload; client Web chỉ dùng `url` trong response entity.
 
 ### Env
 - `AWS_*`, `AWS_PRESIGNED_URL_EXPIRES` — xem `.env.example`.
@@ -100,11 +101,9 @@ return [
 ];
 ```
 
-### Bước 3 — Client upload (presigned)
+### Bước 3 — Client upload (presigned, Admin)
 ```javascript
-// Admin
 const fileMeta = await AdminS3Upload.upload(file, FileType.LessonVideo);
-// Web: POST presigned-upload rồi PUT S3, tương tự
 ```
 
 ### Bước 4 — Lưu metadata vào model

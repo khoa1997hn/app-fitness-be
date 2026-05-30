@@ -15,15 +15,17 @@ Toàn bộ file (ảnh + video) upload qua S3 private bucket: client lấy presi
 - CẤM `ValidationException` trong Service — validate ở FormRequest; Service throw `InvalidFileInputException` *(Update 2026-05-29)*
 - Rule tổng: ResponseAPI bắt buộc cho JSON API (Web + Admin) *(Update 2026-05-29)*
 - LocalStack S3 trong docker-compose + `.env.example` preset *(Update 2026-05-29)*
+- **Web không có API presigned-upload** — client Web chỉ đọc file qua presigned GET (`File::url()` trong response API khác); upload chỉ Admin *(Update 2026-05-29)*
 
 ## Phạm vi
 
 ### In-scope
-- `FileUploadService`: chỉ `createPresignedUpload()` + `getUrl()` (presigned GET S3).
+- `FileUploadService`: `createPresignedUpload()` (Admin) + `getUrl()` (presigned GET S3 — Web + Admin).
 - Tất cả `FileType` trong `config/app_file.php` → `disk: s3`.
-- `POST /api/v1/files/presigned-upload` (Web JWT) + `POST /admin/files/presigned-upload` (Admin).
+- `POST /admin/files/presigned-upload` (Admin session).
 - Admin JS base: `public/js/admin/s3-presigned-upload.js` + meta URL trong layout.
-- `HandlesPresignedFileUpload` dùng `ResponseAPI::success()`.
+- `HandlesPresignedFileUpload` dùng `ResponseAPI::success()` (Admin).
+- Web API: **không** endpoint upload; file field trong JSON response có `url` presigned GET.
 
 ### Out-of-scope
 - Migrate data/file cũ.
@@ -45,7 +47,7 @@ Toàn bộ file (ảnh + video) upload qua S3 private bucket: client lấy presi
 
 ## Input / Output
 
-### POST presigned-upload
+### POST presigned-upload (Admin)
 Request:
 ```json
 {
@@ -80,6 +82,7 @@ Response (ResponseAPI):
 - Admin JS: `window.AdminS3Upload.upload(file, type)`.
 - **2026-05-29** — Service exception: `InvalidFileInputException`, không `ValidationException`.
 - **2026-05-29** — Local dev: LocalStack (`AWS_ENDPOINT=http://localstack:4566`, bucket `fitness-local`).
+- **2026-05-29** — Web: không `POST /api/v1/files/presigned-upload`; không `FileController` Web. Upload presigned chỉ Admin.
 
 ## Liên quan
 
