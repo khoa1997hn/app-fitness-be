@@ -48,7 +48,29 @@ Có thể gom 1 lần hỏi (tối đa 4 câu theo `docs/guides/ask-protocol.md`
 - Enum: `app/Share/Enums/FileType.php` (mỗi loại file 1 const).
 - Value object: `app/Share/Attributes/File.php` (path / name / extension / size, có `url()`, implement `JsonSerializable`).
 - Cast: `app/Share/Casts/FileCast.php` (Model field ↔ `File` object qua JSON).
-- Storage: disk `public` (filesystem default).
+- Storage: disk `s3` (private) cho **mọi** FileType — presigned PUT upload + presigned GET URL.
+
+## Upload qua S3 presigned (bắt buộc)
+
+### Flow
+1. Client `POST /api/v1/files/presigned-upload` (Web JWT) hoặc `POST /admin/files/presigned-upload` (Admin session) với body:
+   ```json
+   { "type": "program_cover", "filename": "cover.jpg", "mimetype": "image/jpeg", "size": 204800 }
+   ```
+2. BE validate `type` ∈ FileType, `mimetype` ∈ `allow_mimetypes`, `size` ≤ `allow_max_size` (KB→bytes).
+3. BE trả `upload_url` (presigned PUT), `headers`, `file` metadata — response qua `ResponseAPI::success()`.
+4. Client PUT file lên S3.
+5. Client lưu object `file` vào entity (jsonb).
+
+### Admin JS base
+- Script: `public/js/admin/s3-presigned-upload.js` (load trong `admin/layouts/app.blade.php`).
+- API: `await AdminS3Upload.upload(fileInput.files[0], 'program_cover')` → trả `{ path, name, extension, size }`.
+
+### Get URL
+- `File::url()` / JSON serialize → `FileUploadService::getUrl(path)` → presigned GET S3.
+
+### Env
+- `AWS_*`, `AWS_PRESIGNED_URL_EXPIRES` — xem `.env.example`.
 
 ## Khi thêm 1 loại file mới (ví dụ `LessonVideo`)
 
@@ -78,25 +100,16 @@ return [
 ];
 ```
 
-### Bước 3 — Validate trong FormRequest
-```php
-$request->validate([
-    'file' => [
-        'required',
-        'file',
-        'mimetypes:' . implode(',', config('app_file.lesson_video.allow_mimetypes')),
-        'max:' . config('app_file.lesson_video.allow_max_size'),
-    ],
-]);
+### Bước 3 — Client upload (presigned)
+```javascript
+// Admin
+const fileMeta = await AdminS3Upload.upload(file, FileType.LessonVideo);
+// Web: POST presigned-upload rồi PUT S3, tương tự
 ```
 
-### Bước 4 — Gọi service trong Controller
+### Bước 4 — Lưu metadata vào model
 ```php
-public function store(Request $request, FileUploadService $upload)
-{
-    $file = $upload->upload($request->file('file'), FileType::LessonVideo);
-    // $file là instance App\Share\Attributes\File
-}
+$banner->image = $fileMeta; // array hoặc File instance
 ```
 
 ## Trong Model
@@ -154,8 +167,8 @@ Hoặc map từng field nếu chỉ cần URL:
 
 - CẤM thêm cột `jsonb` + `FileCast` cho field upload mà **không** thêm `FileType` + `config/app_file.php` tương ứng.
 - CẤM đoán `prefix_path` / `allow_mimetypes` / `allow_max_size` khi spec không rõ — phải `AskUserQuestion`.
-- CẤM tự sinh path filename — phải qua `FileUploadService::upload()` (random 40 ký tự + extension gốc).
-- CẤM dùng `Storage::disk('local')` cho file user upload — phải `public` để có URL truy cập.
+- CẤM tự sinh path filename — phải qua `FileUploadService::createPresignedUpload()`.
+- CẤM direct upload qua Laravel `UploadedFile` / disk `public` — chỉ presigned S3.
 - CẤM hardcode mimetypes/max_size — luôn lấy từ `config/app_file.php`.
 - CẤM thêm `FileType` const mà không thêm config tương ứng — `FileUploadService` sẽ throw `InvalidArgumentException`.
 - CẤM dùng `string` cho cột file trong migration (phải `jsonb` để lưu meta).

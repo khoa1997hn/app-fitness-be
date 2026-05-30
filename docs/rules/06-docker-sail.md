@@ -29,3 +29,10 @@ sail up -d
 
 - Phải dùng Laravel artisan commands khi có sẵn (KHÔNG tự code file migration/model/controller).
 - Mọi migration BẮT BUỘC qua `php artisan make:migration`.
+
+## LocalStack S3 (local)
+
+- Service `localstack` trong `docker-compose.yaml` — giả lập S3 cho dev.
+- Init bucket: `docker/localstack/init-s3.sh` (mount vào `/etc/localstack/init/ready.d/`).
+- `.env.example` đã preset `AWS_ENDPOINT=http://localstack:4566`, `AWS_USE_PATH_STYLE_ENDPOINT=true`, bucket `fitness-local`.
+- Sau `sail up -d`, presigned upload/get hoạt động ngay nếu copy env mẫu.

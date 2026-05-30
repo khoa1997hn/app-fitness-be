@@ -31,6 +31,12 @@ return ResponseAPI::success([
 - Cấu trúc: `{ success: bool, message: string, data: mixed, errors?: array }`.
 - Base controller: `app/Web/Http/Controllers/API/V1/APIController.php`.
 
+## Bắt buộc dùng ResponseAPI
+
+- **Web API** (`app/Web/Http/Controllers/API/V1/*`): CẤM `return response()->json([...])` trực tiếp — luôn `ResponseAPI::success()` / `ResponseAPI::error()`.
+- **Admin JSON** (ajax upload, v.v.): Cùng quy tắc — dùng `ResponseAPI` hoặc trait/concern gọi `ResponseAPI` (vd. `HandlesPresignedFileUpload`).
+- Object implement `JsonSerializable` (vd. `File`) có thể nằm trong `data` — Laravel serialize qua `jsonSerialize()`.
+
 ## Vì sao
 
 - Tránh leak field nhạy cảm.

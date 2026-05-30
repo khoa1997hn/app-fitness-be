@@ -23,6 +23,7 @@ Route::middleware('guest:admin')->group(function () {
 // Authenticated routes
 Route::middleware('auth:admin')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+    Route::post('/files/presigned-upload', [\App\Admin\Http\Controllers\FileController::class, 'presignedUpload'])->name('files.presigned-upload');
     Route::get('/', function () {
         return view('admin.dashboard');
     })->name('dashboard');

@@ -1,6 +1,6 @@
 ---
 description: Response API Web — bắt buộc map từng field, không return full model.
-globs: app/Web/Http/Controllers/**/*.php
+globs: app/Web/Http/Controllers/**/*.php,app/Admin/Http/Controllers/**/*.php,app/Share/Http/Controllers/**/*.php
 alwaysApply: false
 ---
 
@@ -10,6 +10,7 @@ alwaysApply: false
 - Kể cả khi trả về đầy đủ field — vẫn liệt kê rõ từng key.
 - Helper: `ResponseAPI::success()` / `ResponseAPI::error()`.
 - Cấu trúc: `{ success, message, data, errors? }`.
+- CẤM `response()->json()` trực tiếp ở Web API và Admin JSON endpoints — luôn qua `ResponseAPI`.
 
 ```php
 // ❌ Sai

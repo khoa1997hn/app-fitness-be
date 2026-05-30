@@ -44,4 +44,11 @@ return [
     'subscription_cancel_apple_manual' => 'Vui lòng hủy gia hạn trong Cài đặt → Apple ID → Đăng ký trên thiết bị của bạn.',
     'subscription_cannot_cancel_renewal' => 'Gói đăng ký không thể hủy gia hạn ở trạng thái hiện tại.',
 
+    // File upload
+    'file_type_not_supported' => 'Loại file không được hỗ trợ cho presigned upload.',
+    'file_type_not_configured' => 'Loại file chưa được cấu hình.',
+    'file_mimetype_not_allowed' => 'Định dạng file không được phép.',
+    'file_size_exceeded' => 'Dung lượng file vượt quá :max_kb KB.',
+    'file_extension_required' => 'Tên file phải có phần mở rộng.',
+
 ];

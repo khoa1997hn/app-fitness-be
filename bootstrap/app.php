@@ -29,14 +29,14 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->redirectUsersTo(fn () => route('admin.dashboard'));
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        // Xử lý exception cho API requests
         $exceptions->render(function (Throwable $e, Request $request) {
-            // Chỉ xử lý cho các request API
-            if (! $request->is('api/*')) {
+            $wantsJsonResponse = $request->is('api/*')
+                || ($request->is('admin/*') && $request->expectsJson());
+
+            if (! $wantsJsonResponse) {
                 return null;
             }
 
-            // ValidationException (422)
             if ($e instanceof ValidationException) {
                 return ResponseAPI::error(
                     __('messages.validation_error'),
@@ -45,7 +45,10 @@ return Application::configure(basePath: dirname(__DIR__))
                 );
             }
 
-            // AuthenticationException (401)
+            if ($e instanceof \App\Share\Exceptions\File\InvalidFileInputException) {
+                return ResponseAPI::error($e->getMessage(), 422);
+            }
+
             if ($e instanceof AuthenticationException) {
                 return ResponseAPI::error(
                     __('messages.authentication_error'),

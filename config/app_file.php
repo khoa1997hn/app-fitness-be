@@ -3,17 +3,23 @@
 use App\Share\Enums\FileType;
 
 return [
+    'default_disk' => env('FILE_UPLOAD_DISK', 's3'),
+    'presigned_expires_minutes' => (int) env('AWS_PRESIGNED_URL_EXPIRES', 15),
+
     FileType::BannerImage => [
+        'disk' => 's3',
         'prefix_path' => 'banner/image',
         'allow_mimetypes' => ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'],
         'allow_max_size' => 5120, // KB (5MB)
     ],
     FileType::ProgramCover => [
+        'disk' => 's3',
         'prefix_path' => 'program/cover',
         'allow_mimetypes' => ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'],
         'allow_max_size' => 5120, // KB (5MB)
     ],
     FileType::LessonVideo => [
+        'disk' => 's3',
         'prefix_path' => 'lesson/video',
         'allow_mimetypes' => [
             'video/mp4',
@@ -26,6 +32,7 @@ return [
         'allow_max_size' => 1048576, // KB (1GB)
     ],
     FileType::LessonThumbnail => [
+        'disk' => 's3',
         'prefix_path' => 'lesson/thumbnail',
         'allow_mimetypes' => ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'],
         'allow_max_size' => 5120, // KB (5MB)

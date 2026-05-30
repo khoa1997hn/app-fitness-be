@@ -13,6 +13,7 @@ alwaysApply: false
 - Migration: dùng `jsonb` cho cột file (KHÔNG `string`).
 - Model: cast field qua `FileCast::class` + PHPDoc `@property File $field` (`App\Share\Attributes\File`).
 - Response: `$model->file_field` tự serialize (`{ path, name, extension, size, url }`).
-- Disk: `public` (filesystem default).
+- Disk: `s3` only — presigned upload/get cho mọi FileType.
+- Admin JS: `AdminS3Upload.upload(file, type)` — `public/js/admin/s3-presigned-upload.js`.
 
 Chi tiết: [`docs/rules/12-file-upload.md`](../../docs/rules/12-file-upload.md)

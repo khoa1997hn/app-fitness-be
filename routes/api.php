@@ -4,6 +4,7 @@ use App\Web\Http\Controllers\API\V1\Auth\AuthController;
 use App\Web\Http\Controllers\API\V1\Auth\ProfileController;
 use App\Web\Http\Controllers\API\V1\Auth\RegistrationController;
 use App\Web\Http\Controllers\API\V1\BannerController;
+use App\Web\Http\Controllers\API\V1\FileController;
 use App\Web\Http\Controllers\API\V1\LessonFavoriteController;
 use App\Web\Http\Controllers\API\V1\ProgramController;
 use App\Web\Http\Controllers\API\V1\ProgramSelectionController;
@@ -63,6 +64,8 @@ Route::as('api.')
             Route::get('banners', [BannerController::class, 'index'])->name('banners.index');
 
             Route::middleware('auth:api')->group(function () {
+                Route::post('files/presigned-upload', [FileController::class, 'presignedUpload'])->name('files.presigned-upload');
+
                 Route::get('programs', [ProgramController::class, 'index'])->name('programs.index');
                 Route::get('programs/purchased', [ProgramSelectionController::class, 'purchased'])->name('programs.purchased');
                 Route::get('programs/selection', [ProgramSelectionController::class, 'show'])->name('programs.selection.show');

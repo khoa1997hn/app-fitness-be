@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="admin-presigned-upload-url" content="{{ route('admin.files.presigned-upload') }}">
     <meta name="description" content="">
     <title>@yield('title', 'Bảng quản trị')</title>
     <link rel="icon" type="image/png" href="{{ asset('dashcode/assets/images/logo/favicon.svg') }}">
@@ -41,6 +43,7 @@
     <script src="{{ asset('dashcode/assets/js/jquery-3.6.0.min.js') }}"></script>
     <script src="{{ asset('dashcode/assets/js/rt-plugins.js') }}"></script>
     <script src="{{ asset('dashcode/assets/js/app.js') }}"></script>
+    <script src="{{ asset('js/admin/s3-presigned-upload.js') }}"></script>
     <script>
         document.getElementById('thisYear').textContent = new Date().getFullYear();
     </script>

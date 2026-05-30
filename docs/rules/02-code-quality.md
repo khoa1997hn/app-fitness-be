@@ -10,6 +10,7 @@
 
 - **Catch**: dùng `catch (\Throwable $e)`, KHÔNG `catch (\Exception $e)`.
 - **Throw**: tạo domain exception trong `app/Share/Exceptions/<Domain>/`, kế thừa base phù hợp (ví dụ `SubscriptionException`). KHÔNG `throw new \Exception(...)` ad-hoc.
+- **CẤM `ValidationException` trong Service** — validation input user thuộc FormRequest (Web) / Request validate (Admin). Service chỉ throw domain exception (vd. `InvalidFileInputException`) cho lỗi nghiệp vụ/config, không gắn field errors Laravel.
 
 ## Enum
 
