@@ -71,7 +71,19 @@ class ProgramSelectionController extends BaseAPIController
                                         properties: [
                                             new OA\Property(property: 'id', type: 'integer', example: 1),
                                             new OA\Property(property: 'name', type: 'string', example: 'Yoga'),
-                                            new OA\Property(property: 'cover', type: 'object', nullable: true),
+                                            new OA\Property(
+                                                property: 'cover',
+                                                description: 'Ảnh cover program (theo locale)',
+                                                properties: [
+                                                    new OA\Property(property: 'path', description: 'Đường dẫn file', type: 'string', example: 'programs/cover/sample.jpg'),
+                                                    new OA\Property(property: 'name', description: 'Tên file', type: 'string', example: 'sample.jpg'),
+                                                    new OA\Property(property: 'extension', description: 'Phần mở rộng file', type: 'string', example: 'jpg', nullable: true),
+                                                    new OA\Property(property: 'size', description: 'Kích thước file (bytes)', type: 'integer', example: 102400, nullable: true),
+                                                    new OA\Property(property: 'url', description: 'URL đầy đủ', type: 'string', example: 'http://localhost/storage/programs/cover/sample.jpg'),
+                                                ],
+                                                type: 'object',
+                                                nullable: true
+                                            ),
                                             new OA\Property(property: 'selected_at', type: 'string', format: 'date-time', nullable: true),
                                         ],
                                         type: 'object'
@@ -191,7 +203,33 @@ class ProgramSelectionController extends BaseAPIController
                     properties: [
                         new OA\Property(property: 'success', type: 'boolean', example: true),
                         new OA\Property(property: 'message', type: 'string', example: 'Success'),
-                        new OA\Property(property: 'data', description: 'Cùng shape GET /programs/selection', type: 'object'),
+                        new OA\Property(
+                            property: 'data',
+                            properties: [
+                                new OA\Property(property: 'subscription_id', type: 'integer', example: 10),
+                                new OA\Property(property: 'plan', type: 'string', example: 'plus'),
+                                new OA\Property(property: 'requires_selection', type: 'boolean', example: true),
+                                new OA\Property(property: 'max_programs', type: 'integer', example: 2, nullable: true),
+                                new OA\Property(
+                                    property: 'allowed_lesson_types',
+                                    type: 'array',
+                                    items: new OA\Items(type: 'string', example: 'level')
+                                ),
+                                new OA\Property(
+                                    property: 'selected_programs',
+                                    type: 'array',
+                                    items: new OA\Items(
+                                        properties: [
+                                            new OA\Property(property: 'id', type: 'integer', example: 1),
+                                            new OA\Property(property: 'name', type: 'string', example: 'Yoga'),
+                                            new OA\Property(property: 'selected_at', type: 'string', format: 'date-time', example: '2026-05-29T10:00:00+07:00'),
+                                        ],
+                                        type: 'object'
+                                    )
+                                ),
+                            ],
+                            type: 'object'
+                        ),
                     ]
                 )
             ),

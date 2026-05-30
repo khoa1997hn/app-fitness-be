@@ -11,6 +11,7 @@ use App\Web\Http\Controllers\API\V1\Subscription\AppleIapController;
 use App\Web\Http\Controllers\API\V1\Subscription\GoogleIapController;
 use App\Web\Http\Controllers\API\V1\Subscription\SubscriptionCancelController;
 use App\Web\Http\Controllers\API\V1\VideoPlayController;
+use App\Web\Http\Controllers\API\V1\VideoWatchProgressController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -75,6 +76,7 @@ Route::as('api.')
                 Route::delete('lessons/{lesson}/favorite', [LessonFavoriteController::class, 'destroy'])->name('lessons.favorite.destroy');
 
                 Route::post('videos/{video}/play', [VideoPlayController::class, 'play'])->name('videos.play');
+                Route::post('videos/{video}/watch-progress', [VideoWatchProgressController::class, 'store'])->name('videos.watch-progress');
             });
         });
     });

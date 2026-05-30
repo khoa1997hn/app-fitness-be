@@ -7,6 +7,7 @@ use App\Share\Enums\Level;
 use App\Share\Models\Lesson;
 use App\Share\Models\Program;
 use App\Share\Models\User;
+use App\Share\Services\Video\VideoWatchProgressService;
 use App\Share\Utils\ResponseAPI;
 use App\Web\Http\Controllers\API\V1\APIController as BaseAPIController;
 use Illuminate\Http\JsonResponse;
@@ -15,6 +16,10 @@ use OpenApi\Attributes as OA;
 
 class ProgramController extends BaseAPIController
 {
+    public function __construct(
+        private readonly VideoWatchProgressService $videoWatchProgressService,
+    ) {}
+
     /**
      * Lấy danh sách program cho màn Home
      */
@@ -62,6 +67,7 @@ class ProgramController extends BaseAPIController
                                         type: 'array',
                                         items: new OA\Items(type: 'string', example: 'Cải thiện sức khỏe')
                                     ),
+                                    new OA\Property(property: 'watched_percent', description: 'Phần trăm hoàn thành program (0-100)', type: 'integer', example: 30),
                                 ],
                                 type: 'object'
                             )
@@ -75,6 +81,9 @@ class ProgramController extends BaseAPIController
     )]
     public function index(): JsonResponse
     {
+        /** @var User $user */
+        $user = auth()->user();
+
         $programs = Program::query()
             ->withTranslation()
             ->with($this->programRelations())
@@ -82,8 +91,16 @@ class ProgramController extends BaseAPIController
             ->orderByDesc('id')
             ->get();
 
+        $programIds = $programs->pluck('id')->all();
+        $programPercentMap = $this->videoWatchProgressService->programPercentMapForUser($user, $programIds);
+
         return ResponseAPI::success(
-            $programs->map(fn (Program $program) => $this->mapProgram($program))->toArray()
+            $programs
+                ->map(fn (Program $program) => [
+                    ...$this->mapProgram($program),
+                    'watched_percent' => $programPercentMap[$program->id] ?? 0,
+                ])
+                ->toArray()
         );
     }
 
@@ -119,7 +136,19 @@ class ProgramController extends BaseAPIController
                                 new OA\Property(property: 'id', type: 'integer', example: 1),
                                 new OA\Property(property: 'name', type: 'string', example: 'Yoga'),
                                 new OA\Property(property: 'description', type: 'string', nullable: true),
-                                new OA\Property(property: 'cover', type: 'object', nullable: true),
+                                new OA\Property(
+                                    property: 'cover',
+                                    description: 'Ảnh cover program (theo locale)',
+                                    properties: [
+                                        new OA\Property(property: 'path', description: 'Đường dẫn file', type: 'string', example: 'programs/cover/sample.jpg'),
+                                        new OA\Property(property: 'name', description: 'Tên file', type: 'string', example: 'sample.jpg'),
+                                        new OA\Property(property: 'extension', description: 'Phần mở rộng file', type: 'string', example: 'jpg', nullable: true),
+                                        new OA\Property(property: 'size', description: 'Kích thước file (bytes)', type: 'integer', example: 102400, nullable: true),
+                                        new OA\Property(property: 'url', description: 'URL đầy đủ', type: 'string', example: 'http://localhost/storage/programs/cover/sample.jpg'),
+                                    ],
+                                    type: 'object',
+                                    nullable: true
+                                ),
                                 new OA\Property(property: 'rating', type: 'number', format: 'float', nullable: true),
                                 new OA\Property(property: 'duration_minutes', type: 'integer', example: 30),
                                 new OA\Property(property: 'course_count', type: 'integer', example: 3),
@@ -128,6 +157,7 @@ class ProgramController extends BaseAPIController
                                     type: 'array',
                                     items: new OA\Items(type: 'string')
                                 ),
+                                new OA\Property(property: 'watched_percent', description: 'Phần trăm hoàn thành program (0-100)', type: 'integer', example: 20),
                                 new OA\Property(
                                     property: 'lessons',
                                     properties: [
@@ -143,20 +173,145 @@ class ProgramController extends BaseAPIController
                                                             new OA\Property(property: 'day', description: 'Thứ tự ngày tập', type: 'integer', example: 1),
                                                             new OA\Property(property: 'name', type: 'string', example: 'Bài nhập môn'),
                                                             new OA\Property(property: 'description', type: 'string', nullable: true),
-                                                            new OA\Property(property: 'thumbnail', description: 'Ảnh thumbnail bài học (theo locale)', type: 'object', nullable: true),
+                                                            new OA\Property(
+                                                                property: 'thumbnail',
+                                                                description: 'Ảnh thumbnail bài học (theo locale)',
+                                                                properties: [
+                                                                    new OA\Property(property: 'path', description: 'Đường dẫn file', type: 'string', example: 'lessons/thumbnails/lesson.jpg'),
+                                                                    new OA\Property(property: 'name', description: 'Tên file', type: 'string', example: 'lesson.jpg'),
+                                                                    new OA\Property(property: 'extension', description: 'Phần mở rộng file', type: 'string', example: 'jpg', nullable: true),
+                                                                    new OA\Property(property: 'size', description: 'Kích thước file (bytes)', type: 'integer', example: 102400, nullable: true),
+                                                                    new OA\Property(property: 'url', description: 'URL đầy đủ', type: 'string', example: 'http://localhost/storage/lessons/thumbnails/lesson.jpg'),
+                                                                ],
+                                                                type: 'object',
+                                                                nullable: true
+                                                            ),
                                                             new OA\Property(property: 'duration_seconds', type: 'integer', example: 600),
                                                             new OA\Property(property: 'is_favorited', description: 'User hiện tại đã yêu thích bài học chưa', type: 'boolean', example: false),
+                                                            new OA\Property(property: 'watched_percent', description: 'Phần trăm hoàn thành lesson (0-100)', type: 'integer', example: 50),
                                                         ],
                                                         type: 'object'
                                                     )
                                                 ),
-                                                new OA\Property(property: 'intermediate', type: 'array', items: new OA\Items(type: 'object')),
-                                                new OA\Property(property: 'advanced', type: 'array', items: new OA\Items(type: 'object')),
+                                                new OA\Property(
+                                                    property: 'intermediate',
+                                                    type: 'array',
+                                                    items: new OA\Items(
+                                                        properties: [
+                                                            new OA\Property(property: 'id', type: 'integer', example: 2),
+                                                            new OA\Property(property: 'day', description: 'Thứ tự ngày tập', type: 'integer', example: 2),
+                                                            new OA\Property(property: 'name', type: 'string', example: 'Bài trung cấp'),
+                                                            new OA\Property(property: 'description', type: 'string', nullable: true),
+                                                            new OA\Property(
+                                                                property: 'thumbnail',
+                                                                description: 'Ảnh thumbnail bài học (theo locale)',
+                                                                properties: [
+                                                                    new OA\Property(property: 'path', description: 'Đường dẫn file', type: 'string', example: 'lessons/thumbnails/lesson.jpg'),
+                                                                    new OA\Property(property: 'name', description: 'Tên file', type: 'string', example: 'lesson.jpg'),
+                                                                    new OA\Property(property: 'extension', description: 'Phần mở rộng file', type: 'string', example: 'jpg', nullable: true),
+                                                                    new OA\Property(property: 'size', description: 'Kích thước file (bytes)', type: 'integer', example: 102400, nullable: true),
+                                                                    new OA\Property(property: 'url', description: 'URL đầy đủ', type: 'string', example: 'http://localhost/storage/lessons/thumbnails/lesson.jpg'),
+                                                                ],
+                                                                type: 'object',
+                                                                nullable: true
+                                                            ),
+                                                            new OA\Property(property: 'duration_seconds', type: 'integer', example: 900),
+                                                            new OA\Property(property: 'is_favorited', description: 'User hiện tại đã yêu thích bài học chưa', type: 'boolean', example: false),
+                                                            new OA\Property(property: 'watched_percent', description: 'Phần trăm hoàn thành lesson (0-100)', type: 'integer', example: 0),
+                                                        ],
+                                                        type: 'object'
+                                                    )
+                                                ),
+                                                new OA\Property(
+                                                    property: 'advanced',
+                                                    type: 'array',
+                                                    items: new OA\Items(
+                                                        properties: [
+                                                            new OA\Property(property: 'id', type: 'integer', example: 3),
+                                                            new OA\Property(property: 'day', description: 'Thứ tự ngày tập', type: 'integer', example: 3),
+                                                            new OA\Property(property: 'name', type: 'string', example: 'Bài nâng cao'),
+                                                            new OA\Property(property: 'description', type: 'string', nullable: true),
+                                                            new OA\Property(
+                                                                property: 'thumbnail',
+                                                                description: 'Ảnh thumbnail bài học (theo locale)',
+                                                                properties: [
+                                                                    new OA\Property(property: 'path', description: 'Đường dẫn file', type: 'string', example: 'lessons/thumbnails/lesson.jpg'),
+                                                                    new OA\Property(property: 'name', description: 'Tên file', type: 'string', example: 'lesson.jpg'),
+                                                                    new OA\Property(property: 'extension', description: 'Phần mở rộng file', type: 'string', example: 'jpg', nullable: true),
+                                                                    new OA\Property(property: 'size', description: 'Kích thước file (bytes)', type: 'integer', example: 102400, nullable: true),
+                                                                    new OA\Property(property: 'url', description: 'URL đầy đủ', type: 'string', example: 'http://localhost/storage/lessons/thumbnails/lesson.jpg'),
+                                                                ],
+                                                                type: 'object',
+                                                                nullable: true
+                                                            ),
+                                                            new OA\Property(property: 'duration_seconds', type: 'integer', example: 1200),
+                                                            new OA\Property(property: 'is_favorited', description: 'User hiện tại đã yêu thích bài học chưa', type: 'boolean', example: false),
+                                                            new OA\Property(property: 'watched_percent', description: 'Phần trăm hoàn thành lesson (0-100)', type: 'integer', example: 0),
+                                                        ],
+                                                        type: 'object'
+                                                    )
+                                                ),
                                             ],
                                             type: 'object'
                                         ),
-                                        new OA\Property(property: 'special', type: 'array', items: new OA\Items(type: 'object')),
-                                        new OA\Property(property: 'signature', type: 'array', items: new OA\Items(type: 'object')),
+                                        new OA\Property(
+                                            property: 'special',
+                                            type: 'array',
+                                            items: new OA\Items(
+                                                properties: [
+                                                    new OA\Property(property: 'id', type: 'integer', example: 4),
+                                                    new OA\Property(property: 'day', description: 'Thứ tự ngày tập', type: 'integer', example: 1),
+                                                    new OA\Property(property: 'name', type: 'string', example: 'Bài đặc biệt'),
+                                                    new OA\Property(property: 'description', type: 'string', nullable: true),
+                                                    new OA\Property(
+                                                        property: 'thumbnail',
+                                                        description: 'Ảnh thumbnail bài học (theo locale)',
+                                                        properties: [
+                                                            new OA\Property(property: 'path', description: 'Đường dẫn file', type: 'string', example: 'lessons/thumbnails/lesson.jpg'),
+                                                            new OA\Property(property: 'name', description: 'Tên file', type: 'string', example: 'lesson.jpg'),
+                                                            new OA\Property(property: 'extension', description: 'Phần mở rộng file', type: 'string', example: 'jpg', nullable: true),
+                                                            new OA\Property(property: 'size', description: 'Kích thước file (bytes)', type: 'integer', example: 102400, nullable: true),
+                                                            new OA\Property(property: 'url', description: 'URL đầy đủ', type: 'string', example: 'http://localhost/storage/lessons/thumbnails/lesson.jpg'),
+                                                        ],
+                                                        type: 'object',
+                                                        nullable: true
+                                                    ),
+                                                    new OA\Property(property: 'duration_seconds', type: 'integer', example: 600),
+                                                    new OA\Property(property: 'is_favorited', description: 'User hiện tại đã yêu thích bài học chưa', type: 'boolean', example: false),
+                                                    new OA\Property(property: 'watched_percent', description: 'Phần trăm hoàn thành lesson (0-100)', type: 'integer', example: 0),
+                                                ],
+                                                type: 'object'
+                                            )
+                                        ),
+                                        new OA\Property(
+                                            property: 'signature',
+                                            type: 'array',
+                                            items: new OA\Items(
+                                                properties: [
+                                                    new OA\Property(property: 'id', type: 'integer', example: 5),
+                                                    new OA\Property(property: 'day', description: 'Thứ tự ngày tập', type: 'integer', example: 1),
+                                                    new OA\Property(property: 'name', type: 'string', example: 'Bài signature'),
+                                                    new OA\Property(property: 'description', type: 'string', nullable: true),
+                                                    new OA\Property(
+                                                        property: 'thumbnail',
+                                                        description: 'Ảnh thumbnail bài học (theo locale)',
+                                                        properties: [
+                                                            new OA\Property(property: 'path', description: 'Đường dẫn file', type: 'string', example: 'lessons/thumbnails/lesson.jpg'),
+                                                            new OA\Property(property: 'name', description: 'Tên file', type: 'string', example: 'lesson.jpg'),
+                                                            new OA\Property(property: 'extension', description: 'Phần mở rộng file', type: 'string', example: 'jpg', nullable: true),
+                                                            new OA\Property(property: 'size', description: 'Kích thước file (bytes)', type: 'integer', example: 102400, nullable: true),
+                                                            new OA\Property(property: 'url', description: 'URL đầy đủ', type: 'string', example: 'http://localhost/storage/lessons/thumbnails/lesson.jpg'),
+                                                        ],
+                                                        type: 'object',
+                                                        nullable: true
+                                                    ),
+                                                    new OA\Property(property: 'duration_seconds', type: 'integer', example: 600),
+                                                    new OA\Property(property: 'is_favorited', description: 'User hiện tại đã yêu thích bài học chưa', type: 'boolean', example: false),
+                                                    new OA\Property(property: 'watched_percent', description: 'Phần trăm hoàn thành lesson (0-100)', type: 'integer', example: 0),
+                                                ],
+                                                type: 'object'
+                                            )
+                                        ),
                                     ],
                                     type: 'object'
                                 ),
@@ -177,14 +332,20 @@ class ProgramController extends BaseAPIController
 
         /** @var User $user */
         $user = auth()->user();
+
         $favoritedIds = $user->favoriteLessons()
             ->whereIn('lessons.id', $program->lessons->pluck('id'))
             ->pluck('lessons.id')
             ->all();
 
+        $lessonIds = $program->lessons->pluck('id')->all();
+        $lessonPercentMap = $this->videoWatchProgressService->lessonPercentMapForUser($user, $lessonIds);
+        $programPercent = $this->videoWatchProgressService->programWatchedPercent($user, $program);
+
         return ResponseAPI::success([
             ...$this->mapProgram($program),
-            'lessons' => $this->groupLessons($program->lessons, $favoritedIds),
+            'watched_percent' => $programPercent,
+            'lessons' => $this->groupLessons($program->lessons, $favoritedIds, $lessonPercentMap),
         ]);
     }
 
@@ -200,9 +361,6 @@ class ProgramController extends BaseAPIController
         ];
     }
 
-    /**
-     * @return array<string, mixed>
-     */
     private function mapProgram(Program $program): array
     {
         $totalSeconds = $program->lessons
@@ -222,9 +380,10 @@ class ProgramController extends BaseAPIController
 
     /**
      * @param  list<int>  $favoritedIds
+     * @param  array<int, int>  $lessonPercentMap  lessonId => watched_percent
      * @return array<string, mixed>
      */
-    private function mapLesson(Lesson $lesson, array $favoritedIds): array
+    private function mapLesson(Lesson $lesson, array $favoritedIds, array $lessonPercentMap): array
     {
         return [
             'id' => $lesson->id,
@@ -234,15 +393,17 @@ class ProgramController extends BaseAPIController
             'thumbnail' => $lesson->thumbnail,
             'duration_seconds' => (int) $lesson->videos->sum('duration_seconds'),
             'is_favorited' => in_array($lesson->id, $favoritedIds, true),
+            'watched_percent' => $lessonPercentMap[$lesson->id] ?? 0,
         ];
     }
 
     /**
      * @param  Collection<int, Lesson>  $lessons
      * @param  list<int>  $favoritedIds
+     * @param  array<int, int>  $lessonPercentMap
      * @return array<string, mixed>
      */
-    private function groupLessons(Collection $lessons, array $favoritedIds): array
+    private function groupLessons(Collection $lessons, array $favoritedIds, array $lessonPercentMap): array
     {
         $sorted = $this->sortLessons($lessons);
 
@@ -252,24 +413,29 @@ class ProgramController extends BaseAPIController
             'level' => [
                 'beginner' => $this->mapLessonsCollection(
                     $levelLessons->filter(fn (Lesson $lesson) => $lesson->level?->is(Level::Beginner)),
-                    $favoritedIds
+                    $favoritedIds,
+                    $lessonPercentMap
                 ),
                 'intermediate' => $this->mapLessonsCollection(
                     $levelLessons->filter(fn (Lesson $lesson) => $lesson->level?->is(Level::Intermediate)),
-                    $favoritedIds
+                    $favoritedIds,
+                    $lessonPercentMap
                 ),
                 'advanced' => $this->mapLessonsCollection(
                     $levelLessons->filter(fn (Lesson $lesson) => $lesson->level?->is(Level::Advanced)),
-                    $favoritedIds
+                    $favoritedIds,
+                    $lessonPercentMap
                 ),
             ],
             'special' => $this->mapLessonsCollection(
                 $sorted->filter(fn (Lesson $lesson) => $lesson->type->is(LessonType::Special)),
-                $favoritedIds
+                $favoritedIds,
+                $lessonPercentMap
             ),
             'signature' => $this->mapLessonsCollection(
                 $sorted->filter(fn (Lesson $lesson) => $lesson->type->is(LessonType::Signature)),
-                $favoritedIds
+                $favoritedIds,
+                $lessonPercentMap
             ),
         ];
     }
@@ -277,12 +443,13 @@ class ProgramController extends BaseAPIController
     /**
      * @param  Collection<int, Lesson>  $lessons
      * @param  list<int>  $favoritedIds
+     * @param  array<int, int>  $lessonPercentMap
      * @return list<array<string, mixed>>
      */
-    private function mapLessonsCollection(Collection $lessons, array $favoritedIds): array
+    private function mapLessonsCollection(Collection $lessons, array $favoritedIds, array $lessonPercentMap): array
     {
         return $lessons
-            ->map(fn (Lesson $lesson) => $this->mapLesson($lesson, $favoritedIds))
+            ->map(fn (Lesson $lesson) => $this->mapLesson($lesson, $favoritedIds, $lessonPercentMap))
             ->values()
             ->all();
     }

@@ -12,6 +12,7 @@ alwaysApply: false
 - Mỗi endpoint cần: `path`, `summary`, `description`, `tags`, `parameters` (nếu có), `requestBody` (nếu có), `responses` nested đầy đủ field theo mapping thực tế, status codes đầy đủ (200/4xx/500), `security` nếu cần auth.
 - Đổi mapping field response → BẮT BUỘC đổi attribute cho khớp.
 - Sau khi sửa: `sail exec --user sail laravel.test php artisan l5-swagger:generate`.
+- **CẤM schema mơ hồ**: `type: 'object'` không có `properties` → vi phạm. File/media fields (cover, thumbnail, image, file, ...) bắt buộc khai báo đủ `{ path, name, extension, size, url }`.
 
 Chi tiết: [`docs/rules/08-swagger.md`](../../docs/rules/08-swagger.md)
 Agent phụ trách: [`docs/agents/openapi-writer.md`](../../docs/agents/openapi-writer.md)

@@ -35,7 +35,7 @@ Cần API trả **đầy đủ thông tin program** và **danh sách bài học*
 - Mỗi lesson: `id`, `day`, `name`, `description`, `thumbnail`, `duration_seconds` (sum video theo locale). **Không** trả `file` video.
 - `day` (int) = thứ tự ngày tập (admin nhập). Sort trong nhóm theo `day` asc rồi `id` asc.
 - `thumbnail` = ảnh bài học (đa ngôn ngữ, File jsonb + `FileType::LessonThumbnail`). Hiển thị ở card figma.
-- Tiến độ xem (Replay/Continue/Start, tick hoàn thành) → **FE tự lưu local, BE không trả**.
+- Tiến độ xem (Replay/Continue/Start, tick hoàn thành) → **FE tự lưu local, BE không trả** *(superseded 2026-05-30 — xem [`video-watch-progress/spec.md`](../video-watch-progress/spec.md))*.
 
 ## API Design
 
@@ -105,6 +105,7 @@ Cần API trả **đầy đủ thông tin program** và **danh sách bài học*
 - 2026-05-29 (update figma) — Lesson thumbnail? → CÓ. Thêm `thumbnail` (jsonb File) vào `lesson_translations` + `FileType::LessonThumbnail` (prefix `lesson/thumbnail`, image, 5MB). Trả trong lesson item.
 - 2026-05-29 (update figma) — Nhãn "Day N" + thứ tự? → Thêm cột `day` (unsignedInteger, NOT NULL, default 1) vào `lessons`. Sort nhóm theo `day` asc rồi `id` asc (bỏ sort theo tên). Trả `day` trong response.
 - 2026-05-29 (update figma) — Tiến độ xem video (Replay/Continue/Start)? → FE tự lưu local, BE không care.
+- **2026-05-30** — Tiến độ xem: BE lưu qua `watch-progress`; GET program detail trả `watched_percent` trên program + từng lesson *(superseded: bỏ `is_completed` — xem [`video-watch-progress/spec.md`](../video-watch-progress/spec.md))*.
 
 ## Liên quan
 

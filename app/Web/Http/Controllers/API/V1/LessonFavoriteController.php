@@ -4,6 +4,7 @@ namespace App\Web\Http\Controllers\API\V1;
 
 use App\Share\Models\Lesson;
 use App\Share\Models\User;
+use App\Share\Services\Video\VideoWatchProgressService;
 use App\Share\Utils\ResponseAPI;
 use App\Web\Http\Controllers\API\V1\APIController as BaseAPIController;
 use Illuminate\Http\JsonResponse;
@@ -12,6 +13,10 @@ use OpenApi\Attributes as OA;
 
 class LessonFavoriteController extends BaseAPIController
 {
+    public function __construct(
+        private readonly VideoWatchProgressService $videoWatchProgressService,
+    ) {}
+
     /**
      * Danh sách bài học user đã yêu thích (flatten, phân trang)
      */
@@ -43,10 +48,23 @@ class LessonFavoriteController extends BaseAPIController
                                         properties: [
                                             new OA\Property(property: 'id', type: 'integer', example: 12),
                                             new OA\Property(property: 'name', description: 'Tên bài học (theo locale)', type: 'string', example: 'Day 1 - Warm up'),
-                                            new OA\Property(property: 'thumbnail', description: 'Ảnh thumbnail (theo locale)', type: 'object', nullable: true),
+                                            new OA\Property(
+                                                property: 'thumbnail',
+                                                description: 'Ảnh thumbnail (theo locale)',
+                                                properties: [
+                                                    new OA\Property(property: 'path', description: 'Đường dẫn file', type: 'string', example: 'lessons/thumbnails/lesson.jpg'),
+                                                    new OA\Property(property: 'name', description: 'Tên file', type: 'string', example: 'lesson.jpg'),
+                                                    new OA\Property(property: 'extension', description: 'Phần mở rộng file', type: 'string', example: 'jpg', nullable: true),
+                                                    new OA\Property(property: 'size', description: 'Kích thước file (bytes)', type: 'integer', example: 102400, nullable: true),
+                                                    new OA\Property(property: 'url', description: 'URL đầy đủ', type: 'string', example: 'http://localhost/storage/lessons/thumbnails/lesson.jpg'),
+                                                ],
+                                                type: 'object',
+                                                nullable: true
+                                            ),
                                             new OA\Property(property: 'day', description: 'Ngày tập của bài học', type: 'integer', example: 1),
                                             new OA\Property(property: 'duration_seconds', type: 'integer', example: 600),
                                             new OA\Property(property: 'is_favorited', type: 'boolean', example: true),
+                                            new OA\Property(property: 'watched_percent', description: 'Phần trăm hoàn thành lesson (0-100)', type: 'integer', example: 50),
                                         ],
                                         type: 'object'
                                     )
@@ -80,13 +98,17 @@ class LessonFavoriteController extends BaseAPIController
 
         $favorites = $user->favoriteLessons()
             ->withTranslation()
-            ->with(['videos'])
+            ->with(['videos' => fn ($query) => $query->withTranslation()])
             ->orderByPivot('created_at', 'desc')
             ->paginate($perPage);
 
+        $lessons = collect($favorites->items());
+        $lessonIds = $lessons->pluck('id')->all();
+        $lessonPercentMap = $this->videoWatchProgressService->lessonPercentMapForUser($user, $lessonIds);
+
         return ResponseAPI::success([
-            'items' => collect($favorites->items())
-                ->map(fn (Lesson $lesson) => $this->mapFavorite($lesson))
+            'items' => $lessons
+                ->map(fn (Lesson $lesson) => $this->mapFavorite($lesson, $lessonPercentMap))
                 ->all(),
             'pagination' => [
                 'current_page' => $favorites->currentPage(),
@@ -176,9 +198,10 @@ class LessonFavoriteController extends BaseAPIController
     }
 
     /**
+     * @param  array<int, int>  $lessonPercentMap  lessonId => watched_percent
      * @return array<string, mixed>
      */
-    private function mapFavorite(Lesson $lesson): array
+    private function mapFavorite(Lesson $lesson, array $lessonPercentMap): array
     {
         return [
             'id' => $lesson->id,
@@ -187,6 +210,7 @@ class LessonFavoriteController extends BaseAPIController
             'day' => $lesson->day,
             'duration_seconds' => (int) $lesson->videos->sum('duration_seconds'),
             'is_favorited' => true,
+            'watched_percent' => $lessonPercentMap[$lesson->id] ?? 0,
         ];
     }
 }
