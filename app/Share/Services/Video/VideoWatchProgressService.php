@@ -161,6 +161,100 @@ class VideoWatchProgressService
     }
 
     /**
+     * Return all programs the user has watch progress for, sorted by most recently watched.
+     * Uses a window function to pick the latest video per program in one query,
+     * then batch-loads stats and models.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function leftOffProgram(User $user): array
+    {
+        // One query: for each program, get the video with MAX(last_watched_at) using ROW_NUMBER()
+        $latestRows = DB::select(
+            '
+            SELECT video_id, lesson_id, program_id, program_last_watched_at
+            FROM (
+                SELECT
+                    uvp.video_id,
+                    v.lesson_id,
+                    l.program_id,
+                    MAX(uvp.last_watched_at) OVER (PARTITION BY l.program_id) AS program_last_watched_at,
+                    ROW_NUMBER() OVER (PARTITION BY l.program_id ORDER BY uvp.last_watched_at DESC) AS rn
+                FROM user_video_progress uvp
+                JOIN videos v ON v.id = uvp.video_id
+                JOIN lessons l ON l.id = v.lesson_id
+                WHERE uvp.user_id = ? AND uvp.last_watched_at IS NOT NULL
+            ) ranked
+            WHERE rn = 1
+            ORDER BY program_last_watched_at DESC
+        ',
+            [$user->id]
+        );
+
+        if ($latestRows === []) {
+            return [];
+        }
+
+        $programIds = array_column($latestRows, 'program_id');
+        $lessonIds = array_column($latestRows, 'lesson_id');
+        $videoIds = array_column($latestRows, 'video_id');
+
+        // Batch: progress + total duration per program
+        $statsRows = DB::table('videos as v')
+            ->join('lessons as l', 'l.id', '=', 'v.lesson_id')
+            ->leftJoin('video_translations as vt', function ($join) {
+                $join->on('vt.video_id', '=', 'v.id')
+                    ->where('vt.locale', '=', config('app.locale'));
+            })
+            ->leftJoin('user_video_progress as uvp', function ($join) use ($user) {
+                $join->on('uvp.video_id', '=', 'v.id')->where('uvp.user_id', '=', $user->id);
+            })
+            ->whereIn('l.program_id', $programIds)
+            ->groupBy('l.program_id')
+            ->selectRaw('
+                l.program_id,
+                COALESCE(SUM(COALESCE(uvp.watched_seconds, 0)), 0) AS watched_seconds,
+                COALESCE(ROUND(COUNT(CASE WHEN uvp.is_completed THEN 1 END) * 100.0 / NULLIF(COUNT(v.id), 0)), 0) AS completed_percent,
+                COALESCE(SUM(COALESCE(vt.duration_seconds, 0)), 0) AS total_duration_seconds
+            ')
+            ->get()
+            ->keyBy('program_id');
+
+        // Batch load models
+        $programs = Program::withTranslation()->whereIn('id', $programIds)->get()->keyBy('id');
+        $lessons = Lesson::withTranslation()->whereIn('id', $lessonIds)->get()->keyBy('id');
+        $videos = Video::withTranslation()->whereIn('id', $videoIds)->get()->keyBy('id');
+
+        return array_map(function ($row) use ($programs, $lessons, $videos, $statsRows) {
+            $program = $programs[$row->program_id];
+            $lesson = $lessons[$row->lesson_id];
+            $video = $videos[$row->video_id];
+            $stats = $statsRows[$row->program_id] ?? null;
+
+            return [
+                'id' => $program->id,
+                'name' => $program->name,
+                'cover' => $program->cover,
+                'duration_seconds' => (int) ($stats?->total_duration_seconds ?? 0),
+                'progress' => [
+                    'watched_seconds' => (int) ($stats?->watched_seconds ?? 0),
+                    'completed_percent' => (int) ($stats?->completed_percent ?? 0),
+                ],
+                'last_lesson' => [
+                    'id' => $lesson->id,
+                    'name' => $lesson->name,
+                    'day' => $lesson->day,
+                    'thumbnail' => $lesson->thumbnail,
+                    'video' => [
+                        'id' => $video->id,
+                        'duration_seconds' => (int) $video->duration_seconds,
+                    ],
+                ],
+            ];
+        }, $latestRows);
+    }
+
+    /**
      * Batch progress for multiple lessons — one SQL query.
      *
      * @param  array<int>  $lessonIds
