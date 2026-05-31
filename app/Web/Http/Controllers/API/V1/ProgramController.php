@@ -25,7 +25,7 @@ class ProgramController extends BaseAPIController
      */
     #[OA\Get(
         path: '/programs',
-        description: 'Lấy danh sách program (bộ môn) hiển thị ở màn Home. Trả full list (không phân trang), sắp xếp theo sort tăng dần và id giảm dần. duration_minutes và course_count được tính động từ lessons/videos. Không trả link xem video.',
+        description: 'Lấy danh sách program (bộ môn) hiển thị ở màn Home. Trả full list (không phân trang). Thứ tự: các program user đã yêu thích trước (theo thứ tự favorite, mới nhất trước), sau đó các program chưa yêu thích (sort tăng dần, id giảm dần). duration_minutes và course_count được tính động từ lessons/videos. Không trả link xem video.',
         summary: 'Lấy danh sách program',
         security: [['bearerAuth' => []]],
         tags: ['Programs'],
@@ -93,16 +93,28 @@ class ProgramController extends BaseAPIController
         /** @var User $user */
         $user = auth()->user();
 
-        $programs = Program::query()
+        $favoritedPrograms = $user->favoritePrograms()
+            ->withTranslation()
+            ->with($this->programRelations())
+            ->orderByPivot('created_at', 'desc')
+            ->get();
+
+        $favoritedProgramIds = $favoritedPrograms->pluck('id')->all();
+
+        $otherProgramsQuery = Program::query()
             ->withTranslation()
             ->with($this->programRelations())
             ->orderByTranslation('sort')
-            ->orderByDesc('id')
-            ->get();
+            ->orderByDesc('id');
+
+        if ($favoritedProgramIds !== []) {
+            $otherProgramsQuery->whereNotIn('id', $favoritedProgramIds);
+        }
+
+        $programs = $favoritedPrograms->concat($otherProgramsQuery->get());
 
         $programIds = $programs->pluck('id')->all();
         $programProgressMap = $this->videoWatchProgressService->programProgressMapForUser($user, $programIds);
-        $favoritedProgramIds = $user->favoritePrograms()->pluck('programs.id')->all();
 
         return ResponseAPI::success(
             $programs
