@@ -73,7 +73,7 @@ Route::as('api.')
                 Route::get('programs/left-off', ProgramLeftOffController::class)->name('programs.left-off');
                 Route::get('programs/selection', [ProgramSelectionController::class, 'show'])->name('programs.selection.show');
                 Route::post('programs/selection', [ProgramSelectionController::class, 'store'])->name('programs.selection.store');
-                Route::post('programs/{program}/favorite', [ProgramFavoriteController::class, 'store'])->name('programs.favorite.store');
+                Route::post('programs/favorites', [ProgramFavoriteController::class, 'store'])->name('programs.favorites.store');
                 Route::get('programs/{program}', [ProgramController::class, 'show'])->name('programs.show');
 
                 Route::get('lessons/favorites', [LessonFavoriteController::class, 'index'])->name('lessons.favorites.index');
