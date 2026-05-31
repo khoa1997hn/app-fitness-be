@@ -27,6 +27,7 @@ use Tymon\JWTAuth\Contracts\JWTSubject;
  * @property-read Subscription|null $validSubscription
  * @property \Carbon\Carbon|null $deleted_at
  * @property-read \Illuminate\Database\Eloquent\Collection<int, Lesson> $favoriteLessons
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Program> $favoritePrograms
  */
 class User extends Authenticatable implements JWTSubject
 {
@@ -85,6 +86,12 @@ class User extends Authenticatable implements JWTSubject
     public function favoriteLessons(): BelongsToMany
     {
         return $this->belongsToMany(Lesson::class, 'lesson_favorites')
+            ->withTimestamps();
+    }
+
+    public function favoritePrograms(): BelongsToMany
+    {
+        return $this->belongsToMany(Program::class, 'program_favorites')
             ->withTimestamps();
     }
 

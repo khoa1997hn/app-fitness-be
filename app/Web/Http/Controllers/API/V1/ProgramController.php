@@ -76,6 +76,7 @@ class ProgramController extends BaseAPIController
                                         ],
                                         type: 'object'
                                     ),
+                                    new OA\Property(property: 'is_favorited', description: 'User hiện tại đã yêu thích program chưa', type: 'boolean', example: false),
                                 ],
                                 type: 'object'
                             )
@@ -101,12 +102,14 @@ class ProgramController extends BaseAPIController
 
         $programIds = $programs->pluck('id')->all();
         $programProgressMap = $this->videoWatchProgressService->programProgressMapForUser($user, $programIds);
+        $favoritedProgramIds = $user->favoritePrograms()->pluck('programs.id')->all();
 
         return ResponseAPI::success(
             $programs
                 ->map(fn (Program $program) => [
                     ...$this->mapProgram($program),
                     'progress' => $programProgressMap[$program->id] ?? ['watched_seconds' => 0, 'completed_percent' => 0],
+                    'is_favorited' => in_array($program->id, $favoritedProgramIds, true),
                 ])
                 ->toArray()
         );
