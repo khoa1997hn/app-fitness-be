@@ -7,6 +7,7 @@ use Astrotomic\Translatable\Contracts\Translatable as TranslatableContract;
 use Astrotomic\Translatable\Translatable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property int $id
@@ -16,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Carbon\Carbon $created_at
  * @property \Carbon\Carbon $updated_at
  * @property-read Lesson $lesson
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, UserVideoProgress> $progresses
  */
 class Video extends Model implements TranslatableContract
 {
@@ -33,5 +35,10 @@ class Video extends Model implements TranslatableContract
     public function lesson(): BelongsTo
     {
         return $this->belongsTo(Lesson::class);
+    }
+
+    public function progresses(): HasMany
+    {
+        return $this->hasMany(UserVideoProgress::class);
     }
 }
