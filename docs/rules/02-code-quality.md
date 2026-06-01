@@ -6,6 +6,17 @@
   - Ví dụ: `User::query()->where(...)->get()` (KHÔNG `User::where()->get()`).
   - Ví dụ: `Admin::query()->firstOrCreate([...])`.
 
+### KHÔNG truy cập table trực tiếp — quy hết về Model
+
+- **CẤM `DB::table('...')`, `DB::select(...)`, `DB::insert/update/delete/statement` với tên bảng hard-code.** Mọi truy vấn dữ liệu PHẢI đi qua Eloquent Model + quan hệ:
+  - Quan hệ: `belongsTo` / `hasMany` / `belongsToMany` (tên bảng pivot dạng `'lesson_favorites'` trong relationship là HỢP LỆ — đó là Laravel chuẩn, không phải "truy cập table trực tiếp").
+  - Aggregate: `withSum` / `withCount` / `withAvg` / `whereHas` thay cho `join` thủ công.
+  - `selectRaw('SUM(...)')` cho phép tính tổng/đếm trên query của Model — KHÔNG phải tên bảng nên KHÔNG vi phạm rule.
+- **Ngoại lệ duy nhất: query quá phức tạp** mà Eloquent diễn đạt được nhưng kém rõ ràng/kém hiệu năng rõ rệt (vd. window function, CTE nhiều tầng). Khi đó:
+  - Vẫn ưu tiên bắt đầu từ `Model::query()` rồi mới `selectRaw`/subquery.
+  - Nếu buộc dùng raw SQL → thêm comment giải thích VÌ SAO không dùng Eloquent được.
+- `DB::transaction(...)` KHÔNG thuộc rule này (không truy cập table) — dùng thoải mái.
+
 ## Exception
 
 - **Catch**: dùng `catch (\Throwable $e)`, KHÔNG `catch (\Exception $e)`.

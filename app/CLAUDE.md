@@ -9,6 +9,7 @@
 
 ## Code quality (rule 02)
 - Eloquent: luôn `Model::query()->...`.
+- CẤM `DB::table('...')` / `DB::select(...)` tên bảng hard-code — quy hết về Model + quan hệ (`withSum`/`withCount`/`whereHas`). Ngoại lệ: query quá phức tạp (window function/CTE) → vẫn bắt đầu từ `Model::query()`, raw thì comment lý do. `DB::transaction(...)` không thuộc rule này.
 - Catch: `catch (\Throwable $e)`, KHÔNG `\Exception`.
 - Throw: dùng domain exception trong `app/Share/Exceptions/<Domain>/`, KHÔNG `\Exception` raw.
 - CẤM `ValidationException` trong Service — validation thuộc FormRequest.
