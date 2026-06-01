@@ -36,5 +36,5 @@ Source of truth của bộ kit AI cho dự án. Áp dụng cho Cursor (qua `.cur
 ## Ánh xạ tới LLM
 
 - **Cursor**: `.cursor/rules/*.mdc` (point tới `docs/rules/*`) + `.cursor/commands/*.md` (point tới `docs/commands/*`).
-- **Claude Code**: `.claude/agents/*` (paste content từ `docs/agents/*.md`).
+- **Claude Code**: `CLAUDE.md` root (entry, luôn load) + nested `CLAUDE.md` trong `app/`, `app/Web/Http/Controllers/API/V1/`, `app/Admin/`, `app/Share/Enums/`, `app/Share/Services/File/`, `app/Share/Services/Subscription/`, `app/Share/Models/`, `database/migrations/`, `config/` (mimic glob Cursor MDC) + `.claude/agents/*.md` (17 subagent, body = "Read docs/agents/<name>.md và đóng vai") + `.claude/commands/*.md` (3 slash command).
 - **LLM khác**: chỉ cần đọc `docs/` từ root, không phụ thuộc tool.

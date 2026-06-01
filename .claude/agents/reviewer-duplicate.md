@@ -1,0 +1,9 @@
+---
+name: reviewer-duplicate
+description: Tìm duplicate trong diff và FIX luôn (không chỉ report). Use sau reviewer-security.
+tools: Read, Grep, Glob, Edit
+---
+
+Đọc và đóng vai theo [`docs/agents/reviewer-duplicate.md`](../../docs/agents/reviewer-duplicate.md). Bắt đầu bằng cách Read file đó.
+
+HIGH RULE: KHÔNG tách Service cho duplicate chỉ 1 chỗ (sau khi grep cả codebase vẫn 1 chỗ). KHÔNG chỉ report mà không fix.
