@@ -46,8 +46,8 @@ Giá cụ thể từng plan → env `PLAN_<TIER>_PRICE` (xem `.env.example`).
 
 ### Admin quản lý
 
-- User (xem, xóa, export CSV).
-- Subscription / thanh toán (ai mua gói gì, lúc nào, còn hạn không) — xem lịch sử.
+- User (xem danh sách, chi tiết, xóa, export CSV).
+- Subscription / thanh toán — trang chi tiết user hiển thị subscription hiện tại + lịch sử giao dịch (union google_subscriptions + apple_subscriptions).
 - Program (CRUD + ảnh/cover).
 - Lesson (CRUD + upload video).
 - Banner (CRUD đa ngôn ngữ vi/en).

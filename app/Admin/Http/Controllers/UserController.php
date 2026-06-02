@@ -3,6 +3,8 @@
 namespace App\Admin\Http\Controllers;
 
 use App\Share\Http\Controllers\Controller as BaseController;
+use App\Share\Models\AppleSubscription;
+use App\Share\Models\GoogleSubscription;
 use App\Share\Models\User;
 use Illuminate\Http\Request;
 use League\Csv\Writer;
@@ -16,6 +18,45 @@ class UserController extends BaseController
         $users = $query->latest()->orderByDesc('id')->paginate(10);
 
         return view('admin.users.index', compact('users'));
+    }
+
+    public function show(User $user)
+    {
+        $user->load('subscription');
+
+        $googleTransactions = GoogleSubscription::query()
+            ->where('user_id', $user->id)
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(fn ($t) => [
+                'provider' => 'Google IAP',
+                'transaction_id' => $t->order_id,
+                'product_id' => $t->item_id,
+                'purchase_date' => $t->transaction_date,
+                'expires_date' => $t->expiry_date,
+                'status' => $t->status?->value,
+                'created_at' => $t->created_at,
+            ]);
+
+        $appleTransactions = AppleSubscription::query()
+            ->where('user_id', $user->id)
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(fn ($t) => [
+                'provider' => 'Apple IAP',
+                'transaction_id' => $t->transaction_id,
+                'product_id' => $t->product_id,
+                'purchase_date' => $t->purchase_date,
+                'expires_date' => $t->expires_date,
+                'status' => $t->status?->value,
+                'created_at' => $t->created_at,
+            ]);
+
+        $transactions = $googleTransactions->concat($appleTransactions)
+            ->sortByDesc('created_at')
+            ->values();
+
+        return view('admin.users.show', compact('user', 'transactions'));
     }
 
     public function destroy(User $user)
