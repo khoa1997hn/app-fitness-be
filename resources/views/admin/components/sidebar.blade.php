@@ -24,7 +24,7 @@
         <ul class="sidebar-menu">
             <li class="sidebar-menu-title">MENU</li>
             <li>
-                <a href="{{ route('admin.dashboard') }}" class="navItem">
+                <a href="{{ route('admin.dashboard') }}" class="navItem {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
                     <span class="flex items-center">
                         <iconify-icon class="nav-icon" icon="heroicons-outline:home"></iconify-icon>
                         <span>Bảng điều khiển</span>
@@ -32,7 +32,7 @@
                 </a>
             </li>
             <li>
-                <a href="{{ route('admin.users.index') }}" class="navItem">
+                <a href="{{ route('admin.users.index') }}" class="navItem {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
                     <span class="flex items-center">
                         <iconify-icon class="nav-icon" icon="heroicons-outline:users"></iconify-icon>
                         <span>Khách hàng</span>
@@ -40,10 +40,18 @@
                 </a>
             </li>
             <li>
-                <a href="{{ route('admin.programs.index') }}" class="navItem">
+                <a href="{{ route('admin.programs.index') }}" class="navItem {{ request()->routeIs('admin.programs.*') ? 'active' : '' }}">
                     <span class="flex items-center">
                         <iconify-icon class="nav-icon" icon="heroicons-outline:academic-cap"></iconify-icon>
                         <span>Bộ môn</span>
+                    </span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ route('admin.banners.index') }}" class="navItem {{ request()->routeIs('admin.banners.*') ? 'active' : '' }}">
+                    <span class="flex items-center">
+                        <iconify-icon class="nav-icon" icon="heroicons-outline:photograph"></iconify-icon>
+                        <span>Banner</span>
                     </span>
                 </a>
             </li>

@@ -29,6 +29,7 @@ Route::middleware('auth:admin')->group(function () {
     })->name('dashboard');
     Route::resource('users', \App\Admin\Http\Controllers\UserController::class)->only(['index', 'destroy'])->names(['index' => 'users.index', 'destroy' => 'users.destroy']);
     Route::get('users/export', [\App\Admin\Http\Controllers\UserController::class, 'export'])->name('users.export');
+    Route::resource('banners', \App\Admin\Http\Controllers\BannerController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
     Route::resource('programs', \App\Admin\Http\Controllers\ProgramController::class)->only(['index', 'edit', 'update', 'destroy']);
     // scoped(): ràng buộc lesson PHẢI thuộc program trên URL (chống IDOR — sửa/xóa lesson của program khác qua manipulate ID).
     Route::resource('programs.lessons', \App\Admin\Http\Controllers\LessonController::class)->only(['create', 'store', 'edit', 'update', 'destroy'])->scoped();
