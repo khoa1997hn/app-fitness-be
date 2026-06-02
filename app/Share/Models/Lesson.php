@@ -9,6 +9,7 @@ use Astrotomic\Translatable\Contracts\Translatable as TranslatableContract;
 use Astrotomic\Translatable\Translatable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
@@ -24,6 +25,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property \Carbon\Carbon $updated_at
  * @property-read Program $program
  * @property-read \Illuminate\Database\Eloquent\Collection<int, Video> $videos
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, User> $favorites
  */
 class Lesson extends Model implements TranslatableContract
 {
@@ -59,5 +61,10 @@ class Lesson extends Model implements TranslatableContract
     public function videos(): HasMany
     {
         return $this->hasMany(Video::class);
+    }
+
+    public function favorites(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'lesson_favorites');
     }
 }

@@ -111,6 +111,43 @@ public function setStatus(string $status): void { ... }
 $svc->setStatus(SubscriptionStatus::Active);  // gọi
 ```
 
+## Label hiển thị (đa ngôn ngữ) — dùng lang file, KHÔNG override `getDescription()`
+
+Label hiển thị của enum (dropdown / cột table / badge) lấy qua **localization gốc của BenSampo**, KHÔNG override `getDescription()` bằng `match`, KHÔNG hardcode label ở Blade/Controller.
+
+### Cơ chế
+- Base `App\Share\Enums\Enum` đã `implements BenSampo\Enum\Contracts\LocalizedEnum` → **mọi enum đều localizable**. Thiếu key trong lang file → tự fallback friendly name (không lỗi).
+- Label đặt trong `lang/<locale>/enums.php` (số nhiều — đúng default package, key `enums.<FQCN>.<value>`):
+
+```php
+// lang/vi/enums.php
+use App\Share\Enums\LessonType;
+use App\Share\Enums\Level;
+
+return [
+    LessonType::class => [
+        LessonType::Level     => 'Theo cấp độ',
+        LessonType::Special   => 'Đặc biệt',
+        LessonType::Signature => 'Đặc trưng',
+    ],
+    Level::class => [
+        Level::Beginner     => 'Người mới',
+        Level::Intermediate => 'Trung cấp',
+        Level::Advanced     => 'Nâng cao',
+    ],
+];
+```
+
+### Dùng
+- Dropdown form: `LessonType::asSelectArray()` → `value => label` (option value raw, text hiển thị theo locale).
+- Hiển thị 1 giá trị: accessor `->description` (vd `$lesson->type->description`) — KHÔNG `->value`. Package tự resolve theo `app()->getLocale()`.
+
+### Lý do
+- Gom label về 1 file lang theo từng locale → đa ngôn ngữ thật (thêm `lang/en/enums.php` là có tiếng Anh), không phải sửa code enum.
+- Thêm locale mới chỉ thêm file lang, KHÔNG đụng class enum.
+
+> CẤM override `getDescription()` bằng `match` để hardcode label — phải dùng `lang/<locale>/enums.php`.
+
 ## Trong Swagger annotation
 
 Liệt kê value (raw string) qua `enum:` field:
@@ -134,3 +171,4 @@ KHÔNG ghi PascalCase constant — Swagger phải là raw value để khớp JSO
 - [ ] Có field nào trong Model dùng enum này → cast + PHPDoc đầy đủ?
 - [ ] Có endpoint Web response trả enum → Swagger annotation liệt kê value?
 - [ ] Có method signature dùng enum → type-hint `string`?
+- [ ] Có cần label hiển thị (Admin Blade) → thêm key vào `lang/<locale>/enums.php` (KHÔNG override `getDescription()`), dùng `asSelectArray()` / `->description`?

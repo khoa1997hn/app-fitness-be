@@ -73,6 +73,16 @@ Có thể gom 1 lần hỏi (tối đa 4 câu theo `docs/guides/ask-protocol.md`
 ### Env
 - `AWS_*`, `AWS_PRESIGNED_URL_EXPIRES` — xem `.env.example`.
 
+### CORS bucket (BẮT BUỘC khi upload từ browser)
+- Upload presigned **PUT** chạy trực tiếp browser → S3, nên là request **cross-origin có preflight** (PUT luôn bị browser gửi `OPTIONS`). Nếu bucket **chưa cấu hình CORS** → preflight bị chặn → browser báo `net::ERR_FAILED` (KHÔNG phải lỗi signature; lỗi signature trả HTTP 403 có body).
+- Dùng command có sẵn để set CORS cho bucket (chạy qua Sail):
+  ```bash
+  sail exec --user sail laravel.test php artisan s3:put-cors
+  ```
+  (`app/Share/Console/Commands/PutBucketCorsCommand.php` → AWS SDK `PutBucketCors` trên disk `s3`.)
+- Policy hiện tại: `AllowedOrigins = ['*']` cho **dev**. **Production BẮT BUỘC siết** về domain admin thật (sửa `AllowedOrigins` trong command trước khi chạy ở prod).
+- Kiểm tra nhanh sau khi set: `curl -i -X OPTIONS '<bucket-url>/<key>' -H 'Origin: <admin-origin>' -H 'Access-Control-Request-Method: PUT'` → phải thấy header `access-control-allow-origin`.
+
 ## Khi thêm 1 loại file mới (ví dụ `LessonVideo`)
 
 ### Bước 1 — Thêm vào FileType enum

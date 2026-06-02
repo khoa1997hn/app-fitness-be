@@ -7,6 +7,8 @@ alwaysApply: false
 
 Áp dụng khi cần chạy bất kỳ lệnh PHP/Composer/Artisan/Pint.
 
+**LUÔN LUÔN dùng Sail cho mọi lệnh PHP-related. CẤM chạy php/composer/artisan/pint trực tiếp ở host, CẤM chạy qua `docker`/`docker compose` thường.**
+
 - Sail chưa chạy → `sail up -d` trước.
 - Mẫu: `sail exec --user sail laravel.test <command>`.
 - Migration: BẮT BUỘC `php artisan make:migration ...` qua Sail.

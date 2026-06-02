@@ -39,6 +39,14 @@
                     </span>
                 </a>
             </li>
+            <li>
+                <a href="{{ route('admin.programs.index') }}" class="navItem">
+                    <span class="flex items-center">
+                        <iconify-icon class="nav-icon" icon="heroicons-outline:academic-cap"></iconify-icon>
+                        <span>Bộ môn</span>
+                    </span>
+                </a>
+            </li>
         </ul>
     </div>
 </div>

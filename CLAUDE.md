@@ -86,6 +86,7 @@ Mỗi agent file (`.claude/agents/<name>.md`) có YAML frontmatter (`name`, `des
 
 ## Ràng buộc nghiêm
 
+- **LUÔN dùng Laravel Sail** cho MỌI lệnh PHP-related (php/artisan/composer/pint/phpunit/tinker...): `sail exec --user sail laravel.test <command>`. CẤM chạy trực tiếp ở host, CẤM chạy qua `docker`/`docker compose` thường. Xem [`docs/rules/06-docker-sail.md`](docs/rules/06-docker-sail.md).
 - KHÔNG tự `git commit` / `git push`. Finalizer chỉ HỎI, user duyệt mới làm. Xem [`docs/guides/commit-protocol.md`](docs/guides/commit-protocol.md).
 - KHÔNG skip vai trò trong workflow.
 - KHÔNG bịa rule/nghiệp vụ — mọi quyết định phải dựa trên spec hoặc rule file.
