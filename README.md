@@ -213,6 +213,16 @@ sudo chmod -R 775 /path/to/fitness-website/storage
 sudo chmod -R 775 /path/to/fitness-website/bootstrap/cache
 ```
 
+### Bước 8: Cấu hình CORS cho bucket S3 (upload ảnh/video)
+
+Upload ảnh/video chạy trực tiếp từ browser lên S3 qua presigned PUT, nên bucket **bắt buộc có CORS**. Dùng command có sẵn:
+
+```bash
+php artisan s3:put-cors
+```
+
+> ⚠️ **Trước khi chạy ở production:** mở `app/Share/Console/Commands/PutBucketCorsCommand.php` và **siết `AllowedOrigins`** từ `['*']` (giá trị dev) về **domain admin thật** (ví dụ `['https://admin.example.com']`), sau đó mới chạy `s3:put-cors` trên bucket production. Để `*` ở production là rủi ro bảo mật.
+
 ## Seed dữ liệu
 
 ### Seed dữ liệu bắt buộc
