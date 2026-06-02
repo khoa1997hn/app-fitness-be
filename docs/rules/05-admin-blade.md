@@ -17,6 +17,43 @@
 - Component tái dùng: `resources/views/admin/components/`
 - Trang feature: `resources/views/admin/<feature>/index.blade.php`, `create.blade.php`, …
 
+## CSS Dashcode là bản BIÊN DỊCH SẴN (static) — KHÔNG có JIT
+
+- Admin nạp `dashcode/assets/css/app.css` (build sẵn), KHÔNG có Tailwind JIT. ⇒ **CHỈ dùng class CSS đã tồn tại** trong `app.css`.
+- CẤM chế class Tailwind tùy ý (vd `bg-emerald-100`, `bg-sky-100`…) — không có trong build nên KHÔNG lên style (im lặng, không lỗi).
+- Màu semantic có sẵn: `primary / secondary / success / warning / info / danger` (kèm `-500`, `text-<c>-500`, `bg-opacity-30`, `bg-<c>-100`). Nghi ngờ → grep trong `public/dashcode/assets/css/app.css` trước khi dùng.
+
+## Hiển thị label enum/status trong danh sách — dùng badge màu
+
+- Label enum/status ở **cột table / danh sách** KHÔNG để text trơn → render **badge bo tròn có màu** cho sinh động.
+- Dùng partial chung: `@include('admin.components.enum-badge', ['enum' => $model->field])`.
+  - Nhận enum instance (BenSampo) hoặc null; render `->description` (label từ `lang/<locale>/enums.php`).
+  - Màu gán **ổn định theo value** từ palette **Dashcode** (`badge bg-<c>-500 text-<c>-500 bg-opacity-30 rounded-3xl`, `<c>` ∈ primary/success/warning/info/danger); null → text trung tính.
+- KHÔNG tự viết span màu rời rạc ở mỗi view — tái dùng partial. KHÔNG dùng class màu ngoài palette Dashcode (xem mục trên).
+
+## Hiển thị lỗi validate — DƯỚI từng field
+
+- Lỗi validate hiển thị **ngay dưới field tương ứng**, KHÔNG gom 1 cục `@if($errors->any())` ở đầu form.
+- Mỗi input: `@error('<field>')<span class="text-danger-500 text-xs mt-1 block">{{ $message }}</span>@enderror`.
+- Field đa ngôn ngữ: dùng key theo locale, đặt dưới đúng input của locale đó — `@error('translations.'.$locale.'.name') … @enderror`.
+- Field lồng (file/nested): `@error('video.file.path')`, `@error('translations.'.$locale.'.cover.path')`…
+
+## Form đa ngôn ngữ — input các locale cạnh nhau theo từng field
+
+Form create/edit có field dịch (translatable): **nhóm theo FIELD**, các locale của cùng 1 field xếp **cạnh nhau** (grid), KHÔNG tách thành block riêng theo từng locale.
+
+```
+Tên *
+┌─────────────────────┬─────────────────────┐
+│ Tiếng Việt *        │ Tiếng Anh           │
+│ [input vi]          │ [input en]          │
+└─────────────────────┴─────────────────────┘
+```
+
+- Lặp động theo `config('translatable.locales')`; required chỉ ép `config('translatable.fallback_locale')` (1 locale).
+- Tên hiển thị locale lấy **động** qua `\Locale::getDisplayLanguage($locale, app()->getLocale())` (ext intl) — KHÔNG hardcode "Tiếng Việt"/"Tiếng Anh" (thêm locale mới tự có tên).
+- Bố cục: `grid grid-cols-1 md:grid-cols-2 gap-4` (mỗi locale 1 cột), label field ở trên.
+
 ## Route
 
 - File: `routes/admin.php`

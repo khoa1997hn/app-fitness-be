@@ -124,9 +124,10 @@ Giá cụ thể từng plan → env `PLAN_<TIER>_PRICE` (xem `.env.example`).
 - Phát video: `POST /api/v1/videos/{video}/play` — kiểm tra subscription + program/lesson type, trả metadata video + presigned GET (`VideoPlayService`); FE gọi lại `play` khi URL hết hạn.
 - Tiến độ xem: `POST /api/v1/videos/{video}/watch-progress` (start/progress/completed); tổng hợp % video → lesson → program; các API program/lesson/favorites/play trả `progress: {watched_seconds, completed_percent}`.
 - Program đang học dở: `GET /api/v1/programs/left-off` — trả program có `last_watched_at` mới nhất kèm `last_lesson` + `video`.
+- Admin CRUD Program + Lesson + Video: `ProgramController` (index/edit/update/destroy — KHÔNG create, 7 program cố định) + `LessonController` nested (create/store/edit/update/destroy). Views Blade `admin/programs/{index,edit}`, `admin/lessons/{create,edit,_form}`; relation `favorites()` trên Program/Lesson; label tiếng Việt enum `LessonType`/`Level` qua `getDescription()`. Upload video presigned PUT (lưu key S3) + xem presigned GET; `duration_seconds` nhập tay. Route: `routes/admin.php` (2 resource); menu sidebar "Bộ môn".
 
 ### CHƯA có (phase tiếp)
-- Admin CRUD: programs, lessons (kèm upload video), subscription/payment view.
+- Admin: subscription/payment view.
 
 > LLM thực hiện task: nếu task chạm các module **CHƯA có**, dùng `/implement-spec`. Nếu chạm module **đã có** mà phải đổi, dùng `/update-spec`.
 

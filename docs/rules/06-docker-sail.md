@@ -1,6 +1,14 @@
 # Docker & Sail commands
 
-Mọi lệnh PHP/Composer/Artisan **phải chạy qua Laravel Sail**.
+**LUÔN LUÔN** chạy mọi lệnh liên quan PHP (php, artisan, composer, pint, phpunit/pest, tinker, ...) **qua Laravel Sail**.
+
+## CẤM (HIGH)
+
+- ❌ KHÔNG chạy `php`, `composer`, `artisan`, `pint`, ... trực tiếp trên **host**.
+- ❌ KHÔNG chạy qua `docker` / `docker compose exec ...` thường — **chỉ dùng `sail`**.
+- ✅ Mọi lệnh PHP-related: bọc qua `sail exec --user sail laravel.test <command>`.
+
+Lý do: môi trường PHP/extension/version sống trong container Sail; chạy ở host hoặc docker thường dễ lệch version, thiếu extension, sai path, hỏng kết quả.
 
 ## Mẫu lệnh
 
