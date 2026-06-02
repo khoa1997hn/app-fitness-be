@@ -105,10 +105,10 @@ class ProgramController extends BaseAPIController
             ->withTranslation()
             ->with($this->programRelations())
             ->orderByTranslation('sort')
-            ->orderByDesc('id');
+            ->orderByDesc('programs.id');
 
         if ($favoritedProgramIds !== []) {
-            $otherProgramsQuery->whereNotIn('id', $favoritedProgramIds);
+            $otherProgramsQuery->whereNotIn('programs.id', $favoritedProgramIds);
         }
 
         $programs = $favoritedPrograms->concat($otherProgramsQuery->get());
