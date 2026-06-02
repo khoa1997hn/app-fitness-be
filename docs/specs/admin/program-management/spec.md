@@ -200,6 +200,15 @@ Rule cập nhật: `docs/rules/11-enum.md` (đổi sang lang file), `docs/rules/
 
 **Lưu ý:** đây là fix hạ tầng (cấu hình bucket S3), KHÔNG đổi luồng presigned trong code Laravel (`FileUploadService::createPresignedUpload` giữ nguyên).
 
+## Update 2026-06-02 (f) — UI nâng cấp: sao rating, trái tim favorite, badge ngày, định dạng thời lượng
+
+**Phạm vi:** chỉ thay đổi view, không migration, không logic.
+
+1. **Rating → sao vàng:** Cột "Đánh giá" ở list program hiển thị sao vàng filled (iconify `heroicons-solid:star`, `text-warning-500`) thay cho số thuần, dựa trên `floor(rating)`; sao chưa fill dùng `heroicons-outline:star` màu xám; kèm số rating nhỏ bên cạnh.
+2. **Favorites count → trái tim đỏ:** Cột "Số yêu thích" ở list program và list lesson (trong edit program) hiển thị icon trái tim đỏ (iconify `heroicons-solid:heart`, `text-danger-500`) + số bên cạnh.
+3. **Cột "Ngày" lesson → badge:** Giá trị `day` trong table list lesson hiển thị dạng badge Dashcode (`badge bg-info-500 text-info-500 bg-opacity-30 rounded-3xl`) thay cho text trơn.
+4. **Định dạng thời lượng → H:i:s:** Tất cả chỗ hiện tại dùng "N phút N giây" chuyển sang format `H:i:s` (ví dụ `0:30:00`). Hiện tại chỉ có 1 chỗ: cột "Tổng thời lượng" ở list program. Logic: `sprintf('%d:%02d:%02d', floor($s/3600), floor(($s%3600)/60), $s%60)`.
+
 ## Liên quan
 
 - Overview: `docs/project-overview.md` (mục Program/Lesson, Subscription plans, đa ngôn ngữ).

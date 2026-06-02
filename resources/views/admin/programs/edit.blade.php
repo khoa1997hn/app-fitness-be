@@ -166,8 +166,15 @@
                                         <td class="table-td">{{ $lesson->name }}</td>
                                         <td class="table-td">@include('admin.components.enum-badge', ['enum' => $lesson->type])</td>
                                         <td class="table-td">@include('admin.components.enum-badge', ['enum' => $lesson->level])</td>
-                                        <td class="table-td">{{ $lesson->day }}</td>
-                                        <td class="table-td">{{ $lesson->favorites_count }}</td>
+                                        <td class="table-td">
+                                            <span class="badge bg-info-500 text-info-500 bg-opacity-30 rounded-3xl">{{ $lesson->day }}</span>
+                                        </td>
+                                        <td class="table-td">
+                                            <span class="inline-flex items-center gap-1">
+                                                <iconify-icon icon="heroicons-solid:heart" class="text-danger-500"></iconify-icon>
+                                                {{ $lesson->favorites_count }}
+                                            </span>
+                                        </td>
                                         <td class="table-td">
                                             <div class="relative">
                                                 <div class="dropdown relative">

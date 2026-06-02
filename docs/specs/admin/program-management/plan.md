@@ -123,3 +123,17 @@ Thêm Admin CRUD cho Program (chỉ edit + delete) và Lesson (CRUD đầy đủ
 - CORS: AllowedOrigins `['*']` (dev), Methods `[PUT,GET,HEAD]`, Headers `['*']`, ExposeHeaders `['ETag']`, MaxAgeSeconds 3600.
 - Verify: chạy qua Sail `sail exec --user sail laravel.test php artisan s3:put-cors`; sau đó probe lại `OPTIONS` bucket thấy trả CORS headers; upload cover trên UI thành công.
 - Rule liên quan: 06-docker-sail (Sail), 09-magic-and-env (config), 12-file-upload (S3 presigned), 02-code-quality (\Throwable).
+
+
+## Update 2026-06-02 (f) — UI nâng cấp view
+
+### Ảnh hưởng
+- `resources/views/admin/programs/index.blade.php` — rating → sao, favorites → trái tim, duration → H:i:s
+- `resources/views/admin/programs/edit.blade.php` — lesson favorites → trái tim, Ngày → badge
+
+### Verify
+- [ ] List program: cột rating hiển thị sao vàng + số
+- [ ] List program: cột yêu thích hiển thị trái tim đỏ + số
+- [ ] List program: cột thời lượng hiển thị H:i:s (ví dụ 1:05:30)
+- [ ] List lesson trong edit program: cột yêu thích hiển thị trái tim đỏ + số
+- [ ] List lesson trong edit program: cột Ngày hiển thị badge màu

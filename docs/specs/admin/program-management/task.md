@@ -89,3 +89,11 @@
 - [ ] reviewer-rules + reviewer-security cho command mới
 - [ ] docs-syncer: ghi chú CORS vào docs/rules/12-file-upload.md + 06-docker-sail.md
 - [ ] finalizer: pint qua Sail + commit message đề xuất
+
+## Update 2026-06-02 (f)
+
+- [ ] 1. `programs/index.blade.php` — rating: sao vàng filled/outline theo `floor(rating)` + số
+- [ ] 2. `programs/index.blade.php` — favorites: icon trái tim đỏ + số
+- [ ] 3. `programs/index.blade.php` — thời lượng: format H:i:s
+- [ ] 4. `programs/edit.blade.php` — lesson favorites: icon trái tim đỏ + số
+- [ ] 5. `programs/edit.blade.php` — cột Ngày: badge info

@@ -42,7 +42,12 @@
                             </thead>
                             <tbody class="bg-white divide-y divide-slate-100 dark:bg-slate-800 dark:divide-slate-700">
                                 @forelse ($programs as $program)
-                                    @php $totalSeconds = $program->totalDurationSeconds(); @endphp
+                                    @php
+                                        $totalSeconds = $program->totalDurationSeconds();
+                                        $durationH = floor($totalSeconds / 3600);
+                                        $durationM = floor(($totalSeconds % 3600) / 60);
+                                        $durationS = $totalSeconds % 60;
+                                    @endphp
                                     <tr>
                                         <td class="table-td">{{ $program->id }}</td>
                                         <td class="table-td">
@@ -53,10 +58,30 @@
                                             @endif
                                         </td>
                                         <td class="table-td">{{ $program->name }}</td>
-                                        <td class="table-td">{{ $program->rating ?? 'N/A' }}</td>
-                                        <td class="table-td">{{ $program->favorites_count }}</td>
+                                        <td class="table-td">
+                                            @if ($program->rating !== null)
+                                                <span class="inline-flex items-center gap-0.5">
+                                                    @for ($i = 1; $i <= 5; $i++)
+                                                        @if ($i <= floor($program->rating))
+                                                            <iconify-icon icon="heroicons-solid:star" class="text-warning-500"></iconify-icon>
+                                                        @else
+                                                            <iconify-icon icon="heroicons-outline:star" class="text-slate-300"></iconify-icon>
+                                                        @endif
+                                                    @endfor
+                                                    <span class="text-xs text-slate-500 ml-1">{{ $program->rating }}</span>
+                                                </span>
+                                            @else
+                                                <span class="text-slate-400">N/A</span>
+                                            @endif
+                                        </td>
+                                        <td class="table-td">
+                                            <span class="inline-flex items-center gap-1">
+                                                <iconify-icon icon="heroicons-solid:heart" class="text-danger-500"></iconify-icon>
+                                                {{ $program->favorites_count }}
+                                            </span>
+                                        </td>
                                         <td class="table-td">{{ $program->lessons_count }}</td>
-                                        <td class="table-td">{{ floor($totalSeconds / 60) }} phút {{ $totalSeconds % 60 }} giây</td>
+                                        <td class="table-td">{{ sprintf('%d:%02d:%02d', $durationH, $durationM, $durationS) }}</td>
                                         <td class="table-td">
                                             <div class="relative">
                                                 <div class="dropdown relative">
