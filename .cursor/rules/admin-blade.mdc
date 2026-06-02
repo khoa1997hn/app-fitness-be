@@ -14,5 +14,6 @@ alwaysApply: false
 - Label enum/status trong list → **badge màu** Dashcode: `@include('admin.components.enum-badge', ['enum' => $model->field])` (màu ổn định theo value). KHÔNG text trơn.
 - Lỗi validate hiển **dưới từng field** bằng `@error('<field>')…@enderror` (field i18n: `translations.<locale>.<field>`), KHÔNG gom 1 cục đầu form.
 - Form đa ngôn ngữ: nhóm theo FIELD, các locale của 1 field xếp **cạnh nhau** (`grid md:grid-cols-2`), lặp động `config('translatable.locales')`, tên locale qua `\Locale::getDisplayLanguage()` (KHÔNG hardcode), required chỉ ép `fallback_locale`.
+- Upload media: thẻ preview (`<img>`/`<video>`) luôn có trong DOM (ẩn `hidden`); sau upload JS set `src = URL.createObjectURL(file)`, bỏ `hidden` (video gọi thêm `.load()`) — phản ánh ngay, không đợi reload.
 
 Chi tiết: [`docs/rules/05-admin-blade.md`](../../docs/rules/05-admin-blade.md)

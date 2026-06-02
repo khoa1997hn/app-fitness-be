@@ -143,6 +143,16 @@
 9. **Lesson `type` ↔ `level`:** `type = level` ⇒ `level` REQUIRED; `type = special`/`signature` ⇒ `level = null` (form ẩn ô level).
 10. **Lesson `day`:** integer, min 1, ý nghĩa = ngày thứ N trong lộ trình; **KHÔNG unique** (cho phép nhiều lesson cùng day).
 
+## Update 2026-06-02 (d) — Player video phản ánh ngay sau khi upload
+
+**Triệu chứng:** upload video (PUT S3) xong nhưng `<video>` player chưa hiển thị video vừa upload (chỉ hiện video đã lưu từ server khi load trang).
+
+**Nguyên nhân:** giống bug preview ảnh — player chỉ render server-side khi `$video->file` đã tồn tại; JS upload chỉ set hidden input, KHÔNG cập nhật player.
+
+**Fix:** player `<video>` luôn hiện diện (ẩn `hidden` nếu chưa có video). JS sau khi upload thành công set `<source src>` = `URL.createObjectURL(file)`, gọi `player.load()`, bỏ `hidden`. (Cùng pattern với preview ảnh cover/thumbnail.)
+
+Rule: mở rộng note "preview media sau upload" trong `docs/rules/05-admin-blade.md` áp cho cả ảnh lẫn video.
+
 ## Update 2026-06-02 (c) — Badge dùng class Dashcode + lỗi validate dưới field + preview ảnh sau upload
 
 3 chỉnh sửa UI (kèm rule):

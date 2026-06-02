@@ -90,14 +90,13 @@
 <div class="border border-slate-200 dark:border-slate-700 rounded-md p-4 mb-5">
     <h5 class="text-base font-medium mb-4">Video</h5>
 
-    @if ($video && $video->file)
-        <div class="mb-4">
-            <video controls class="max-w-full rounded" style="max-height: 360px;">
-                <source src="{{ $video->file->url() }}">
-                Trình duyệt không hỗ trợ phát video.
-            </video>
-        </div>
-    @endif
+    @php $videoUrl = ($video && $video->file) ? $video->file->url() : null; @endphp
+    <div class="mb-4 {{ $videoUrl ? '' : 'hidden' }}" id="video-preview-wrapper">
+        <video controls class="max-w-full rounded" style="max-height: 360px;" id="video-preview">
+            <source src="{{ $videoUrl }}" id="video-preview-source">
+            Trình duyệt không hỗ trợ phát video.
+        </video>
+    </div>
 
     <div class="input-area mb-2">
         <label class="form-label">Tệp video @unless ($video)<span class="text-red-500">*</span>@endunless</label>
@@ -178,6 +177,12 @@
                 document.getElementById('video-name').value = meta.name;
                 document.getElementById('video-extension').value = meta.extension || '';
                 document.getElementById('video-size').value = meta.size || '';
+                const wrapper = document.getElementById('video-preview-wrapper');
+                const source = document.getElementById('video-preview-source');
+                const player = document.getElementById('video-preview');
+                source.src = URL.createObjectURL(this.files[0]);
+                player.load();
+                wrapper.classList.remove('hidden');
                 status.textContent = 'Đã tải lên: ' + meta.name;
             } catch (error) {
                 status.textContent = 'Lỗi: ' + error.message;

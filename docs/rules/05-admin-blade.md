@@ -54,6 +54,12 @@ Tên *
 - Tên hiển thị locale lấy **động** qua `\Locale::getDisplayLanguage($locale, app()->getLocale())` (ext intl) — KHÔNG hardcode "Tiếng Việt"/"Tiếng Anh" (thêm locale mới tự có tên).
 - Bố cục: `grid grid-cols-1 md:grid-cols-2 gap-4` (mỗi locale 1 cột), label field ở trên.
 
+## Upload media — preview phản ánh NGAY sau khi upload
+
+- Sau khi upload presigned thành công, phải hiển thị ngay media vừa chọn (ảnh `<img>` / video `<video>`), KHÔNG đợi save + reload.
+- Thẻ preview LUÔN hiện diện trong DOM (ẩn `hidden` nếu chưa có), gắn `id`/`class` + `data-locale` để JS cập nhật.
+- JS sau upload: set `src` = `URL.createObjectURL(file)`, bỏ `hidden`; với `<video>` gọi thêm `player.load()`.
+
 ## Route
 
 - File: `routes/admin.php`
