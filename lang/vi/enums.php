@@ -9,14 +9,14 @@ use App\Share\Enums\Level;
 // Key: <EnumClass>::class => [<enum value> => 'label'].
 return [
     LessonType::class => [
-        LessonType::Level => 'Theo cấp độ',
-        LessonType::Special => 'Đặc biệt',
-        LessonType::Signature => 'Đặc trưng',
+        LessonType::Level => 'Level',
+        LessonType::Special => 'Special',
+        LessonType::Signature => 'Signature',
     ],
 
     Level::class => [
-        Level::Beginner => 'Người mới',
-        Level::Intermediate => 'Trung cấp',
-        Level::Advanced => 'Nâng cao',
+        Level::Beginner => 'Beginner',
+        Level::Intermediate => 'Intermediate',
+        Level::Advanced => 'Advanced',
     ],
 ];

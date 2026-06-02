@@ -7,6 +7,15 @@
     $requiredLocale = (string) config('translatable.fallback_locale');
     // Tên hiển thị locale lấy động (ext intl) — không hardcode "Tiếng Việt"/"Tiếng Anh".
     $localeLabel = fn (string $locale) => ucfirst(\Locale::getDisplayLanguage($locale, app()->getLocale()) ?: $locale);
+    // Preview media: ưu tiên file vừa upload (old) để giữ qua validate fail, fallback giá trị server.
+    $resolveMedia = fn (string $prefix, $serverFile) => old($prefix.'.path')
+        ? \App\Share\Attributes\File::fromArray([
+            'path' => old($prefix.'.path'),
+            'name' => old($prefix.'.name'),
+            'extension' => old($prefix.'.extension'),
+            'size' => old($prefix.'.size'),
+        ])
+        : $serverFile;
 @endphp
 
 @section('content')
@@ -92,7 +101,7 @@
                     <label class="form-label">Ảnh cover <span class="text-red-500">*</span></label>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         @foreach ($locales as $locale)
-                            @php $cover = optional($program->translate($locale))->cover; @endphp
+                            @php $cover = $resolveMedia('translations.'.$locale.'.cover', optional($program->translate($locale))->cover); @endphp
                             <div class="input-area">
                                 <span class="text-xs font-medium text-slate-500 mb-1 block">{{ $localeLabel($locale) }}@if ($locale === $requiredLocale) <span class="text-red-500">*</span>@endif</span>
                                 <input type="file" accept="image/*" class="form-control cover-file-input" data-locale="{{ $locale }}">

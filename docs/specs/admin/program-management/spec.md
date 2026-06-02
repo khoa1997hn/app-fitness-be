@@ -143,6 +143,12 @@
 9. **Lesson `type` ↔ `level`:** `type = level` ⇒ `level` REQUIRED; `type = special`/`signature` ⇒ `level = null` (form ẩn ô level).
 10. **Lesson `day`:** integer, min 1, ý nghĩa = ngày thứ N trong lộ trình; **KHÔNG unique** (cho phép nhiều lesson cùng day).
 
+## Update 2026-06-02 (e) — Giữ preview ảnh/video khi validate fail + label enum để tiếng Anh
+
+1. **Preview ảnh/video biến mất khi submit fail validate:** hidden input (path/name/...) ĐÃ giữ qua `old()` nên data không mất, NHƯNG thẻ preview `<img>`/`<video>` lấy `src` từ giá trị server (DB), không từ `old()` → reload sau validate fail thì preview trống.
+   - Fix: blade resolve File **ưu tiên `old('<prefix>.path')`** (dựng `App\Share\Attributes\File::fromArray(...)` → presigned GET `url()`), fallback giá trị server. Áp cho cover (program), thumbnail + video (lesson). Preview giữ nguyên sau validate fail.
+2. **Label enum để tiếng Anh:** theo yêu cầu user, giữ entry trong `lang/vi/enums.php` nhưng dùng **label tiếng Anh nguyên bản** (Level/Special/Signature, Beginner/Intermediate/Advanced) thay cho tiếng Việt.
+
 ## Update 2026-06-02 (d) — Player video phản ánh ngay sau khi upload
 
 **Triệu chứng:** upload video (PUT S3) xong nhưng `<video>` player chưa hiển thị video vừa upload (chỉ hiện video đã lưu từ server khi load trang).

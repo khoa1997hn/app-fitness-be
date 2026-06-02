@@ -59,6 +59,7 @@ Tên *
 - Sau khi upload presigned thành công, phải hiển thị ngay media vừa chọn (ảnh `<img>` / video `<video>`), KHÔNG đợi save + reload.
 - Thẻ preview LUÔN hiện diện trong DOM (ẩn `hidden` nếu chưa có), gắn `id`/`class` + `data-locale` để JS cập nhật.
 - JS sau upload: set `src` = `URL.createObjectURL(file)`, bỏ `hidden`; với `<video>` gọi thêm `player.load()`.
+- **Giữ preview qua validate fail:** hidden input (`path/name/...`) phải dùng `old()`; thẻ preview render `src` từ **`old('<prefix>.path')` trước** (dựng `App\Share\Attributes\File::fromArray(...)->url()` → presigned GET), fallback giá trị server. KHÔNG lấy `src` chỉ từ DB — sẽ mất ảnh/video vừa upload khi submit lỗi.
 
 ## Route
 

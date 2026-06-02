@@ -5,6 +5,15 @@
     $video = $video ?? null;
     // Tên hiển thị locale lấy động (ext intl) — không hardcode "Tiếng Việt"/"Tiếng Anh".
     $localeLabel = fn (string $locale) => ucfirst(\Locale::getDisplayLanguage($locale, app()->getLocale()) ?: $locale);
+    // Preview media: ưu tiên file vừa upload (old) để giữ qua validate fail, fallback giá trị server.
+    $resolveMedia = fn (string $prefix, $serverFile) => old($prefix.'.path')
+        ? \App\Share\Attributes\File::fromArray([
+            'path' => old($prefix.'.path'),
+            'name' => old($prefix.'.name'),
+            'extension' => old($prefix.'.extension'),
+            'size' => old($prefix.'.size'),
+        ])
+        : $serverFile;
 @endphp
 
 <div class="input-area mb-4 max-w-[300px]">
@@ -70,7 +79,7 @@
     <label class="form-label">Ảnh thumbnail <span class="text-red-500">*</span></label>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         @foreach ($locales as $locale)
-            @php $thumbnail = optional($lesson ? $lesson->translate($locale) : null)->thumbnail; @endphp
+            @php $thumbnail = $resolveMedia('translations.'.$locale.'.thumbnail', optional($lesson ? $lesson->translate($locale) : null)->thumbnail); @endphp
             <div class="input-area">
                 <span class="text-xs font-medium text-slate-500 mb-1 block">{{ $localeLabel($locale) }}@if ($locale === $requiredLocale) <span class="text-red-500">*</span>@endif</span>
                 <input type="file" accept="image/*" class="form-control thumbnail-file-input" data-locale="{{ $locale }}">
@@ -90,7 +99,10 @@
 <div class="border border-slate-200 dark:border-slate-700 rounded-md p-4 mb-5">
     <h5 class="text-base font-medium mb-4">Video</h5>
 
-    @php $videoUrl = ($video && $video->file) ? $video->file->url() : null; @endphp
+    @php
+        $videoFile = $resolveMedia('video.file', $video?->file);
+        $videoUrl = $videoFile?->url();
+    @endphp
     <div class="mb-4 {{ $videoUrl ? '' : 'hidden' }}" id="video-preview-wrapper">
         <video controls class="max-w-full rounded" style="max-height: 360px;" id="video-preview">
             <source src="{{ $videoUrl }}" id="video-preview-source">
