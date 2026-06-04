@@ -20,6 +20,7 @@ class ProgramFavoriteController extends BaseAPIController
         path: '/programs/favorites',
         description: 'Đánh dấu yêu thích một hoặc nhiều program cho user hiện tại. User có thể yêu thích nhiều program; mỗi lần gọi chỉ thêm các program trong body, không xóa các program đã yêu thích trước đó. Idempotent: gọi lại với cùng program_ids vẫn trả 200, không tạo bản ghi trùng.',
         summary: 'Yêu thích program',
+        tags: ['Program Favorites'],
         security: [['bearerAuth' => []]],
         requestBody: new OA\RequestBody(
             required: true,
