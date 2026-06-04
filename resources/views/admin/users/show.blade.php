@@ -200,6 +200,20 @@
                             <span class="font-medium text-warning-500">{{ $sub->grace_period_ends_at->format('d/m/Y H:i') }}</span>
                         </div>
                     @endif
+                    @if ($sub->plan->value !== 'all')
+                        <div class="flex flex-col gap-1 md:col-span-2">
+                            <span class="text-slate-400">Bộ môn đã chọn</span>
+                            @if ($sub->programSelections->isNotEmpty())
+                                <ul class="list-disc list-inside text-slate-700 dark:text-white font-medium">
+                                    @foreach ($sub->programSelections->sortBy('created_at') as $selection)
+                                        <li>{{ $selection->program->name ?? 'N/A' }}</li>
+                                    @endforeach
+                                </ul>
+                            @else
+                                <span class="text-slate-400">Chưa chọn bộ môn</span>
+                            @endif
+                        </div>
+                    @endif
                 </div>
             @else
                 <p class="text-slate-400 text-sm">Người dùng chưa có subscription.</p>

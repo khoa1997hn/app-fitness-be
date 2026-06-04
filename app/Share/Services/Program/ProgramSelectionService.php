@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Share\Services\Program;
 
+use App\Share\Enums\Plan;
 use App\Share\Models\Program;
 use App\Share\Models\Subscription;
 use App\Share\Models\SubscriptionProgramSelection;
@@ -63,20 +64,50 @@ class ProgramSelectionService
             ]);
         }
 
+        $this->assertProgramIdsValid($subscription->plan, $programIds);
+
+        $this->replaceSelections($subscription, $user, $programIds);
+
+        $subscription->unsetRelation('programSelections');
+
+        return $this->buildStatusPayload($subscription->fresh(['programSelections.program']));
+    }
+
+    /**
+     * Admin: đồng bộ bộ môn theo subscription (không phụ thuộc validSubscription).
+     *
+     * @param  list<int>  $programIds
+     */
+    public function adminSyncSelections(Subscription $subscription, User $user, string $plan, array $programIds): void
+    {
+        $limits = $this->subscriptionService->getPlanLimits(Plan::fromValue($plan));
+
+        if (! $limits['requires_selection']) {
+            $this->clearSelections($subscription);
+
+            return;
+        }
+
+        $this->assertProgramIdsValid($plan, $programIds);
+
+        $this->replaceSelections($subscription, $user, $programIds);
+    }
+
+    public function clearSelections(Subscription $subscription): void
+    {
+        SubscriptionProgramSelection::query()
+            ->where('subscription_id', $subscription->id)
+            ->delete();
+
+        $subscription->unsetRelation('programSelections');
+    }
+
+    /**
+     * @param  list<int>  $programIds
+     */
+    private function replaceSelections(Subscription $subscription, User $user, array $programIds): void
+    {
         $programIds = array_values(array_unique($programIds));
-
-        if ($programIds === [] || count($programIds) > (int) $limits['max_programs']) {
-            throw ValidationException::withMessages([
-                'program_ids' => [__('messages.program_selection_invalid_count', ['max' => $limits['max_programs']])],
-            ]);
-        }
-
-        $existingCount = Program::query()->whereIn('id', $programIds)->count();
-        if ($existingCount !== count($programIds)) {
-            throw ValidationException::withMessages([
-                'program_ids' => [__('messages.program_not_found')],
-            ]);
-        }
 
         DB::transaction(function () use ($subscription, $user, $programIds): void {
             SubscriptionProgramSelection::query()
@@ -93,8 +124,30 @@ class ProgramSelectionService
         });
 
         $subscription->unsetRelation('programSelections');
+    }
 
-        return $this->buildStatusPayload($subscription->fresh(['programSelections.program']));
+    /**
+     * @param  list<int>  $programIds
+     */
+    private function assertProgramIdsValid(Plan|string $plan, array $programIds): void
+    {
+        $planEnum = $plan instanceof Plan ? $plan : Plan::fromValue($plan);
+        $limits = $this->subscriptionService->getPlanLimits($planEnum);
+        $programIds = array_values(array_unique($programIds));
+        $max = (int) $limits['max_programs'];
+
+        if ($programIds === [] || count($programIds) > $max) {
+            throw ValidationException::withMessages([
+                'program_ids' => [__('messages.program_selection_invalid_count', ['max' => $max])],
+            ]);
+        }
+
+        $existingCount = Program::query()->whereIn('id', $programIds)->count();
+        if ($existingCount !== count($programIds)) {
+            throw ValidationException::withMessages([
+                'program_ids' => [__('messages.program_not_found')],
+            ]);
+        }
     }
 
     /**

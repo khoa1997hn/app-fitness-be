@@ -8,9 +8,12 @@ use App\Share\Http\Controllers\Controller as BaseController;
 use App\Share\Models\AppleSubscription;
 use App\Share\Models\GoogleSubscription;
 use App\Share\Models\User;
+use App\Share\Models\Program;
+use App\Share\Services\Program\ProgramSelectionService;
 use App\Share\Services\Subscription\SubscriptionService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use League\Csv\Writer;
 
 class UserController extends BaseController
@@ -26,7 +29,11 @@ class UserController extends BaseController
 
     public function show(User $user)
     {
-        $user->load('subscription');
+        $user->load([
+            'subscription.programSelections' => fn ($query) => $query->with([
+                'program' => fn ($q) => $q->withTranslation(),
+            ]),
+        ]);
 
         $googleTransactions = GoogleSubscription::query()
             ->where('user_id', $user->id)
@@ -65,21 +72,53 @@ class UserController extends BaseController
 
     public function editSubscription(User $user)
     {
-        $user->load('subscription');
+        $user->load([
+            'subscription.programSelections' => fn ($query) => $query->with([
+                'program' => fn ($q) => $q->withTranslation(),
+            ]),
+        ]);
 
         $planOptions = Plan::asSelectArray();
         $statusOptions = SubscriptionStatus::asSelectArray();
 
-        return view('admin.users.subscription.edit', compact('user', 'planOptions', 'statusOptions'));
+        $programs = Program::query()
+            ->withTranslation()
+            ->orderBy('id')
+            ->get();
+
+        $selectedProgramIds = old(
+            'program_ids',
+            $user->subscription?->programSelections->pluck('program_id')->all() ?? []
+        );
+
+        return view('admin.users.subscription.edit', compact(
+            'user',
+            'planOptions',
+            'statusOptions',
+            'programs',
+            'selectedProgramIds',
+        ));
     }
 
-    public function updateSubscription(Request $request, User $user, SubscriptionService $subscriptionService)
-    {
+    public function updateSubscription(
+        Request $request,
+        User $user,
+        SubscriptionService $subscriptionService,
+        ProgramSelectionService $programSelectionService,
+    ) {
+        $requiresProgramSelection = in_array($request->input('plan'), [Plan::Basic, Plan::Plus], true);
+
         $validated = $request->validate([
             'plan' => ['required', 'in:'.implode(',', Plan::getValues())],
             'status' => ['required', 'in:'.implode(',', SubscriptionStatus::getValues())],
             'expires_at' => ['nullable', 'date'],
             'auto_renew' => ['boolean'],
+            'program_ids' => [
+                Rule::requiredIf($requiresProgramSelection),
+                'array',
+                Rule::when($requiresProgramSelection, ['min:1']),
+            ],
+            'program_ids.*' => ['integer', 'distinct'],
         ], [
             'plan.required' => 'Vui lòng chọn gói.',
             'plan.in' => 'Gói không hợp lệ.',
@@ -87,6 +126,10 @@ class UserController extends BaseController
             'status.in' => 'Trạng thái không hợp lệ.',
             'expires_at.date' => 'Ngày hết hạn không hợp lệ.',
             'auto_renew.boolean' => 'Tự gia hạn không hợp lệ.',
+            'program_ids.required' => 'Vui lòng chọn ít nhất một bộ môn.',
+            'program_ids.min' => 'Vui lòng chọn ít nhất một bộ môn.',
+            'program_ids.*.integer' => 'Bộ môn không hợp lệ.',
+            'program_ids.*.distinct' => 'Không được chọn trùng bộ môn.',
         ]);
 
         $expiresAt = isset($validated['expires_at'])
@@ -95,12 +138,19 @@ class UserController extends BaseController
 
         $hadSubscription = $user->subscription()->exists();
 
-        $subscriptionService->adminUpsert(
+        $subscription = $subscriptionService->adminUpsert(
             $user,
             $validated['plan'],
             $validated['status'],
             $expiresAt,
             $request->boolean('auto_renew'),
+        );
+
+        $programSelectionService->adminSyncSelections(
+            $subscription,
+            $user,
+            $validated['plan'],
+            array_map('intval', $validated['program_ids'] ?? []),
         );
 
         return redirect()

@@ -8,7 +8,7 @@ Admin cần chỉnh subscription của user từ trang Chi tiết khách hàng (
 
 ### In-scope
 - Nút **Sửa subscription** / **Tạo subscription** trên card subscription tại `GET /admin/users/{user}`
-- Form `GET /admin/users/{user}/subscription/edit` — 4 field: `plan`, `status`, `expires_at`, `auto_renew`
+- Form `GET /admin/users/{user}/subscription/edit` — `plan`, `status`, `expires_at`, `auto_renew`; khi plan `basic`/`plus` thêm chọn bộ môn (`program_ids`)
 - Submit `PUT /admin/users/{user}/subscription` qua `SubscriptionService::adminUpsert` (transaction + lock + sync `users.plan` + `users.subscription_status`)
 - Tạo mới khi chưa có record: `provider=admin`, `amount` từ `config('app_payment.plans.<plan>.price')`, `currency`/`billing_cycle` mặc định
 - Sửa record có sẵn: chỉ 4 field form; giữ `provider`, `amount`, `currency`, `billing_cycle`, các ngày khác
@@ -33,6 +33,7 @@ Admin cần chỉnh subscription của user từ trang Chi tiết khách hàng (
 | `status` | Có | `SubscriptionStatus` values |
 | `expires_at` | Không | datetime |
 | `auto_renew` | Không | checkbox boolean |
+| `program_ids` | Có nếu plan `basic`/`plus` | Basic: đúng 1; Plus: 1–2; `all`: không gửi, xóa selection cũ |
 
 ### Output
 - Redirect `admin.users.show` + message tiếng Việt
@@ -45,11 +46,14 @@ Admin cần chỉnh subscription của user từ trang Chi tiết khách hàng (
 - [ ] Sửa IAP → provider/amount không đổi; plan/status/expires/auto_renew cập nhật
 - [ ] Card user (plan/status) đồng bộ sau lưu
 - [ ] Log channel `subscription` với `admin_id`
+- [ ] Plan basic/plus: bắt buộc chọn bộ môn đúng số lượng; plan all: xóa selection
+- [ ] Chi tiết user hiển thị bộ môn đã chọn (basic/plus)
 
 ## Quyết định
 
 - 2026-06-04 — Provider tạo từ admin: `admin` (`SubscriptionProvider::Admin`)
 - 2026-06-04 — Logic qua `SubscriptionService::adminUpsert`, không update từ controller
+- 2026-06-04 — Chọn bộ môn qua `ProgramSelectionService::adminSyncSelections` (replace theo subscription)
 
 ## Liên quan
 
