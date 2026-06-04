@@ -28,6 +28,8 @@ Route::middleware('auth:admin')->group(function () {
         return view('admin.dashboard');
     })->name('dashboard');
     Route::get('users/export', [\App\Admin\Http\Controllers\UserController::class, 'export'])->name('users.export');
+    Route::get('users/{user}/subscription/edit', [\App\Admin\Http\Controllers\UserController::class, 'editSubscription'])->name('users.subscription.edit');
+    Route::put('users/{user}/subscription', [\App\Admin\Http\Controllers\UserController::class, 'updateSubscription'])->name('users.subscription.update');
     Route::resource('users', \App\Admin\Http\Controllers\UserController::class)->only(['index', 'show', 'destroy'])->names(['index' => 'users.index', 'show' => 'users.show', 'destroy' => 'users.destroy']);
     Route::resource('banners', \App\Admin\Http\Controllers\BannerController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
     Route::resource('programs', \App\Admin\Http\Controllers\ProgramController::class)->only(['index', 'edit', 'update', 'destroy']);

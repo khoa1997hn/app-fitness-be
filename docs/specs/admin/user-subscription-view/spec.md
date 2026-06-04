@@ -14,7 +14,7 @@ Admin cần xem thông tin chi tiết một user kèm subscription hiện tại 
 - Link "Xem chi tiết" trong dropdown action ở list user (+ click vào tên/email cũng dẫn vào show)
 
 ### Out-of-scope
-- Sửa subscription từ admin
+- Sửa subscription từ admin → xem spec [`user-subscription-edit`](../user-subscription-edit/spec.md)
 - Lịch sử subscription ở bảng `subscriptions` (user_id UNIQUE → 1 dòng duy nhất)
 - `raw_response` JSON detail
 

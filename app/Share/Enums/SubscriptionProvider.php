@@ -9,4 +9,6 @@ class SubscriptionProvider extends Enum
     public const GoogleIap = 'google_iap';
 
     public const AppleIap = 'apple_iap';
+
+    public const Admin = 'admin';
 }

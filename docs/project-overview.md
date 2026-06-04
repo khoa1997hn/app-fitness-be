@@ -114,7 +114,7 @@ Giá cụ thể từng plan → env `PLAN_<TIER>_PRICE` (xem `.env.example`).
 
 ### Đã có
 - Auth (register / login / profile / logout / refresh / delete account) — JWT. User soft-delete (`DELETE /api/v1/auth/me`); đăng nhập lại sau khi xóa bị chặn. Google Play subscription được cancel phía provider trước khi xóa; Apple bỏ qua (không hỗ trợ outbound cancel).
-- Admin login, dashboard placeholder, Users list/delete/export CSV.
+- Admin login, dashboard placeholder, Users list/delete/export CSV; chi tiết khách hàng + xem subscription/lịch sử IAP; sửa/tạo subscription thủ công (`SubscriptionService::adminUpsert`, provider `admin`).
 - Subscription core: model + service + listener Apple/Google + IAP webhook.
 - Banner (list API + multi-language).
 - Program / Lesson / Video: model + migration + translatable (Lesson có enum `type`/`level`). API list program Home (`GET /api/v1/programs`) + chi tiết program + lessons grouped (`GET /api/v1/programs/{program}`, auth JWT).
@@ -128,7 +128,6 @@ Giá cụ thể từng plan → env `PLAN_<TIER>_PRICE` (xem `.env.example`).
 - Admin CRUD Banner: `BannerController` (index/create/store/edit/update/destroy). Views Blade `admin/banners/{index,create,edit}`; list phân trang 20/trang sort `id` DESC, hiển thị locale vi; form đa ngôn ngữ (vi/en) gồm `image` (presigned PUT, `FileType::BannerImage`), `link_url`, `order`, `is_active` per locale + `description` dùng chung; menu sidebar "Banner". Model `Banner`/`BannerTranslation` + migration đã có từ trước.
 
 ### CHƯA có (phase tiếp)
-- Admin: subscription/payment view.
 
 > LLM thực hiện task: nếu task chạm các module **CHƯA có**, dùng `/implement-spec`. Nếu chạm module **đã có** mà phải đổi, dùng `/update-spec`.
 

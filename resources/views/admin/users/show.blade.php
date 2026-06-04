@@ -121,6 +121,10 @@
     <div class="card">
         <header class="card-header noborder">
             <h4 class="card-title">Subscription hiện tại</h4>
+            <a href="{{ route('admin.users.subscription.edit', $user) }}" class="btn btn-dark inline-flex items-center gap-1 px-4">
+                <iconify-icon icon="heroicons-outline:pencil-square"></iconify-icon>
+                {{ $user->subscription ? 'Sửa subscription' : 'Tạo subscription' }}
+            </a>
         </header>
         <div class="card-body px-6 pb-6">
             @if ($user->subscription)
@@ -143,8 +147,10 @@
                         <span class="font-medium text-slate-700 dark:text-white flex items-center gap-1">
                             @if ($sub->provider->value === 'google_iap')
                                 <iconify-icon icon="logos:google-play-icon" class="text-base"></iconify-icon> Google IAP
-                            @else
+                            @elseif ($sub->provider->value === 'apple_iap')
                                 <iconify-icon icon="logos:apple" class="text-base"></iconify-icon> Apple IAP
+                            @else
+                                {{ $sub->provider->description }}
                             @endif
                         </span>
                     </div>

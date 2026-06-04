@@ -2,10 +2,14 @@
 
 namespace App\Admin\Http\Controllers;
 
+use App\Share\Enums\Plan;
+use App\Share\Enums\SubscriptionStatus;
 use App\Share\Http\Controllers\Controller as BaseController;
 use App\Share\Models\AppleSubscription;
 use App\Share\Models\GoogleSubscription;
 use App\Share\Models\User;
+use App\Share\Services\Subscription\SubscriptionService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use League\Csv\Writer;
 
@@ -57,6 +61,51 @@ class UserController extends BaseController
             ->values();
 
         return view('admin.users.show', compact('user', 'transactions'));
+    }
+
+    public function editSubscription(User $user)
+    {
+        $user->load('subscription');
+
+        $planOptions = Plan::asSelectArray();
+        $statusOptions = SubscriptionStatus::asSelectArray();
+
+        return view('admin.users.subscription.edit', compact('user', 'planOptions', 'statusOptions'));
+    }
+
+    public function updateSubscription(Request $request, User $user, SubscriptionService $subscriptionService)
+    {
+        $validated = $request->validate([
+            'plan' => ['required', 'in:'.implode(',', Plan::getValues())],
+            'status' => ['required', 'in:'.implode(',', SubscriptionStatus::getValues())],
+            'expires_at' => ['nullable', 'date'],
+            'auto_renew' => ['boolean'],
+        ], [
+            'plan.required' => 'Vui lòng chọn gói.',
+            'plan.in' => 'Gói không hợp lệ.',
+            'status.required' => 'Vui lòng chọn trạng thái.',
+            'status.in' => 'Trạng thái không hợp lệ.',
+            'expires_at.date' => 'Ngày hết hạn không hợp lệ.',
+            'auto_renew.boolean' => 'Tự gia hạn không hợp lệ.',
+        ]);
+
+        $expiresAt = isset($validated['expires_at'])
+            ? Carbon::parse($validated['expires_at'])
+            : null;
+
+        $hadSubscription = $user->subscription()->exists();
+
+        $subscriptionService->adminUpsert(
+            $user,
+            $validated['plan'],
+            $validated['status'],
+            $expiresAt,
+            $request->boolean('auto_renew'),
+        );
+
+        return redirect()
+            ->route('admin.users.show', $user)
+            ->with('success', $hadSubscription ? 'Cập nhật subscription thành công.' : 'Tạo subscription thành công.');
     }
 
     public function destroy(User $user)

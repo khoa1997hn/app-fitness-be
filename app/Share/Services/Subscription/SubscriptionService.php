@@ -5,15 +5,81 @@ namespace App\Share\Services\Subscription;
 use App\Share\Enums\BillingCycle;
 use App\Share\Enums\LessonType;
 use App\Share\Enums\Plan;
+use App\Share\Enums\SubscriptionProvider;
 use App\Share\Enums\SubscriptionStatus;
 use App\Share\Exceptions\Subscription\SubscriptionNotFoundException;
 use App\Share\Models\Subscription;
 use App\Share\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Psr\Log\LoggerInterface;
 
 class SubscriptionService
 {
+    protected LoggerInterface $logger;
+
+    public function __construct()
+    {
+        $this->logger = Log::channel('subscription');
+    }
+
+    /**
+     * Admin tạo hoặc cập nhật subscription (chỉ plan, status, expires_at, auto_renew).
+     */
+    public function adminUpsert(
+        User $user,
+        string $plan,
+        string $status,
+        ?Carbon $expiresAt,
+        bool $autoRenew
+    ): Subscription {
+        return DB::transaction(function () use ($user, $plan, $status, $expiresAt, $autoRenew) {
+            $existing = Subscription::query()
+                ->where('user_id', $user->id)
+                ->lockForUpdate()
+                ->first();
+
+            $coreData = [
+                'plan' => $plan,
+                'status' => $status,
+                'expires_at' => $expiresAt,
+                'auto_renew' => $autoRenew,
+            ];
+
+            if ($existing) {
+                $existing->update($coreData);
+                $subscription = $existing->fresh();
+            } else {
+                $subscription = Subscription::query()->create([
+                    'user_id' => $user->id,
+                    ...$coreData,
+                    'provider' => SubscriptionProvider::Admin,
+                    'provider_subscription_id' => null,
+                    'amount' => (float) config('app_payment.plans.'.$plan.'.price'),
+                    'currency' => config('app_payment.currency'),
+                    'billing_cycle' => BillingCycle::Monthly,
+                ]);
+            }
+
+            $user->update([
+                'plan' => $plan,
+                'subscription_status' => $status,
+            ]);
+
+            $this->logger->info('[Admin] Subscription upsert', [
+                'user_id' => $user->id,
+                'admin_id' => auth('admin')->id(),
+                'subscription_id' => $subscription->id,
+                'created' => $existing === null,
+                'plan' => $plan,
+                'status' => $status,
+            ]);
+
+            return $subscription;
+        });
+    }
+
     /**
      * Activate subscription for user
      */
