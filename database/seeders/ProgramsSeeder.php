@@ -84,58 +84,123 @@ class ProgramsSeeder extends Seeder
 
     private function seedLessons(Program $program): void
     {
-        $lessons = [
-            ['type' => LessonType::Level, 'level' => Level::Beginner, 'day' => 1, 'vi' => 'Bài nhập môn', 'en' => 'Beginner lesson'],
-            ['type' => LessonType::Level, 'level' => Level::Intermediate, 'day' => 2, 'vi' => 'Bài trung cấp', 'en' => 'Intermediate lesson'],
-            ['type' => LessonType::Special, 'level' => null, 'day' => 1, 'vi' => 'Bài đặc biệt', 'en' => 'Special lesson'],
+        $nameVi = $program->translate('vi')->name;
+        $nameEn = $program->translate('en')->name;
+        $thumbnail = $this->lessonThumbnail();
+
+        foreach ([Level::Beginner, Level::Intermediate, Level::Advanced] as $level) {
+            for ($day = 1; $day <= 10; $day++) {
+                [$vi, $en] = $this->levelLessonNames($nameVi, $nameEn, $level, $day);
+                $this->createLesson($program, LessonType::Level, $level, $day, $vi, $en, $thumbnail);
+            }
+        }
+
+        for ($day = 1; $day <= 10; $day++) {
+            $this->createLesson(
+                $program,
+                LessonType::Special,
+                null,
+                $day,
+                "{$nameVi} — Đặc biệt {$day}",
+                "{$nameEn} — Special {$day}",
+                $thumbnail,
+            );
+            $this->createLesson(
+                $program,
+                LessonType::Signature,
+                null,
+                $day,
+                "{$nameVi} — Signature {$day}",
+                "{$nameEn} — Signature {$day}",
+                $thumbnail,
+            );
+        }
+    }
+
+    /**
+     * @return array{name: string, path: string, size: int, extension: string}
+     */
+    private function lessonThumbnail(): array
+    {
+        return [
+            'name' => '7lkbLprBMslkQglRV2PCcZvb1bqQuwRnscKAK5LK.jpg',
+            'path' => 'lesson/thumbnail/7lkbLprBMslkQglRV2PCcZvb1bqQuwRnscKAK5LK.jpg',
+            'size' => 377855,
+            'extension' => 'jpg',
+        ];
+    }
+
+    /**
+     * @return array{name: string, path: string, size: int, extension: string}
+     */
+    private function lessonVideoFile(): array
+    {
+        return [
+            'name' => 'g2x0MZqzF8uAMrfj0hLKoVMxwZoLuVw7poZJGjhJ.mp4',
+            'path' => 'lesson/video/g2x0MZqzF8uAMrfj0hLKoVMxwZoLuVw7poZJGjhJ.mp4',
+            'size' => 266176052,
+            'extension' => 'mp4',
+        ];
+    }
+
+    /**
+     * @return array{0: string, 1: string}
+     */
+    private function levelLessonNames(string $nameVi, string $nameEn, string $level, int $day): array
+    {
+        $labels = [
+            Level::Beginner => ['vi' => 'Cơ bản', 'en' => 'Beginner'],
+            Level::Intermediate => ['vi' => 'Trung cấp', 'en' => 'Intermediate'],
+            Level::Advanced => ['vi' => 'Nâng cao', 'en' => 'Advanced'],
         ];
 
-        foreach ($lessons as $data) {
-            $thumbnail = [
-                'path' => 'lesson/thumbnail/sample.jpg',
-                'name' => 'sample.jpg',
-                'extension' => 'jpg',
-                'size' => 102400,
-            ];
+        $label = $labels[$level];
 
-            $lesson = new Lesson([
-                'program_id' => $program->id,
-                'type' => $data['type'],
-                'level' => $data['level'],
-                'day' => $data['day'],
-            ]);
-            $lesson->fill([
-                'vi' => ['name' => $data['vi'], 'description' => "Mô tả {$data['vi']}.", 'thumbnail' => $thumbnail],
-                'en' => ['name' => $data['en'], 'description' => "{$data['en']} description.", 'thumbnail' => $thumbnail],
-            ]);
-            $lesson->save();
+        return [
+            "{$nameVi} — {$label['vi']} — Ngày {$day}",
+            "{$nameEn} — {$label['en']} — Day {$day}",
+        ];
+    }
 
-            $this->seedVideo($lesson->id);
-        }
+    /**
+     * @param  array{name: string, path: string, size: int, extension: string}  $thumbnail
+     */
+    private function createLesson(
+        Program $program,
+        string $type,
+        ?string $level,
+        int $day,
+        string $nameVi,
+        string $nameEn,
+        array $thumbnail,
+    ): void {
+        $lesson = new Lesson([
+            'program_id' => $program->id,
+            'type' => $type,
+            'level' => $level,
+            'day' => $day,
+        ]);
+        $lesson->fill([
+            'vi' => ['name' => $nameVi, 'description' => "Mô tả {$nameVi}.", 'thumbnail' => $thumbnail],
+            'en' => ['name' => $nameEn, 'description' => "{$nameEn} description.", 'thumbnail' => $thumbnail],
+        ]);
+        $lesson->save();
+
+        $this->seedVideo($lesson->id);
     }
 
     private function seedVideo(int $lessonId): void
     {
+        $file = $this->lessonVideoFile();
+        $videoPayload = [
+            'file' => $file,
+            'duration_seconds' => 600,
+        ];
+
         $video = new Video(['lesson_id' => $lessonId]);
         $video->fill([
-            'vi' => [
-                'file' => [
-                    'path' => 'lesson/video/sample-vi.mp4',
-                    'name' => 'sample-vi.mp4',
-                    'extension' => 'mp4',
-                    'size' => 5242880,
-                ],
-                'duration_seconds' => 600,
-            ],
-            'en' => [
-                'file' => [
-                    'path' => 'lesson/video/sample-en.mp4',
-                    'name' => 'sample-en.mp4',
-                    'extension' => 'mp4',
-                    'size' => 5242880,
-                ],
-                'duration_seconds' => 600,
-            ],
+            'vi' => $videoPayload,
+            'en' => $videoPayload,
         ]);
         $video->save();
     }
