@@ -92,6 +92,7 @@ class LessonController extends BaseController
             $payload[$locale] = [
                 'name' => $data['name'],
                 'description' => $data['description'] ?? null,
+                'teacher_name' => $data['teacher_name'] ?? null,
                 'thumbnail' => $data['thumbnail'] ?? null,
             ];
         }

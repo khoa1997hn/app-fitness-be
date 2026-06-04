@@ -181,8 +181,18 @@ class ProgramsSeeder extends Seeder
             'day' => $day,
         ]);
         $lesson->fill([
-            'vi' => ['name' => $nameVi, 'description' => "Mô tả {$nameVi}.", 'thumbnail' => $thumbnail],
-            'en' => ['name' => $nameEn, 'description' => "{$nameEn} description.", 'thumbnail' => $thumbnail],
+            'vi' => [
+                'name' => $nameVi,
+                'description' => "Mô tả {$nameVi}.",
+                'teacher_name' => 'Nguyễn Văn A',
+                'thumbnail' => $thumbnail,
+            ],
+            'en' => [
+                'name' => $nameEn,
+                'description' => "{$nameEn} description.",
+                'teacher_name' => 'John Smith',
+                'thumbnail' => $thumbnail,
+            ],
         ]);
         $lesson->save();
 

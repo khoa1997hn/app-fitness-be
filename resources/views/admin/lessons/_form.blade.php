@@ -59,6 +59,22 @@
     </div>
 </div>
 
+{{-- Tên giáo viên --}}
+<div class="mb-5">
+    <label class="form-label">Tên giáo viên</label>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        @foreach ($locales as $locale)
+            @php $translation = $lesson ? $lesson->translate($locale) : null; @endphp
+            <div class="input-area">
+                <span class="text-xs font-medium text-slate-500 mb-1 block">{{ $localeLabel($locale) }}</span>
+                <input type="text" name="translations[{{ $locale }}][teacher_name]" class="form-control"
+                    value="{{ old('translations.'.$locale.'.teacher_name', optional($translation)->teacher_name) }}">
+                @error('translations.'.$locale.'.teacher_name')<span class="text-danger-500 text-xs mt-1 block">{{ $message }}</span>@enderror
+            </div>
+        @endforeach
+    </div>
+</div>
+
 {{-- Mô tả --}}
 <div class="mb-5">
     <label class="form-label">Mô tả</label>

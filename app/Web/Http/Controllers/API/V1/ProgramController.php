@@ -132,7 +132,7 @@ class ProgramController extends BaseAPIController
      */
     #[OA\Get(
         path: '/programs/{program}',
-        description: 'Lấy chi tiết một program kèm danh sách bài học nhóm theo level (beginner/intermediate/advanced), special và signature. Mỗi bài học trả id, name, description, duration_seconds — không trả file/url video. Program không tồn tại → 404 (route model binding).',
+        description: 'Lấy chi tiết một program kèm danh sách bài học nhóm theo level (beginner/intermediate/advanced), special và signature. Mỗi bài học trả id, name, description, teacher_name, duration_seconds — không trả file/url video. Program không tồn tại → 404 (route model binding).',
         summary: 'Chi tiết program',
         security: [['bearerAuth' => []]],
         tags: ['Programs'],
@@ -204,6 +204,7 @@ class ProgramController extends BaseAPIController
                                                             new OA\Property(property: 'day', description: 'Thứ tự ngày tập', type: 'integer', example: 1),
                                                             new OA\Property(property: 'name', type: 'string', example: 'Bài nhập môn'),
                                                             new OA\Property(property: 'description', type: 'string', nullable: true),
+                                                            new OA\Property(property: 'teacher_name', description: 'Tên giáo viên (theo locale)', type: 'string', example: 'Nguyễn Văn A', nullable: true),
                                                             new OA\Property(
                                                                 property: 'thumbnail',
                                                                 description: 'Ảnh thumbnail bài học (theo locale)',
@@ -240,6 +241,7 @@ class ProgramController extends BaseAPIController
                                                             new OA\Property(property: 'day', description: 'Thứ tự ngày tập', type: 'integer', example: 2),
                                                             new OA\Property(property: 'name', type: 'string', example: 'Bài trung cấp'),
                                                             new OA\Property(property: 'description', type: 'string', nullable: true),
+                                                            new OA\Property(property: 'teacher_name', description: 'Tên giáo viên (theo locale)', type: 'string', example: 'Nguyễn Văn A', nullable: true),
                                                             new OA\Property(
                                                                 property: 'thumbnail',
                                                                 description: 'Ảnh thumbnail bài học (theo locale)',
@@ -276,6 +278,7 @@ class ProgramController extends BaseAPIController
                                                             new OA\Property(property: 'day', description: 'Thứ tự ngày tập', type: 'integer', example: 3),
                                                             new OA\Property(property: 'name', type: 'string', example: 'Bài nâng cao'),
                                                             new OA\Property(property: 'description', type: 'string', nullable: true),
+                                                            new OA\Property(property: 'teacher_name', description: 'Tên giáo viên (theo locale)', type: 'string', example: 'Nguyễn Văn A', nullable: true),
                                                             new OA\Property(
                                                                 property: 'thumbnail',
                                                                 description: 'Ảnh thumbnail bài học (theo locale)',
@@ -315,6 +318,7 @@ class ProgramController extends BaseAPIController
                                                     new OA\Property(property: 'day', description: 'Thứ tự ngày tập', type: 'integer', example: 1),
                                                     new OA\Property(property: 'name', type: 'string', example: 'Bài đặc biệt'),
                                                     new OA\Property(property: 'description', type: 'string', nullable: true),
+                                                    new OA\Property(property: 'teacher_name', description: 'Tên giáo viên (theo locale)', type: 'string', example: 'Nguyễn Văn A', nullable: true),
                                                     new OA\Property(
                                                         property: 'thumbnail',
                                                         description: 'Ảnh thumbnail bài học (theo locale)',
@@ -351,6 +355,7 @@ class ProgramController extends BaseAPIController
                                                     new OA\Property(property: 'day', description: 'Thứ tự ngày tập', type: 'integer', example: 1),
                                                     new OA\Property(property: 'name', type: 'string', example: 'Bài signature'),
                                                     new OA\Property(property: 'description', type: 'string', nullable: true),
+                                                    new OA\Property(property: 'teacher_name', description: 'Tên giáo viên (theo locale)', type: 'string', example: 'Nguyễn Văn A', nullable: true),
                                                     new OA\Property(
                                                         property: 'thumbnail',
                                                         description: 'Ảnh thumbnail bài học (theo locale)',
@@ -456,6 +461,7 @@ class ProgramController extends BaseAPIController
             'day' => $lesson->day,
             'name' => $lesson->name,
             'description' => $lesson->description,
+            'teacher_name' => $lesson->teacher_name,
             'thumbnail' => $lesson->thumbnail,
             'duration_seconds' => (int) $lesson->videos->sum('duration_seconds'),
             'is_favorited' => in_array($lesson->id, $favoritedIds, true),

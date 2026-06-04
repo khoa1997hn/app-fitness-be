@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $day
  * @property string $name
  * @property string|null $description
+ * @property string|null $teacher_name
  * @property File|null $thumbnail
  * @property \Carbon\Carbon $created_at
  * @property \Carbon\Carbon $updated_at
@@ -41,6 +42,7 @@ class Lesson extends Model implements TranslatableContract
     protected $translatedAttributes = [
         'name',
         'description',
+        'teacher_name',
         'thumbnail',
     ];
 

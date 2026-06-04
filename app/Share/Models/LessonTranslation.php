@@ -10,6 +10,7 @@ class LessonTranslation extends Model
     protected $fillable = [
         'name',
         'description',
+        'teacher_name',
         'thumbnail',
     ];
 

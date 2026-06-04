@@ -58,6 +58,7 @@ class StoreLessonRequest extends FormRequest
                 'max:255',
             ];
             $rules["translations.{$locale}.description"] = ['nullable', 'string'];
+            $rules["translations.{$locale}.teacher_name"] = ['nullable', 'string', 'max:255'];
 
             $rules["translations.{$locale}.thumbnail"] = [
                 $isRequiredLocale ? 'required' : 'nullable',
@@ -114,6 +115,7 @@ class StoreLessonRequest extends FormRequest
 
         foreach ((array) config('translatable.locales') as $locale) {
             $attributes["translations.{$locale}.name"] = "tên ({$locale})";
+            $attributes["translations.{$locale}.teacher_name"] = "tên giáo viên ({$locale})";
             $attributes["translations.{$locale}.thumbnail.path"] = "ảnh thumbnail ({$locale})";
         }
 
