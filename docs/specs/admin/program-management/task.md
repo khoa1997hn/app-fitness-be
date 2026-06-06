@@ -97,3 +97,9 @@
 - [ ] 3. `programs/index.blade.php` — thời lượng: format H:i:s
 - [ ] 4. `programs/edit.blade.php` — lesson favorites: icon trái tim đỏ + số
 - [ ] 5. `programs/edit.blade.php` — cột Ngày: badge info
+
+## Update 2026-06-06
+
+- [x] `programs/index.blade.php` — cột Tên: link `admin.programs.edit`
+- [x] `programs/edit.blade.php` — cột Tên lesson: link `admin.programs.lessons.edit`
+- [ ] STOP — hỏi user commit/push

@@ -137,3 +137,13 @@ Thêm Admin CRUD cho Program (chỉ edit + delete) và Lesson (CRUD đầy đủ
 - [ ] List program: cột thời lượng hiển thị H:i:s (ví dụ 1:05:30)
 - [ ] List lesson trong edit program: cột yêu thích hiển thị trái tim đỏ + số
 - [ ] List lesson trong edit program: cột Ngày hiển thị badge màu
+
+## Update 2026-06-06
+
+- Cột **Tên** list program + list lesson (trong edit program) → link tới trang sửa tương ứng.
+- Pattern: `text-primary-500 hover:underline font-medium` (tham chiếu `users/index.blade.php`).
+
+### Verify
+- [ ] Bấm tên program → mở `/admin/programs/{id}/edit`
+- [ ] Bấm tên lesson → mở trang edit lesson
+- [ ] Menu ba chấm Sửa/Xóa vẫn hoạt động

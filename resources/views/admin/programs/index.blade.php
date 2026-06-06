@@ -57,7 +57,9 @@
                                                 N/A
                                             @endif
                                         </td>
-                                        <td class="table-td">{{ $program->name }}</td>
+                                        <td class="table-td">
+                                            <a href="{{ route('admin.programs.edit', $program) }}" class="text-primary-500 hover:underline font-medium">{{ $program->name }}</a>
+                                        </td>
                                         <td class="table-td">
                                             @if ($program->rating !== null)
                                                 <span class="inline-flex items-center gap-0.5">

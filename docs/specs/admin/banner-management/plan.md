@@ -48,3 +48,11 @@
 - [ ] Xóa → hard delete + cascade translations
 - [ ] Validate lỗi hiển thị đúng chỗ
 - [ ] Menu sidebar hiện "Banner"
+
+## Update 2026-06-06
+
+- Cột **Mô tả** list banner → link tới `admin.banners.edit`.
+
+### Verify
+- [ ] Bấm mô tả banner → mở trang sửa
+- [ ] Menu ba chấm Sửa/Xóa vẫn hoạt động

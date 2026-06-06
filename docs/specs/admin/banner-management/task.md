@@ -13,3 +13,8 @@
 - [x] 6. Tạo `resources/views/admin/banners/create.blade.php` (form tạo mới)
 - [x] 7. Tạo `resources/views/admin/banners/edit.blade.php` (form sửa, điền sẵn)
 - [x] 8. Thêm menu "Banner" vào sidebar `resources/views/admin/components/sidebar.blade.php`
+
+## Update 2026-06-06
+
+- [x] `banners/index.blade.php` — cột Mô tả: link `admin.banners.edit`
+- [ ] STOP — hỏi user commit/push

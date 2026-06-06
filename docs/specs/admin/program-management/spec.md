@@ -209,6 +209,16 @@ Rule cập nhật: `docs/rules/11-enum.md` (đổi sang lang file), `docs/rules/
 3. **Cột "Ngày" lesson → badge:** Giá trị `day` trong table list lesson hiển thị dạng badge Dashcode (`badge bg-info-500 text-info-500 bg-opacity-30 rounded-3xl`) thay cho text trơn.
 4. **Định dạng thời lượng → H:i:s:** Tất cả chỗ hiện tại dùng "N phút N giây" chuyển sang format `H:i:s` (ví dụ `0:30:00`). Hiện tại chỉ có 1 chỗ: cột "Tổng thời lượng" ở list program. Logic: `sprintf('%d:%02d:%02d', floor($s/3600), floor(($s%3600)/60), $s%60)`.
 
+## Update 2026-06-06 — Click tên để mở trang sửa (list)
+
+### Thay đổi UI
+- **List program** (`/admin/programs`): cột **Tên** là link tới trang sửa program (`admin.programs.edit`). Nút **Sửa** trong menu ba chấm giữ nguyên.
+- **List lesson** (table trong trang edit program): cột **Tên** là link tới trang sửa lesson (`admin.programs.lessons.edit`). Nút **Sửa** trong menu ba chấm giữ nguyên.
+- Style link: theo pattern `users/index` — `text-primary-500 hover:underline font-medium`.
+
+### Quyết định
+- **2026-06-06** — Cột tên clickable trên list program + list lesson; dropdown Sửa/Xóa không đổi.
+
 ## Liên quan
 
 - Overview: `docs/project-overview.md` (mục Program/Lesson, Subscription plans, đa ngôn ngữ).

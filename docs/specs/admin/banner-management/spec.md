@@ -66,6 +66,16 @@ Admin cần CRUD banner hiển thị trong app. Model `Banner` + `BannerTranslat
 - 2026-06-02 — Phân trang list → có, 20 bản ghi/trang
 - 2026-06-02 — Sort list → theo `id` DESC
 
+## Update 2026-06-06 — Click mô tả để mở trang sửa (list)
+
+### Thay đổi UI
+- **List banner** (`/admin/banners`): cột **Mô tả** (`description`) là link tới trang sửa (`admin.banners.edit`). Banner không có cột tên — dùng mô tả làm nhãn chính (đã chốt qua ASK).
+- Nút **Sửa** trong menu ba chấm giữ nguyên.
+- Style link: `text-primary-500 hover:underline font-medium` (giống list khách hàng).
+
+### Quyết định
+- **2026-06-06** — Cột mô tả clickable; dropdown Sửa/Xóa không đổi.
+
 ## Liên quan
 
 - Model: `app/Share/Models/Banner.php`, `app/Share/Models/BannerTranslation.php`

@@ -62,7 +62,9 @@
                                                 <span class="text-slate-400">N/A</span>
                                             @endif
                                         </td>
-                                        <td class="table-td">{{ $banner->description ?? '—' }}</td>
+                                        <td class="table-td">
+                                            <a href="{{ route('admin.banners.edit', $banner) }}" class="text-primary-500 hover:underline font-medium">{{ $banner->description ?? '—' }}</a>
+                                        </td>
                                         <td class="table-td">
                                             @if ($viTranslation?->link_url)
                                                 <span class="text-xs truncate max-w-[200px] block" title="{{ $viTranslation->link_url }}">{{ $viTranslation->link_url }}</span>

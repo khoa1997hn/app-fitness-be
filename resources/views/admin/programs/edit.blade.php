@@ -163,7 +163,9 @@
                                 @forelse ($lessons as $lesson)
                                     <tr>
                                         <td class="table-td">{{ $lesson->id }}</td>
-                                        <td class="table-td">{{ $lesson->name }}</td>
+                                        <td class="table-td">
+                                            <a href="{{ route('admin.programs.lessons.edit', [$program, $lesson]) }}" class="text-primary-500 hover:underline font-medium">{{ $lesson->name }}</a>
+                                        </td>
                                         <td class="table-td">@include('admin.components.enum-badge', ['enum' => $lesson->type])</td>
                                         <td class="table-td">@include('admin.components.enum-badge', ['enum' => $lesson->level])</td>
                                         <td class="table-td">

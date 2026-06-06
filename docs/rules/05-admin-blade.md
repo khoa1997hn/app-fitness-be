@@ -61,6 +61,12 @@ Tên *
 - JS sau upload: set `src` = `URL.createObjectURL(file)`, bỏ `hidden`; với `<video>` gọi thêm `player.load()`.
 - **Giữ preview qua validate fail:** hidden input (`path/name/...`) phải dùng `old()`; thẻ preview render `src` từ **`old('<prefix>.path')` trước** (dựng `App\Share\Attributes\File::fromArray(...)->url()` → presigned GET), fallback giá trị server. KHÔNG lấy `src` chỉ từ DB — sẽ mất ảnh/video vừa upload khi submit lỗi.
 
+## List table — cột tên/nhãn chính clickable
+
+- Cột **tên** (hoặc nhãn chính nếu không có tên, vd banner dùng **Mô tả**) trong bảng list admin nên là **link** tới trang sửa (hoặc detail nếu spec quy định).
+- Style: `text-primary-500 hover:underline font-medium` — tham chiếu `resources/views/admin/users/index.blade.php`.
+- Menu ba chấm (Sửa/Xóa) ở cột Thao tác **giữ nguyên** — không thay bằng link tên.
+
 ## Route
 
 - File: `routes/admin.php`
