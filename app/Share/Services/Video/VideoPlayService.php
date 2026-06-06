@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Share\Services\Video;
 
 use App\Share\Attributes\File;
-use App\Share\Enums\LessonType;
 use App\Share\Enums\Plan;
 use App\Share\Models\User;
 use App\Share\Models\Video;
@@ -35,8 +34,7 @@ readonly class VideoPlayService
         $lesson = $video->lesson;
         $limits = $this->subscriptionService->getPlanLimits($subscription->plan);
 
-        $allowedTypes = collect($limits['allowed_lesson_types']);
-        if (! $allowedTypes->contains(fn (LessonType $type) => $lesson->type->is($type))) {
+        if (! in_array($lesson->type->value, $limits['allowed_lesson_types'], true)) {
             return [
                 'status' => 403,
                 'message' => __('messages.video_lesson_type_not_allowed'),
