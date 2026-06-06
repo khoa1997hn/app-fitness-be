@@ -9,14 +9,12 @@ use App\Share\Enums\LessonType;
 use App\Share\Enums\Plan;
 use App\Share\Models\User;
 use App\Share\Models\Video;
-use App\Share\Services\File\FileUploadService;
 use App\Share\Services\Program\ProgramSelectionService;
 
 readonly class VideoPlayService
 {
     public function __construct(
         private ProgramSelectionService $programSelectionService,
-        private FileUploadService $fileUploadService,
     ) {}
 
     /**
@@ -72,17 +70,6 @@ readonly class VideoPlayService
         }
 
         return null;
-    }
-
-    public function createStreamUrl(Video $video): string
-    {
-        $file = $this->resolveVideoFile($video);
-
-        if ($file === null) {
-            return '';
-        }
-
-        return $this->fileUploadService->getUrl($file->path);
     }
 
     private function resolveVideoFile(Video $video): ?File

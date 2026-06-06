@@ -81,11 +81,11 @@ Response 200 *(Update 2026-05-30)*:
 ```
 
 ### POST /api/v1/videos/{video}/play (progress section)
-Ngoài `stream_url` + metadata *(Update 2026-05-30)*:
+Ngoài `file.url` (presigned GET) + metadata *(Update 2026-05-30; bỏ `stream_url` 2026-06-06)*:
 ```json
 {
   "data": {
-    "id": 1, "lesson_id": 10, "duration_seconds": 600, "file": {...}, "stream_url": "...",
+    "id": 1, "lesson_id": 10, "duration_seconds": 600, "file": {...},
     "watched_percent": 42,
     "lesson": { "id": 10, "watched_percent": 35 },
     "program": { "id": 1, "watched_percent": 12 }

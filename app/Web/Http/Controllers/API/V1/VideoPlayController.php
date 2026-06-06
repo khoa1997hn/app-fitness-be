@@ -23,11 +23,11 @@ class VideoPlayController extends BaseAPIController
      *
      * Presigned URL hết hạn sau `AWS_PRESIGNED_URL_EXPIRES` (phút). Khi URL hết hạn
      * hoặc player báo lỗi truy cập S3, app gọi lại **cùng endpoint này** — BE kiểm tra
-     * quyền lại và trả `stream_url` mới (không có API refresh riêng).
+     * quyền lại và trả `file.url` mới (không có API refresh riêng).
      */
     #[OA\Post(
         path: '/videos/{video}/play',
-        description: 'Kiểm tra subscription và quyền xem (plan, program đã chọn, loại bài). Trả metadata video + presigned GET stream_url + watched_percent của video, lesson và program. Khi URL hết hạn, client gọi lại endpoint này.',
+        description: 'Kiểm tra subscription và quyền xem (plan, program đã chọn, loại bài). Trả metadata video + file (presigned GET trong file.url) + progress video/lesson/program. Khi URL hết hạn, client gọi lại endpoint này.',
         summary: 'Phát video bài học',
         security: [['bearerAuth' => []]],
         tags: ['Videos'],
@@ -59,7 +59,6 @@ class VideoPlayController extends BaseAPIController
                                     ],
                                     type: 'object'
                                 ),
-                                new OA\Property(property: 'stream_url', type: 'string', example: 'https://s3.amazonaws.com/...'),
                                 new OA\Property(
                                     property: 'progress',
                                     description: 'Tiến độ video này',
@@ -123,12 +122,6 @@ class VideoPlayController extends BaseAPIController
             return ResponseAPI::error($gate['message'], $gate['status']);
         }
 
-        $streamUrl = $this->videoPlayService->createStreamUrl($video);
-
-        if ($streamUrl === '') {
-            return ResponseAPI::error(__('messages.video_file_not_available'), 404);
-        }
-
         $video->loadMissing(['lesson.program']);
         $lesson = $video->lesson;
         $program = $lesson->program;
@@ -138,7 +131,6 @@ class VideoPlayController extends BaseAPIController
             'lesson_id' => $video->lesson_id,
             'duration_seconds' => (int) $video->duration_seconds,
             'file' => $video->file,
-            'stream_url' => $streamUrl,
             'progress' => $this->videoWatchProgressService->videoProgress($user, $video),
             'lesson' => [
                 'id' => $lesson->id,

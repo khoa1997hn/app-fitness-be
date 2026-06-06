@@ -15,11 +15,11 @@ suggest: POST /api/videos/{videoId}/play, refresh-stream, S3 presigned GET, 403 
 ## Phạm vi
 
 ### In-scope
-- `POST /api/v1/videos/{video}/play` — kiểm tra quyền, trả metadata video + `stream_url` (presigned GET).
+- `POST /api/v1/videos/{video}/play` — kiểm tra quyền, trả metadata video + `file` (presigned GET trong `file.url`).
 - Auth JWT (`auth:api` middleware); controller lấy user qua `auth()->user()` (default guard `api`).
 - Kiểm tra: đăng nhập, `validSubscription` (trial / active / grace_period), program đã unlock, `lesson.type` thuộc `allowed_lesson_types` của plan.
 - Route model binding `Video` (id video, không phải lesson id).
-- Response: `id`, `lesson_id`, `duration_seconds`, `file` (`File` JsonSerializable), `stream_url` (presigned GET, hết hạn theo `AWS_PRESIGNED_URL_EXPIRES`).
+- Response: `id`, `lesson_id`, `duration_seconds`, `file` (`File` JsonSerializable — `url` là presigned GET, hết hạn theo `AWS_PRESIGNED_URL_EXPIRES`).
 - **Không** endpoint `refresh-stream` riêng — FE gọi lại `play` khi URL hết hạn / player lỗi *(Update 2026-05-29)*.
 - Message lỗi qua `__('messages.*')` + `x-locale`.
 
@@ -42,7 +42,7 @@ suggest: POST /api/videos/{videoId}/play, refresh-stream, S3 presigned GET, 403 
 2. BE load `Video` + `lesson` + `program`; file video theo locale (`x-locale`).
 3. Không đủ quyền → **403** + message cụ thể.
 4. Không có file video cho locale → **404**.
-5. Có quyền → trả metadata video + `stream_url` (presigned GET).
+5. Có quyền → trả metadata video + `file` (presigned GET trong `file.url`).
 6. **Refresh URL**: khi presigned URL hết hạn (`AWS_PRESIGNED_URL_EXPIRES`) hoặc player báo lỗi truy cập, FE **gọi lại cùng endpoint** `POST .../play` — BE kiểm tra quyền lại và cấp URL mới.
 
 ### Lỗi
@@ -78,21 +78,20 @@ suggest: POST /api/videos/{videoId}/play, refresh-stream, S3 presigned GET, 403 
       "extension": "mp4",
       "size": 10485760,
       "url": "https://..."
-    },
-    "stream_url": "https://..."
+    }
   }
 }
 ```
-(`file.url` và `stream_url` cùng presigned GET; FE ưu tiên `stream_url` cho player. Gọi lại `play` khi URL hết hạn.)
+(FE dùng `file.url` cho player. Gọi lại `play` khi URL hết hạn.)
 
 ## Acceptance criteria
 
-- [ ] User All Access + subscription hợp lệ → 200 + `stream_url` playable.
+- [ ] User All Access + subscription hợp lệ → 200 + `file.url` playable.
 - [ ] User Basic đã chọn program A, video thuộc lesson program A, type level → 200.
 - [ ] User Basic chưa chọn program → 403 `video_program_not_selected`.
 - [ ] User Basic, lesson signature → 403 `video_lesson_type_not_allowed`.
 - [ ] User không subscription hợp lệ → 403 `no_active_subscription`.
-- [ ] Gọi lại `play` sau khi URL hết hạn → 200 + `stream_url` mới.
+- [ ] Gọi lại `play` sau khi URL hết hạn → 200 + `file.url` mới.
 
 ## Quyết định
 
@@ -103,6 +102,20 @@ suggest: POST /api/videos/{videoId}/play, refresh-stream, S3 presigned GET, 403 
 - **2026-05-29** — Bỏ `refresh-stream`; FE refresh bằng cách gọi lại `play`.
 - **2026-05-29** — Response play gồm metadata video + `file` + `stream_url`.
 - **2026-05-29** — Web controller: `auth()->user()`, không `auth('api')->user()` (chỉ login/refresh/logout chỉ định guard `api`).
+
+## Update 2026-06-06 — Bỏ `stream_url` trùng `file.url`
+
+### Thay đổi
+- Response `POST /api/v1/videos/{video}/play` **không còn** field `stream_url`.
+- Presigned GET chỉ qua `file.url` (chuẩn `File` JsonSerializable, rule `12-file-upload.md`).
+- Lý do: `stream_url` và `file.url` cùng `FileUploadService::getUrl(path)` — trùng lặp, BE sinh URL 2 lần mỗi request.
+
+### FE
+- Player dùng `data.file.url` thay `data.stream_url`.
+- Refresh URL: vẫn gọi lại `POST .../play`.
+
+### Quyết định
+- **2026-06-06** — Bỏ `stream_url`; FE dùng `file.url` duy nhất.
 
 ## Liên quan
 

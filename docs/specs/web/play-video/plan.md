@@ -36,3 +36,12 @@ Service kiểm tra quyền xem video theo subscription + program selection + les
 - Bỏ `refresh-stream`; mở rộng response `play` (id, lesson_id, duration_seconds, file, stream_url).
 - `auth()->user()` trong controller; rule `04-api-response.md`.
 - OpenAPI + regenerate.
+
+## Update 2026-06-06
+
+- Bỏ `stream_url` khỏi response `play` — presigned GET chỉ qua `file.url`.
+- Xóa `createStreamUrl()` khỏi `VideoPlayService` (không còn dùng).
+- Cập nhật OpenAPI + `video-watch-progress` spec (bỏ nhắc `stream_url`).
+
+### Verify thủ công
+- Subscription active + đủ quyền → 200, `data.file.url` playable (không có `stream_url`).
