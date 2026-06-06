@@ -13,6 +13,35 @@ use Illuminate\Database\Seeder;
 class ProgramsSeeder extends Seeder
 {
     /**
+     * Object key S3 đã upload sẵn — seeder random từ pool.
+     *
+     * @var list<string>
+     */
+    private const PROGRAM_COVER_PATHS = [
+        'program/cover/LYB0r26N4mea4fhy6ABJfRPsBbp0TA1kYjh8tolp.jpg',
+        'program/cover/K6PbHcUZnjzdJ0xmQDvym5YiFpq4Se0xMnmAjkeD.jpg',
+    ];
+
+    /**
+     * @var list<string>
+     */
+    private const LESSON_THUMBNAIL_PATHS = [
+        'lesson/thumbnail/JBZubf0yvag8uR74fZTovDt1wk3lCVC4zUirQDW1.jpg',
+        'lesson/thumbnail/MMhxN3JMiDsYcsMZ8oGF0pEN0QQzhBFUQ3afIOtk.jpg',
+    ];
+
+    /**
+     * @var list<string>
+     */
+    private const LESSON_VIDEO_PATHS = [
+        'lesson/video/5LVjU1yCw4OvN976I5DIMjQ6dFzSm46QaeLUT3qU.mp4',
+    ];
+
+    private const LESSON_VIDEO_DEFAULT_SIZE = 266_176_052;
+
+    private const LESSON_VIDEO_DURATION_SECONDS = 600;
+
+    /**
      * Tên 7 program (vi => en).
      *
      * @var array<string, string>
@@ -34,12 +63,7 @@ class ProgramsSeeder extends Seeder
         foreach ($this->programs as $nameVi => $nameEn) {
             $program = Program::create(['rating' => 4.5]);
 
-            $cover = [
-                'path' => 'program/cover/sample.jpg',
-                'name' => 'sample.jpg',
-                'extension' => 'jpg',
-                'size' => 102400,
-            ];
+            $cover = $this->randomFile(self::PROGRAM_COVER_PATHS);
 
             $program->fill([
                 'vi' => [
@@ -86,12 +110,11 @@ class ProgramsSeeder extends Seeder
     {
         $nameVi = $program->translate('vi')->name;
         $nameEn = $program->translate('en')->name;
-        $thumbnail = $this->lessonThumbnail();
 
         foreach ([Level::Beginner, Level::Intermediate, Level::Advanced] as $level) {
             for ($day = 1; $day <= 10; $day++) {
                 [$vi, $en] = $this->levelLessonNames($nameVi, $nameEn, $level, $day);
-                $this->createLesson($program, LessonType::Level, $level, $day, $vi, $en, $thumbnail);
+                $this->createLesson($program, LessonType::Level, $level, $day, $vi, $en);
             }
         }
 
@@ -103,7 +126,6 @@ class ProgramsSeeder extends Seeder
                 $day,
                 "{$nameVi} — Đặc biệt {$day}",
                 "{$nameEn} — Special {$day}",
-                $thumbnail,
             );
             $this->createLesson(
                 $program,
@@ -112,35 +134,48 @@ class ProgramsSeeder extends Seeder
                 $day,
                 "{$nameVi} — Signature {$day}",
                 "{$nameEn} — Signature {$day}",
-                $thumbnail,
             );
         }
     }
 
     /**
+     * @param  list<string>  $paths
      * @return array{name: string, path: string, size: int, extension: string}
      */
-    private function lessonThumbnail(): array
+    private function randomFile(array $paths, ?int $size = null): array
     {
-        return [
-            'name' => '7lkbLprBMslkQglRV2PCcZvb1bqQuwRnscKAK5LK.jpg',
-            'path' => 'lesson/thumbnail/7lkbLprBMslkQglRV2PCcZvb1bqQuwRnscKAK5LK.jpg',
-            'size' => 377855,
-            'extension' => 'jpg',
-        ];
+        return $this->fileFromPath($this->pickRandomPath($paths), $size);
+    }
+
+    /**
+     * @param  list<string>  $paths
+     */
+    private function pickRandomPath(array $paths): string
+    {
+        return $paths[array_rand($paths)];
     }
 
     /**
      * @return array{name: string, path: string, size: int, extension: string}
      */
-    private function lessonVideoFile(): array
+    private function fileFromPath(string $path, ?int $size = null): array
     {
+        $extension = pathinfo($path, PATHINFO_EXTENSION) ?: '';
+
         return [
-            'name' => 'g2x0MZqzF8uAMrfj0hLKoVMxwZoLuVw7poZJGjhJ.mp4',
-            'path' => 'lesson/video/g2x0MZqzF8uAMrfj0hLKoVMxwZoLuVw7poZJGjhJ.mp4',
-            'size' => 266176052,
-            'extension' => 'mp4',
+            'path' => $path,
+            'name' => basename($path),
+            'extension' => $extension,
+            'size' => $size ?? $this->defaultSizeForExtension($extension),
         ];
+    }
+
+    private function defaultSizeForExtension(string $extension): int
+    {
+        return match ($extension) {
+            'mp4', 'mov', 'webm' => self::LESSON_VIDEO_DEFAULT_SIZE,
+            default => 377_855,
+        };
     }
 
     /**
@@ -162,9 +197,6 @@ class ProgramsSeeder extends Seeder
         ];
     }
 
-    /**
-     * @param  array{name: string, path: string, size: int, extension: string}  $thumbnail
-     */
     private function createLesson(
         Program $program,
         string $type,
@@ -172,8 +204,9 @@ class ProgramsSeeder extends Seeder
         int $day,
         string $nameVi,
         string $nameEn,
-        array $thumbnail,
     ): void {
+        $thumbnail = $this->randomFile(self::LESSON_THUMBNAIL_PATHS);
+
         $lesson = new Lesson([
             'program_id' => $program->id,
             'type' => $type,
@@ -201,10 +234,10 @@ class ProgramsSeeder extends Seeder
 
     private function seedVideo(int $lessonId): void
     {
-        $file = $this->lessonVideoFile();
+        $file = $this->randomFile(self::LESSON_VIDEO_PATHS, self::LESSON_VIDEO_DEFAULT_SIZE);
         $videoPayload = [
             'file' => $file,
-            'duration_seconds' => 600,
+            'duration_seconds' => self::LESSON_VIDEO_DURATION_SECONDS,
         ];
 
         $video = new Video(['lesson_id' => $lessonId]);

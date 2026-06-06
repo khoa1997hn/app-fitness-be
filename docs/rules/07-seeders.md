@@ -25,3 +25,8 @@ Hai loại seeder, KHÔNG được trộn.
 - Là dữ liệu bắt buộc khi hệ thống chạy → đăng ký trong `DatabaseSeeder`.
 - Là dữ liệu fake → đăng ký trong `FakeDatabaseSeeder`.
 - Không đăng ký vào cả hai.
+
+## Fake seeder — file media trên S3
+
+- Field file (`cover`, `thumbnail`, `image`, `file` video) lưu **object key S3** — object phải **đã tồn tại** trên bucket.
+- `BannerFactory` / `ProgramsSeeder`: pool path trong **const** class, random mỗi bản ghi; user điền 2–3 key / loại sau khi upload (xem `docs/specs/shared/fake-seeder-media/spec.md`).
