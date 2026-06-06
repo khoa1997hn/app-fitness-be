@@ -30,3 +30,8 @@ Hai loại seeder, KHÔNG được trộn.
 
 - Field file (`cover`, `thumbnail`, `image`, `file` video) lưu **object key S3** — object phải **đã tồn tại** trên bucket.
 - `BannerFactory` / `ProgramsSeeder`: pool path trong **const** class, random mỗi bản ghi; user điền 2–3 key / loại sau khi upload (xem `docs/specs/shared/fake-seeder-media/spec.md`).
+
+## Fake seeder — subscription
+
+- `SubscriptionsSeeder`: gán subscription cho mọi user fake qua `SubscriptionService::adminUpsert` + `ProgramSelectionService::adminSyncSelections`.
+- Chạy **sau** `ProgramsSeeder`. Xem `docs/specs/shared/fake-subscription-seeder/spec.md`.
