@@ -2,6 +2,13 @@
 
 Triển khai feature MỚI theo spec-driven.
 
+## RULE HIGH (bắt buộc tuyệt đối)
+
+1. **TUYỆT ĐỐI KHÔNG BỊA** — Cấm tự suy diễn nghiệp vụ, field, validation, endpoint, response shape, hành vi FE… không có trong spec/yêu cầu user hoặc code thực tế đã đọc.
+2. **LUÔN HỎI TRƯỚC KHI CODE** — Spec/yêu cầu mơ hồ, thiếu input, có ≥ 2 cách hiểu → **BẮT BUỘC** `AskUserQuestion` qua `question-asker`. **CẤM** tự điền `TODO(ask)` bằng đoán mò rồi implement.
+3. **CÒN `TODO(ask)` → CHƯA ĐƯỢC QUA `implementer`** — Mọi điểm mơ hồ phải được user trả lời và ghi vào spec trước.
+4. Chi tiết: [`docs/rules/00-core.md`](../rules/00-core.md), [`docs/guides/ask-protocol.md`](../guides/ask-protocol.md).
+
 ## Khi nào dùng
 
 - User mô tả feature mới (có thể kèm path spec sẵn hoặc không).
@@ -41,9 +48,10 @@ Chạy tuần tự, mỗi agent đọc prompt template của nó:
 
 ## Ràng buộc
 
+- Tuân thủ **RULE HIGH** ở đầu file — ưu tiên cao nhất.
 - Không skip agent nào trừ khi user yêu cầu.
 - Agent sau chỉ chạy khi agent trước báo cáo OK.
-- Nếu bất kỳ agent nào gặp mơ hồ → DỪNG, AskUserQuestion, KHÔNG bịa.
+- Nếu bất kỳ agent nào gặp mơ hồ → DỪNG, `AskUserQuestion`, **TUYỆT ĐỐI KHÔNG bịa**.
 - Finalizer DỪNG trước commit, hỏi user (xem `docs/guides/commit-protocol.md`).
 
 ## Báo cáo cuối

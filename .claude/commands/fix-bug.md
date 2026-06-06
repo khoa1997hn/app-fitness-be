@@ -6,6 +6,14 @@ description: Fix bug — phân loại DỄ/KHÓ trước, chuỗi vai trò khác
 
 Fix bug. Đọc [`docs/commands/fix-bug.md`](../../docs/commands/fix-bug.md) để hiểu đầy đủ.
 
+## RULE HIGH (bắt buộc tuyệt đối)
+
+1. **TUYỆT ĐỐI KHÔNG BỊA** — Cấm tự suy diễn nguyên nhân bug, hành vi FE/client, field, endpoint… không có trong mô tả user hoặc bằng chứng reproduce thực tế.
+2. **LUÔN HỎI TRƯỚC KHI FIX** — Bug report mơ hồ, thiếu reproduce, có ≥ 2 cách hiểu → **BẮT BUỘC** hỏi user (`question-asker` / `AskUserQuestion`). **CẤM** tự đoán nguyên nhân rồi sửa.
+3. **CẤM GIẢ ĐỊNH FE/CLIENT** — Không được tự cho FE truyền sai field/URL/id… trừ khi user xác nhận.
+4. **CHƯA RÕ NGUYÊN NHÂN → CHƯA ĐƯỢC IMPLEMENT** — Kể cả nhánh DỄ.
+5. Chi tiết: [`docs/rules/00-core.md`](../../docs/rules/00-core.md), [`docs/guides/ask-protocol.md`](../../docs/guides/ask-protocol.md).
+
 ## Bước 1 — Phân loại
 
 Đầu tiên spawn `bug-classifier` → xác định bug **DỄ** hay **KHÓ**. Agent này tạo folder `docs/specs/<big>/<detail>/bug-<slug>-<YYYY-MM-DD>/` và file ban đầu (`report.md` cho DỄ, đủ 4 file cho KHÓ).
@@ -52,7 +60,7 @@ Tạo đủ `spec.md` + `plan.md` + `task.md` + `report.md`.
 
 ## Ràng buộc
 
-- HIGH RULE: KHÔNG BỊA. Xem [`docs/rules/00-core.md`](../../docs/rules/00-core.md).
+- Tuân thủ **RULE HIGH** ở trên — ưu tiên cao nhất.
 - Slug bug: kebab-case ngắn gọn, không dấu. Ví dụ `login-redirect-loop-2026-05-29`.
 - `report.md` PHẢI điền đủ "Cách fix" + "Files đã sửa" + "Verify" trước khi finalizer hỏi commit.
 - KHÔNG tự commit/push.

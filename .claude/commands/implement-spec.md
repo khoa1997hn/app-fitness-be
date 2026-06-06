@@ -8,6 +8,13 @@ Triển khai feature mới theo spec-driven workflow.
 
 Đọc [`docs/commands/implement-spec.md`](../../docs/commands/implement-spec.md) để hiểu đầy đủ.
 
+## RULE HIGH (bắt buộc tuyệt đối)
+
+1. **TUYỆT ĐỐI KHÔNG BỊA** — Cấm tự suy diễn nghiệp vụ, field, validation, endpoint, hành vi FE… không có trong spec/yêu cầu user.
+2. **LUÔN HỎI TRƯỚC KHI CODE** — Spec mơ hồ, thiếu input, có ≥ 2 cách hiểu → **BẮT BUỘC** hỏi user qua `question-asker`. **CẤM** tự đoán rồi implement.
+3. **CÒN `TODO(ask)` → CHƯA ĐƯỢC QUA `implementer`**.
+4. Chi tiết: [`docs/rules/00-core.md`](../../docs/rules/00-core.md), [`docs/guides/ask-protocol.md`](../../docs/guides/ask-protocol.md).
+
 ## Bạn (Claude) PHẢI làm
 
 Chạy tuần tự **16 vai trò** sau. Mỗi vai trò spawn qua Agent tool với subagent type tương ứng (xem `.claude/agents/<name>.md`). Hoàn thành Output của vai trò trước rồi mới chuyển vai tiếp theo.
@@ -33,7 +40,7 @@ Chạy tuần tự **16 vai trò** sau. Mỗi vai trò spawn qua Agent tool vớ
 
 ## Ràng buộc
 
-- HIGH RULE: KHÔNG BỊA. Mơ hồ → AskUserQuestion. Xem [`docs/rules/00-core.md`](../../docs/rules/00-core.md).
+- Tuân thủ **RULE HIGH** ở trên — ưu tiên cao nhất.
 - KHÔNG skip vai trò.
 - KHÔNG tự `git commit` / `git push`. Finalizer chỉ HỎI, user duyệt mới làm.
 

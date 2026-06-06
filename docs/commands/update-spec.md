@@ -2,6 +2,14 @@
 
 Sửa lại spec đã có (sau khi đã `/implement-spec` xong).
 
+## RULE HIGH (bắt buộc tuyệt đối)
+
+1. **TUYỆT ĐỐI KHÔNG BỊA** — Cấm tự suy diễn phần update, nghiệp vụ, field, endpoint, hành vi FE… không có trong yêu cầu user hoặc spec hiện có.
+2. **LUÔN HỎI TRƯỚC KHI CODE** — Yêu cầu update mơ hồ, thiếu input, có ≥ 2 cách hiểu → **BẮT BUỘC** `AskUserQuestion` qua `question-asker`. **CẤM** tự suy diễn rồi implement.
+3. **CẤM GIẢ ĐỊNH FE/CLIENT** — Không được tự cho rằng FE sẽ gọi API thế nào, truyền field gì… trừ khi user nói rõ hoặc spec đã chốt.
+4. **CÒN `TODO(ask)` → CHƯA ĐƯỢC QUA `implementer`** — Mọi điểm mơ hồ phải được user trả lời trước.
+5. Chi tiết: [`docs/rules/00-core.md`](../rules/00-core.md), [`docs/guides/ask-protocol.md`](../guides/ask-protocol.md).
+
 ## Khi nào dùng
 
 - Cần thay đổi nghiệp vụ / API / UI của 1 feature đã code xong.
@@ -46,5 +54,6 @@ Y hệt `/implement-spec` (16 vai trò, gồm `solution-reviewer` + `api-designe
 
 ## Ràng buộc
 
+- Tuân thủ **RULE HIGH** ở đầu file — ưu tiên cao nhất.
 - Cùng ràng buộc với `/implement-spec`.
 - Đặc biệt: KHÔNG xóa quyết định cũ trong section "Quyết định" của spec.md. Chỉ append.
