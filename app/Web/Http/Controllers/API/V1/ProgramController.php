@@ -201,6 +201,7 @@ class ProgramController extends BaseAPIController
                                                     items: new OA\Items(
                                                         properties: [
                                                             new OA\Property(property: 'id', type: 'integer', example: 1),
+                                                            new OA\Property(property: 'video_id', description: 'ID video để gọi POST /videos/{video}/play', type: 'integer', example: 10, nullable: true),
                                                             new OA\Property(property: 'day', description: 'Thứ tự ngày tập', type: 'integer', example: 1),
                                                             new OA\Property(property: 'name', type: 'string', example: 'Bài nhập môn'),
                                                             new OA\Property(property: 'description', type: 'string', nullable: true),
@@ -238,6 +239,7 @@ class ProgramController extends BaseAPIController
                                                     items: new OA\Items(
                                                         properties: [
                                                             new OA\Property(property: 'id', type: 'integer', example: 2),
+                                                            new OA\Property(property: 'video_id', description: 'ID video để gọi POST /videos/{video}/play', type: 'integer', example: 10, nullable: true),
                                                             new OA\Property(property: 'day', description: 'Thứ tự ngày tập', type: 'integer', example: 2),
                                                             new OA\Property(property: 'name', type: 'string', example: 'Bài trung cấp'),
                                                             new OA\Property(property: 'description', type: 'string', nullable: true),
@@ -275,6 +277,7 @@ class ProgramController extends BaseAPIController
                                                     items: new OA\Items(
                                                         properties: [
                                                             new OA\Property(property: 'id', type: 'integer', example: 3),
+                                                            new OA\Property(property: 'video_id', description: 'ID video để gọi POST /videos/{video}/play', type: 'integer', example: 10, nullable: true),
                                                             new OA\Property(property: 'day', description: 'Thứ tự ngày tập', type: 'integer', example: 3),
                                                             new OA\Property(property: 'name', type: 'string', example: 'Bài nâng cao'),
                                                             new OA\Property(property: 'description', type: 'string', nullable: true),
@@ -315,6 +318,7 @@ class ProgramController extends BaseAPIController
                                             items: new OA\Items(
                                                 properties: [
                                                     new OA\Property(property: 'id', type: 'integer', example: 4),
+                                                    new OA\Property(property: 'video_id', description: 'ID video để gọi POST /videos/{video}/play', type: 'integer', example: 10, nullable: true),
                                                     new OA\Property(property: 'day', description: 'Thứ tự ngày tập', type: 'integer', example: 1),
                                                     new OA\Property(property: 'name', type: 'string', example: 'Bài đặc biệt'),
                                                     new OA\Property(property: 'description', type: 'string', nullable: true),
@@ -352,6 +356,7 @@ class ProgramController extends BaseAPIController
                                             items: new OA\Items(
                                                 properties: [
                                                     new OA\Property(property: 'id', type: 'integer', example: 5),
+                                                    new OA\Property(property: 'video_id', description: 'ID video để gọi POST /videos/{video}/play', type: 'integer', example: 10, nullable: true),
                                                     new OA\Property(property: 'day', description: 'Thứ tự ngày tập', type: 'integer', example: 1),
                                                     new OA\Property(property: 'name', type: 'string', example: 'Bài signature'),
                                                     new OA\Property(property: 'description', type: 'string', nullable: true),
@@ -458,6 +463,7 @@ class ProgramController extends BaseAPIController
     {
         return [
             'id' => $lesson->id,
+            'video_id' => $lesson->videos->sortBy('id')->first()?->id,
             'day' => $lesson->day,
             'name' => $lesson->name,
             'description' => $lesson->description,

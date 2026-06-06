@@ -55,3 +55,9 @@
 - [x] cleaner / docs-syncer pass
 - [x] migrate + pint PASS, verify endpoint
 - [ ] STOP — hỏi user commit/push
+
+## Update 2026-06-06 — video_id trong lesson item
+
+- [x] `mapLesson` thêm `video_id`
+- [x] OpenAPI lesson item cập nhật `video_id`
+- [x] `l5-swagger:generate` + pint

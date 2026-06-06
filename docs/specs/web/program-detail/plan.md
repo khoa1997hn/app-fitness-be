@@ -54,3 +54,9 @@ Bổ sung theo 3 ảnh figma: thêm lesson `thumbnail` (File jsonb + FileType::L
 ### Verify
 - lesson item: `id, day, name, description, thumbnail, duration_seconds`; không có `file`
 - Sort theo day asc
+
+## Update 2026-06-06 — video_id trong lesson item
+
+Thêm `video_id` vào `mapLesson` (lấy video đầu tiên theo `id` asc). Cập nhật OpenAPI lesson item trong `show`.
+
+**Files**: `ProgramController.php`.

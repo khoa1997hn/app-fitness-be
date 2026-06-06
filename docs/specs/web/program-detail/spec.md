@@ -107,6 +107,35 @@ Cần API trả **đầy đủ thông tin program** và **danh sách bài học*
 - 2026-05-29 (update figma) — Tiến độ xem video (Replay/Continue/Start)? → FE tự lưu local, BE không care.
 - **2026-05-30** — Tiến độ xem: BE lưu qua `watch-progress`; GET program detail trả `watched_percent` trên program + từng lesson *(superseded: bỏ `is_completed` — xem [`video-watch-progress/spec.md`](../video-watch-progress/spec.md))*.
 
+## Update 2026-06-06 — Thêm `video_id` vào lesson item
+
+### Thay đổi
+
+Mỗi lesson item trong `GET /api/v1/programs/{program}` thêm field `video_id` (int, nullable) — id bảng `videos` để FE gọi `POST /api/v1/videos/{video}/play`.
+
+- Hiện tại mỗi lesson có **1 video** (admin lưu 1 record video/lesson). Lấy `videos` đầu tiên (`id` asc).
+- Lesson chưa có video → `video_id: null`.
+
+### API Design (cập nhật lesson item)
+
+```json
+{
+  "id": 1,
+  "day": 1,
+  "name": "Bài nhập môn",
+  "video_id": 10,
+  "description": "…",
+  "thumbnail": { "path": "…", "url": "…" },
+  "duration_seconds": 600,
+  "is_favorited": false,
+  "progress": { "watched_seconds": 0, "completed_percent": 0 }
+}
+```
+
+### Quyết định
+
+- **2026-06-06** — Thêm `video_id` vào lesson item program detail → lấy id video đầu tiên của lesson (1 video/lesson theo admin hiện tại). Nullable nếu chưa có video.
+
 ## Liên quan
 
 - Mockup figma: [`program_detail_level.png`](../figma/program_detail_level.png), [`program_detail_special.png`](../figma/program_detail_special.png), [`program_detail_signature.png`](../figma/program_detail_signature.png)
