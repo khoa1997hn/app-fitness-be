@@ -35,7 +35,7 @@ suggest: POST /api/videos/{videoId}/play, refresh-stream, S3 presigned GET, 403 
 1. User có `validSubscription`.
 2. **Plan `all`**: mọi program.
 3. **Plan `basic` / `plus`**: `lesson.program_id` nằm trong `subscription_program_selections` của subscription hiện tại (đã chọn program).
-4. `lesson.type` ∈ `allowed_lesson_types` theo plan (xem `ProgramSelectionService::getPlanLimits`).
+4. `lesson.type` ∈ `allowed_lesson_types` theo plan (xem `SubscriptionService::getPlanLimits`).
 
 ### Luồng play
 1. Client `POST` với `{video}` (id).
@@ -98,7 +98,7 @@ suggest: POST /api/videos/{videoId}/play, refresh-stream, S3 presigned GET, 403 
 - **2026-05-29** — Param route = **video id** (`Video` model), không lesson id (một lesson có thể nhiều video).
 - **2026-05-29** — Prefix API ` /api/v1/` (chuẩn Web V1), không `/api/videos` gốc trong suggest.
 - **2026-05-29** — Thời hạn presigned = `config('app_file.presigned_expires_minutes')` (env `AWS_PRESIGNED_URL_EXPIRES`).
-- **2026-05-29** — Tái dùng logic plan/program/lesson type từ `ProgramSelectionService::getPlanLimits` + selections; không duplicate bảng quyền.
+- **2026-05-29** — Tái dùng logic plan/program/lesson type từ `SubscriptionService::getPlanLimits` + selections; không duplicate bảng quyền.
 - **2026-05-29** — Bỏ `refresh-stream`; FE refresh bằng cách gọi lại `play`.
 - **2026-05-29** — Response play gồm metadata video + `file` + `stream_url`.
 - **2026-05-29** — Web controller: `auth()->user()`, không `auth('api')->user()` (chỉ login/refresh/logout chỉ định guard `api`).

@@ -9,12 +9,12 @@ use App\Share\Enums\LessonType;
 use App\Share\Enums\Plan;
 use App\Share\Models\User;
 use App\Share\Models\Video;
-use App\Share\Services\Program\ProgramSelectionService;
+use App\Share\Services\Subscription\SubscriptionService;
 
 readonly class VideoPlayService
 {
     public function __construct(
-        private ProgramSelectionService $programSelectionService,
+        private SubscriptionService $subscriptionService,
     ) {}
 
     /**
@@ -33,7 +33,7 @@ readonly class VideoPlayService
         }
 
         $lesson = $video->lesson;
-        $limits = $this->programSelectionService->getPlanLimits($subscription->plan);
+        $limits = $this->subscriptionService->getPlanLimits($subscription->plan);
 
         $allowedTypes = collect($limits['allowed_lesson_types']);
         if (! $allowedTypes->contains(fn (LessonType $type) => $lesson->type->is($type))) {
