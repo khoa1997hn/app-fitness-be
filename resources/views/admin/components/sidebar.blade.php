@@ -55,6 +55,14 @@
                     </span>
                 </a>
             </li>
+            <li>
+                <a href="{{ route('admin.combos.index') }}" class="navItem {{ request()->routeIs('admin.combos.*') ? 'active' : '' }}">
+                    <span class="flex items-center">
+                        <iconify-icon class="nav-icon" icon="heroicons-outline:squares-2x2"></iconify-icon>
+                        <span>Combo</span>
+                    </span>
+                </a>
+            </li>
         </ul>
     </div>
 </div>

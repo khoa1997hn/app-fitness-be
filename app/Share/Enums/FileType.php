@@ -13,4 +13,8 @@ final class FileType extends Enum
     const LessonVideo = 'lesson_video';
 
     const LessonThumbnail = 'lesson_thumbnail';
+
+    const ComboCover = 'combo_cover';
+
+    const ComboInfoIcon = 'combo_info_icon';
 }

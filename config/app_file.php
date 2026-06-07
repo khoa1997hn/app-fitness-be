@@ -37,4 +37,16 @@ return [
         'allow_mimetypes' => ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'],
         'allow_max_size' => 5120, // KB (5MB)
     ],
+    FileType::ComboCover => [
+        'disk' => 's3',
+        'prefix_path' => 'combo/cover',
+        'allow_mimetypes' => ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'],
+        'allow_max_size' => 5120, // KB (5MB)
+    ],
+    FileType::ComboInfoIcon => [
+        'disk' => 's3',
+        'prefix_path' => 'combo/info-icon',
+        'allow_mimetypes' => ['image/png'],
+        'allow_max_size' => 5120, // KB (5MB)
+    ],
 ];

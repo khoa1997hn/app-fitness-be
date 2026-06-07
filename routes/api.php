@@ -4,6 +4,7 @@ use App\Web\Http\Controllers\API\V1\Auth\AuthController;
 use App\Web\Http\Controllers\API\V1\Auth\ProfileController;
 use App\Web\Http\Controllers\API\V1\Auth\RegistrationController;
 use App\Web\Http\Controllers\API\V1\BannerController;
+use App\Web\Http\Controllers\API\V1\ComboController;
 use App\Web\Http\Controllers\API\V1\LessonController;
 use App\Web\Http\Controllers\API\V1\LessonFavoriteController;
 use App\Web\Http\Controllers\API\V1\ProgramController;
@@ -76,6 +77,9 @@ Route::as('api.')
                 Route::post('programs/selection', [ProgramSelectionController::class, 'store'])->name('programs.selection.store');
                 Route::post('programs/favorites', [ProgramFavoriteController::class, 'store'])->name('programs.favorites.store');
                 Route::get('programs/{program}', [ProgramController::class, 'show'])->name('programs.show');
+
+                Route::get('combos', [ComboController::class, 'index'])->name('combos.index');
+                Route::get('combos/{combo}', [ComboController::class, 'show'])->name('combos.show');
 
                 Route::get('lessons/favorites', [LessonFavoriteController::class, 'index'])->name('lessons.favorites.index');
                 Route::get('lessons/{lesson}', [LessonController::class, 'show'])->name('lessons.show');

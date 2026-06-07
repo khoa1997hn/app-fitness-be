@@ -32,6 +32,7 @@ Route::middleware('auth:admin')->group(function () {
     Route::put('users/{user}/subscription', [\App\Admin\Http\Controllers\UserController::class, 'updateSubscription'])->name('users.subscription.update');
     Route::resource('users', \App\Admin\Http\Controllers\UserController::class)->only(['index', 'show', 'destroy'])->names(['index' => 'users.index', 'show' => 'users.show', 'destroy' => 'users.destroy']);
     Route::resource('banners', \App\Admin\Http\Controllers\BannerController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+    Route::resource('combos', \App\Admin\Http\Controllers\ComboController::class);
     Route::resource('programs', \App\Admin\Http\Controllers\ProgramController::class)->only(['index', 'edit', 'update', 'destroy']);
     // scoped(): ràng buộc lesson PHẢI thuộc program trên URL (chống IDOR — sửa/xóa lesson của program khác qua manipulate ID).
     Route::resource('programs.lessons', \App\Admin\Http\Controllers\LessonController::class)->only(['create', 'store', 'edit', 'update', 'destroy'])->scoped();
