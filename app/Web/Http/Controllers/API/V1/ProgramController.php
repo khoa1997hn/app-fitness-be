@@ -10,12 +10,15 @@ use App\Share\Models\User;
 use App\Share\Services\Video\VideoWatchProgressService;
 use App\Share\Utils\ResponseAPI;
 use App\Web\Http\Controllers\API\V1\APIController as BaseAPIController;
+use App\Web\Http\Controllers\API\V1\Concerns\MapsLessonForApi;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
 use OpenApi\Attributes as OA;
 
 class ProgramController extends BaseAPIController
 {
+    use MapsLessonForApi;
+
     public function __construct(
         private readonly VideoWatchProgressService $videoWatchProgressService,
     ) {}
@@ -461,18 +464,11 @@ class ProgramController extends BaseAPIController
      */
     private function mapLesson(Lesson $lesson, array $favoritedIds, array $lessonProgressMap): array
     {
-        return [
-            'id' => $lesson->id,
-            'video_id' => $lesson->videos->sortBy('id')->first()?->id,
-            'day' => $lesson->day,
-            'name' => $lesson->name,
-            'description' => $lesson->description,
-            'teacher_name' => $lesson->teacher_name,
-            'thumbnail' => $lesson->thumbnail,
-            'duration_seconds' => (int) $lesson->videos->sum('duration_seconds'),
-            'is_favorited' => in_array($lesson->id, $favoritedIds, true),
-            'progress' => $lessonProgressMap[$lesson->id] ?? ['watched_seconds' => 0, 'completed_percent' => 0],
-        ];
+        return $this->mapLessonForApi(
+            $lesson,
+            in_array($lesson->id, $favoritedIds, true),
+            $lessonProgressMap
+        );
     }
 
     /**

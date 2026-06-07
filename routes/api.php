@@ -4,6 +4,7 @@ use App\Web\Http\Controllers\API\V1\Auth\AuthController;
 use App\Web\Http\Controllers\API\V1\Auth\ProfileController;
 use App\Web\Http\Controllers\API\V1\Auth\RegistrationController;
 use App\Web\Http\Controllers\API\V1\BannerController;
+use App\Web\Http\Controllers\API\V1\LessonController;
 use App\Web\Http\Controllers\API\V1\LessonFavoriteController;
 use App\Web\Http\Controllers\API\V1\ProgramController;
 use App\Web\Http\Controllers\API\V1\ProgramFavoriteController;
@@ -77,6 +78,7 @@ Route::as('api.')
                 Route::get('programs/{program}', [ProgramController::class, 'show'])->name('programs.show');
 
                 Route::get('lessons/favorites', [LessonFavoriteController::class, 'index'])->name('lessons.favorites.index');
+                Route::get('lessons/{lesson}', [LessonController::class, 'show'])->name('lessons.show');
                 Route::post('lessons/{lesson}/favorite', [LessonFavoriteController::class, 'store'])->name('lessons.favorite.store');
                 Route::delete('lessons/{lesson}/favorite', [LessonFavoriteController::class, 'destroy'])->name('lessons.favorite.destroy');
 
