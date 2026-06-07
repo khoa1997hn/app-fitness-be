@@ -104,7 +104,7 @@ class ComboController extends BaseController
             $combo->fill([
                 $locale => [
                     'name' => $name,
-                    'cover' => $data['cover'] ?? null,
+                    'cover' => $this->normalizeFileInput($data['cover'] ?? null),
                 ],
             ]);
         }
@@ -135,7 +135,7 @@ class ComboController extends BaseController
             $info = new ComboInfo([
                 'combo_id' => $combo->id,
                 'sort' => $index,
-                'icon' => $infoData['icon'],
+                'icon' => $this->normalizeFileInput($infoData['icon'] ?? null),
             ]);
             $info->save();
 
@@ -155,5 +155,17 @@ class ComboController extends BaseController
 
             $info->save();
         }
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function normalizeFileInput(mixed $file): ?array
+    {
+        if (! is_array($file) || empty($file['path'])) {
+            return null;
+        }
+
+        return $file;
     }
 }

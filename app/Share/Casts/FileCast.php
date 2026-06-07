@@ -34,6 +34,10 @@ class FileCast implements CastsAttributes
             $value = File::fromArray($value);
         }
 
+        if ($value === null) {
+            return null;
+        }
+
         if (! $value instanceof File) {
             throw new InvalidArgumentException("The {$key} attribute must be a File instance or an array.");
         }

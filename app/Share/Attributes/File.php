@@ -22,7 +22,7 @@ class File implements \JsonSerializable
 
     public static function fromArray(array $data): ?self
     {
-        if (! isset($data['path'])) {
+        if (empty($data['path'])) {
             return null;
         }
 
