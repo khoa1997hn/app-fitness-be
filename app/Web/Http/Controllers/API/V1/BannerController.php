@@ -6,7 +6,6 @@ use App\Share\Models\Banner;
 use App\Share\Utils\ResponseAPI;
 use App\Web\Http\Controllers\API\V1\APIController as BaseAPIController;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
 
 class BannerController extends BaseAPIController
@@ -16,18 +15,9 @@ class BannerController extends BaseAPIController
      */
     #[OA\Get(
         path: '/banners',
-        description: 'Lấy danh sách banners hiển thị trên home page. Có thể filter theo id (1 hoặc nhiều ids), sắp xếp theo order tăng dần và id giảm dần.',
+        description: 'Lấy danh sách banners active hiển thị trên home page. Sắp xếp theo order tăng dần và id giảm dần.',
         summary: 'Lấy danh sách banners',
         tags: ['Banners'],
-        parameters: [
-            new OA\Parameter(
-                name: 'id',
-                description: 'Filter theo ID (có thể là 1 ID hoặc mảng nhiều IDs, ví dụ: 1 hoặc 1,2,3)',
-                in: 'query',
-                required: false,
-                schema: new OA\Schema(type: 'string', example: '1,2,3')
-            ),
-        ],
         responses: [
             new OA\Response(
                 response: 200,
@@ -65,26 +55,14 @@ class BannerController extends BaseAPIController
             ),
         ]
     )]
-    public function index(Request $request): JsonResponse
+    public function index(): JsonResponse
     {
-        $query = Banner::query()
+        $banners = Banner::query()
             ->withTranslation()
-            ->whereTranslation('is_active', true);
-
-        // Filter theo id (có thể là 1 hoặc nhiều ids)
-        if ($idParam = $request->input('id')) {
-            $ids = is_array($idParam) ? $idParam : explode(',', $idParam);
-            $ids = array_map('intval', array_filter($ids));
-            if (! empty($ids)) {
-                $query->whereIn('id', $ids);
-            }
-        }
-
-        // Sort: order tăng dần, id giảm dần
-        $query->orderByTranslation('order')
-            ->orderByDesc('id');
-
-        $banners = $query->get();
+            ->whereTranslation('is_active', true)
+            ->orderByTranslation('order')
+            ->orderByDesc('id')
+            ->get();
 
         return ResponseAPI::success(
             $banners->map(function (Banner $banner) {
