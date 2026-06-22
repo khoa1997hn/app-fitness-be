@@ -20,6 +20,7 @@ return [
     'logout_success' => 'Đăng xuất thành công',
     'refresh_success' => 'Làm mới token thành công',
     'login_failed' => 'Email hoặc mật khẩu không đúng.',
+    'password_reset_email_sent' => 'Nếu email đã đăng ký, mật khẩu mới đã được gửi tới hộp thư của bạn.',
 
     // Error messages
     'validation_error' => 'Dữ liệu không hợp lệ.',
