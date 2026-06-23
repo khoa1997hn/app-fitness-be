@@ -113,7 +113,7 @@ Giá cụ thể từng plan → env `PLAN_<TIER>_PRICE` (xem `.env.example`).
 ## Module hiện có vs chưa có
 
 ### Đã có
-- Auth (register / login / profile / logout / refresh / delete account) — JWT. Register: `phone` và `dob` tùy chọn. User soft-delete (`DELETE /api/v1/auth/me`); đăng nhập lại sau khi xóa bị chặn. Google Play subscription được cancel phía provider trước khi xóa; Apple bỏ qua (không hỗ trợ outbound cancel).
+- Auth (register / login / profile / logout / refresh / delete account) — JWT. `GET /api/v1/auth/profile` trả thông tin user + `favorited_programs` (program đã yêu thích, basic card, sort mới nhất trước). Register: `phone` và `dob` tùy chọn. User soft-delete (`DELETE /api/v1/auth/me`); đăng nhập lại sau khi xóa bị chặn. Google Play subscription được cancel phía provider trước khi xóa; Apple bỏ qua (không hỗ trợ outbound cancel).
 - Admin login, dashboard placeholder, Users list/delete/export CSV; chi tiết khách hàng + xem subscription/lịch sử IAP; sửa/tạo subscription thủ công (`SubscriptionService::adminUpsert`, provider `admin`).
 - Subscription core: model + service + listener Apple/Google + IAP webhook.
 - Banner (list API + multi-language).

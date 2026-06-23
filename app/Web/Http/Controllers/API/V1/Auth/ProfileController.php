@@ -2,16 +2,20 @@
 
 namespace App\Web\Http\Controllers\API\V1\Auth;
 
+use App\Share\Models\Program;
 use App\Share\Models\User;
 use App\Share\Services\Subscription\SubscriptionManager;
 use App\Share\Utils\ResponseAPI;
 use App\Web\Http\Controllers\API\V1\APIController as BaseAPIController;
+use App\Web\Http\Controllers\API\V1\Concerns\MapsProgramForApi;
 use Illuminate\Http\JsonResponse;
 use OpenApi\Attributes as OA;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class ProfileController extends BaseAPIController
 {
+    use MapsProgramForApi;
+
     public function __construct(private readonly SubscriptionManager $subscriptionManager) {}
 
     /**
@@ -44,6 +48,34 @@ class ProfileController extends BaseAPIController
                                 new OA\Property(property: 'subscription_status', description: 'Trạng thái subscription', type: 'string', enum: ['trial', 'active', 'expired', 'cancelled', 'grace_period', 'refunded'], example: 'active', nullable: true),
                                 new OA\Property(property: 'created_at', description: 'Thời gian tạo', type: 'string', format: 'date-time', example: '2026-01-30T09:00:00.000000Z'),
                                 new OA\Property(property: 'updated_at', description: 'Thời gian cập nhật', type: 'string', format: 'date-time', example: '2026-01-30T09:00:00.000000Z'),
+                                new OA\Property(
+                                    property: 'favorited_programs',
+                                    description: 'Danh sách program user đã yêu thích (mới nhất trước)',
+                                    type: 'array',
+                                    items: new OA\Items(
+                                        properties: [
+                                            new OA\Property(property: 'id', description: 'ID program', type: 'integer', example: 1),
+                                            new OA\Property(property: 'name', description: 'Tên program (theo locale)', type: 'string', example: 'Pilates'),
+                                            new OA\Property(
+                                                property: 'cover',
+                                                description: 'Ảnh cover (theo locale)',
+                                                properties: [
+                                                    new OA\Property(property: 'path', type: 'string', example: 'programs/cover/sample.jpg'),
+                                                    new OA\Property(property: 'name', type: 'string', example: 'sample.jpg'),
+                                                    new OA\Property(property: 'extension', type: 'string', example: 'jpg', nullable: true),
+                                                    new OA\Property(property: 'size', type: 'integer', example: 102400, nullable: true),
+                                                    new OA\Property(property: 'url', type: 'string', example: 'http://localhost/storage/programs/cover/sample.jpg'),
+                                                ],
+                                                type: 'object',
+                                                nullable: true
+                                            ),
+                                            new OA\Property(property: 'rating', description: 'Đánh giá (admin nhập)', type: 'number', format: 'float', example: 4.9, nullable: true),
+                                            new OA\Property(property: 'duration_minutes', description: 'Tổng thời lượng (phút)', type: 'integer', example: 30),
+                                            new OA\Property(property: 'course_count', description: 'Số lượng bài học', type: 'integer', example: 12),
+                                        ],
+                                        type: 'object'
+                                    )
+                                ),
                             ],
                             type: 'object'
                         ),
@@ -67,6 +99,25 @@ class ProfileController extends BaseAPIController
         /** @var User $user */
         $user = auth()->user();
 
+        $favoritedPrograms = $user->favoritePrograms()
+            ->withTranslation()
+            ->with($this->programRelations())
+            ->orderByPivot('created_at', 'desc')
+            ->get()
+            ->map(function (Program $program) {
+                $mapped = $this->mapProgram($program);
+
+                return [
+                    'id' => $mapped['id'],
+                    'name' => $mapped['name'],
+                    'cover' => $mapped['cover'],
+                    'rating' => $mapped['rating'],
+                    'duration_minutes' => $mapped['duration_minutes'],
+                    'course_count' => $mapped['course_count'],
+                ];
+            })
+            ->all();
+
         return ResponseAPI::success([
             'id' => $user->id,
             'email' => $user->email,
@@ -78,6 +129,7 @@ class ProfileController extends BaseAPIController
             'subscription_status' => $user->subscription_status?->value,
             'created_at' => $user->created_at,
             'updated_at' => $user->updated_at,
+            'favorited_programs' => $favoritedPrograms,
         ]);
     }
 
