@@ -33,5 +33,6 @@ docs/specs/<big-feature-title>/<detail-feature-title>/
 ## Specs hiện có
 
 - `setup/initial-laravel-setup/` — Spec dựng base Laravel 12 ban đầu (lịch sử).
+- `web/auth-register/` — API đăng ký tài khoản (`POST /auth/register`).
 
 (Cập nhật danh sách này khi có spec mới.)

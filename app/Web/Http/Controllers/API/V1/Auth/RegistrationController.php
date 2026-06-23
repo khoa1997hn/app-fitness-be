@@ -21,14 +21,14 @@ class RegistrationController extends BaseAPIController
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                required: ['email', 'password', 'first_name', 'last_name', 'dob'],
+                required: ['email', 'password', 'first_name', 'last_name'],
                 properties: [
                     new OA\Property(property: 'email', description: 'Email đăng ký (phải unique)', type: 'string', format: 'email', maxLength: 255, example: 'user@example.com'),
                     new OA\Property(property: 'password', description: 'Mật khẩu (tối thiểu 8 ký tự, tối đa 50 ký tự)', type: 'string', format: 'password', maxLength: 50, minLength: 8, example: 'password123'),
                     new OA\Property(property: 'first_name', description: 'Tên', type: 'string', maxLength: 255, example: 'Nguyễn'),
                     new OA\Property(property: 'last_name', description: 'Họ', type: 'string', maxLength: 255, example: 'Văn A'),
                     new OA\Property(property: 'phone', description: 'Số điện thoại (tùy chọn)', type: 'string', maxLength: 255, example: '0123456789', nullable: true),
-                    new OA\Property(property: 'dob', description: 'Ngày sinh (định dạng Y-m-d)', type: 'string', format: 'date', example: '1990-01-01'),
+                    new OA\Property(property: 'dob', description: 'Ngày sinh (định dạng Y-m-d, tùy chọn)', type: 'string', format: 'date', example: '1990-01-01', nullable: true),
                 ]
             )
         ),
@@ -87,7 +87,7 @@ class RegistrationController extends BaseAPIController
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'phone' => 'nullable|string|max:255',
-            'dob' => 'required|date:Y-m-d',
+            'dob' => 'nullable|date:Y-m-d',
         ]);
 
         $user = User::query()->create([
@@ -96,7 +96,7 @@ class RegistrationController extends BaseAPIController
             'first_name' => $validated['first_name'],
             'last_name' => $validated['last_name'],
             'phone' => $validated['phone'] ?? null,
-            'dob' => $validated['dob'],
+            'dob' => $validated['dob'] ?? null,
         ]);
 
         return ResponseAPI::success([
