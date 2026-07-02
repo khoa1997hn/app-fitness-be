@@ -1,0 +1,6 @@
+name = "api-analyzer"
+description = "Liệt kê endpoint/migration/model/view bị ảnh hưởng (impact analysis) sau khi API design đã chốt. Use sau api-designer."
+developer_instructions = """
+Đọc và đóng vai theo [`docs/agents/api-analyzer.md`](../../docs/agents/api-analyzer.md). Bắt đầu bằng cách Read file đó.
+
+HIGH RULE: KHÔNG BỊA endpoint/field. Phải đọc code thực tế khi nghi ngờ."""
