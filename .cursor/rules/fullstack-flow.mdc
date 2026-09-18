@@ -1,0 +1,55 @@
+---
+description: Luồng end-to-end BE + FE trong cùng một task (multi-root workspace Kore).
+alwaysApply: true
+---
+
+# Fullstack flow (BE + FE)
+
+Dùng khi task yêu cầu implement feature xuyên cả API và UI trong **cùng một prompt**.
+
+## Workspace
+
+Mở `kore.code-workspace` (multi-root), không mở folder `kore/` trực tiếp.
+
+| Root | Repo | Stack |
+|------|------|-------|
+| `BE` | `app-fitness-be` | Laravel 12, PHP 8.2, MySQL (Sail) |
+| `FE` | `fitness-web` | React 19, Vite, HeroUI, Tailwind 4 |
+
+## Thứ tự implement (bắt buộc)
+
+1. **BE trước** — route → controller → validation → response JSON
+2. **FE sau** — type → API client → hook/service → page/component
+3. **Ghép nối** — thay mock (nếu có) bằng call API thật; cập nhật route/path nếu cần
+
+Không dừng ở BE rồi bảo user tự làm FE, trừ khi user chỉ yêu cầu một phía.
+
+## Contract BE ↔ FE
+
+- Base path API: `/api/v1/...`
+- Response wrapper: `{ success, message, data, errors? }` — luôn qua `ResponseAPI`
+- Field name, enum, status code phải **khớp tuyệt đối** giữa BE resource và FE type
+- Cấm return thẳng model ở BE; Cấm FE tự bịa field không có trong response
+
+Chi tiết BE: rule `api-response`, `architecture`, `swagger`.
+
+## FE conventions
+
+- Pages/components: `fitness-web/src/features/<domain>/`
+- Types: `fitness-web/src/types/`
+- API layer (tạo nếu chưa có): `fitness-web/src/api/` hoặc `fitness-web/src/lib/api/`
+- Mock hiện tại: `fitness-web/src/mocks/` — **chỉ dùng khi endpoint BE chưa tồn tại**
+- Path URL: đồng bộ `fitness-web/src/routes/paths.ts` + `AppRouter.tsx`
+
+## Khi nào hỏi user (ASK-FIRST)
+
+- Spec thiếu response shape hoặc UI behavior
+- ≥ 2 cách map field BE ↔ FE
+- Chưa rõ thay mock hay giữ mock song song
+
+## Báo cáo cuối task fullstack
+
+- Endpoint BE (method, path, auth)
+- File FE đã sửa (type, api client, page)
+- Field/enum đã đồng bộ
+- Còn mock chưa thay (nếu có) và lý do
