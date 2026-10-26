@@ -4,6 +4,12 @@
 
 Admin cần chỉnh subscription của user từ trang Chi tiết khách hàng (hỗ trợ cấp gói thủ công hoặc sửa trạng thái/hết hạn). Xem subscription: spec [`user-subscription-view`](../user-subscription-view/spec.md).
 
+## Admin surfaces
+
+[`docs/guides/admin-dual-surface.md`](../../../guides/admin-dual-surface.md) · FE: [`kore-users.md`](../../../../fitness-web/docs/screens/admin/kore-users.md) (cùng màn chi tiết).
+
+**`surfaces`:** `fe` — form trên React (cùng [`kore-users.md`](../../../../fitness-web/docs/screens/admin/kore-users.md)). Blade = fallback.
+
 ## Phạm vi
 
 ### In-scope

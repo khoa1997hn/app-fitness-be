@@ -7,6 +7,18 @@ App native cần hiển thị **combo** — gói gồm nhiều program (bộ mô
 > Persona end-user: đã đăng nhập (JWT), xem danh sách combo và chi tiết combo trên app.
 > Persona admin: vận hành nội dung, tạo/sửa/xóa combo và gán program.
 
+## Admin surfaces
+
+[`docs/guides/admin-dual-surface.md`](../../../guides/admin-dual-surface.md) · [`module-matrix.md`](../../../../fitness-web/docs/admin/module-matrix.md)
+
+| Surface | Trạng thái | Tài liệu |
+|---------|------------|----------|
+| **Blade** Admin CRUD | ✅ (in-scope dưới) | Spec này — mục Admin |
+| **FE React** | 🔲 phase 11d | [`kore-combo.md`](../../../../fitness-web/docs/screens/admin/kore-combo.md) |
+| **Web API V1** | ✅ | `GET /api/v1/combos` — end-user, không thay admin |
+
+**`surfaces` (admin):** `fe` — React ([`kore-combo.md`](../../../../fitness-web/docs/screens/admin/kore-combo.md)). Blade = fallback.
+
 ## Phạm vi
 
 ### In-scope

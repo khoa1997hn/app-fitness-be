@@ -21,15 +21,15 @@ class AppleIapController extends BaseAPIController
      */
     #[OA\Post(
         path: '/subscriptions/iap/apple/verify',
-        description: 'Xác thực receipt từ Apple App Store và tạo/cập nhật subscription cho user. Hỗ trợ các gói: basic, plus, all.',
-        summary: 'Xác thực giao dịch Apple App Store',
+        description: 'Xác thực giao dịch StoreKit 2 (JWS signed transaction) từ Apple App Store và tạo/cập nhật subscription cho user. Hỗ trợ các gói: basic, plus, all.',
+        summary: 'Xác thực giao dịch Apple App Store (StoreKit 2)',
         security: [['bearerAuth' => []]],
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
-                required: ['receipt'],
+                required: ['transaction'],
                 properties: [
-                    new OA\Property(property: 'receipt', description: 'Receipt data từ Apple App Store (base64 encoded)', type: 'string', example: 'base64_encoded_receipt_data'),
+                    new OA\Property(property: 'transaction', description: 'Signed transaction JWS từ StoreKit 2 (`Transaction.jwsRepresentation`)', type: 'string', example: 'eyJhbGciOiJFUzI1NiIsIng1YyI6Wy...'),
                 ]
             )
         ),
@@ -41,7 +41,7 @@ class AppleIapController extends BaseAPIController
                 content: new OA\JsonContent(
                     properties: [
                         new OA\Property(property: 'success', type: 'boolean', example: true),
-                        new OA\Property(property: 'message', type: 'string', example: 'Receipt verified successfully'),
+                        new OA\Property(property: 'message', type: 'string', example: 'Transaction verified successfully'),
                         new OA\Property(
                             property: 'data',
                             properties: [
@@ -69,7 +69,7 @@ class AppleIapController extends BaseAPIController
             ),
             new OA\Response(
                 response: 400,
-                description: 'Receipt không hợp lệ',
+                description: 'Giao dịch không hợp lệ',
                 content: new OA\JsonContent(
                     properties: [
                         new OA\Property(property: 'success', type: 'boolean', example: false),
@@ -97,7 +97,7 @@ class AppleIapController extends BaseAPIController
                         new OA\Property(
                             property: 'errors',
                             type: 'object',
-                            example: ['receipt' => ['The receipt field is required.']],
+                            example: ['transaction' => ['The transaction field is required.']],
                             additionalProperties: new OA\AdditionalProperties(
                                 type: 'array',
                                 items: new OA\Items(type: 'string')
@@ -111,14 +111,14 @@ class AppleIapController extends BaseAPIController
     public function verify(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'receipt' => 'required|string',
+            'transaction' => 'required|string',
         ]);
 
         $user = auth()->user();
 
         try {
-            $subscription = $this->appleService->verifyReceipt(
-                $validated['receipt'],
+            $subscription = $this->appleService->verifyTransaction(
+                $validated['transaction'],
                 $user
             );
 

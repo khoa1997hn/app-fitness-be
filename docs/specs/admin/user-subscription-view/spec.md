@@ -4,6 +4,17 @@
 
 Admin cần xem thông tin chi tiết một user kèm subscription hiện tại và lịch sử giao dịch IAP (Google/Apple). Hiện `UserController` chỉ có `index`, `destroy`, `export`. Cần thêm `show`.
 
+## Admin surfaces
+
+[`docs/guides/admin-dual-surface.md`](../../../guides/admin-dual-surface.md) · [`module-matrix.md`](../../../../fitness-web/docs/admin/module-matrix.md)
+
+| Surface | Trạng thái | Tài liệu |
+|---------|------------|----------|
+| **Blade** `GET /admin/users/{user}` | ✅ | Spec này |
+| **FE React** | 🔲 phase 11a | [`kore-users.md`](../../../../fitness-web/docs/screens/admin/kore-users.md) |
+
+**`surfaces`:** `fe` — React ([`kore-users.md`](../../../../fitness-web/docs/screens/admin/kore-users.md)). Blade = fallback.
+
 ## Phạm vi
 
 ### In-scope

@@ -1,5 +1,7 @@
 # Plan: Admin quản lý Banner
 
+**FE React (dual surface):** [`kore-banner.md`](../../../../fitness-web/docs/screens/admin/kore-banner.md) · plan [11-admin-modules.md](../../../../fitness-web/plan/11-admin-modules.md) phase 11c.
+
 ## Phân tích ảnh hưởng
 
 ### Migration

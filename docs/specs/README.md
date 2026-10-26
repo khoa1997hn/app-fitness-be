@@ -30,6 +30,12 @@ docs/specs/<big-feature-title>/<detail-feature-title>/
 - File trong `bug-<slug>-<date>/` chỉ tạo qua `/fix-bug`.
 - Tạo thủ công ngoài 3 command trên → không khuyến khích.
 
+## Admin dual surface
+
+- Guide: [`docs/guides/admin-dual-surface.md`](../guides/admin-dual-surface.md)
+- Quy tắc FE: [`fitness-web/docs/admin/README.md`](../../../fitness-web/docs/admin/README.md) — `kore-*.md` → React; còn lại → Blade
+- Ma trận: [`module-matrix.md`](../../../fitness-web/docs/admin/module-matrix.md)
+
 ## Specs hiện có
 
 - `setup/initial-laravel-setup/` — Spec dựng base Laravel 12 ban đầu (lịch sử).

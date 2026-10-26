@@ -6,7 +6,7 @@
 - Services: `app/Share/Services/Subscription/`
   - `SubscriptionService` — logic CHUNG (activate/renew/cancel/expire/refund).
   - `GoogleService` — verify purchase token Google Play.
-  - `AppleService` — verify receipt Apple App Store.
+  - `AppleService` — verify StoreKit 2 signed transaction (JWS) Apple App Store (local signature verify, không gọi `verifyReceipt`).
   - `TrialService` — start trial.
 - Listeners: `app/Share/Listeners/Subscriptions/{Google, Apple}/` — handle event lifecycle qua webhook.
 - Exceptions: `app/Share/Exceptions/Subscription/` (`SubscriptionException` base, `SubscriptionNotFoundException`, `InvalidReceiptException`).
@@ -23,7 +23,7 @@ Mọi thao tác lifecycle chung (activate / renew / cancel / expire / refund) �
 ### 2. Provider-specific logic đặt trong service riêng
 
 `GoogleService` / `AppleService` chỉ chứa:
-- Verify receipt/token qua imdhemy SDK.
+- Apple: verify JWS transaction qua `imdhemy/appstore-iap` (`Parser` + `AppStoreJwsVerifier` + `JwsTransactionInfo`). Google: verify purchase token qua imdhemy SDK.
 - Parse plan từ `item_id` (Google) / `product_id` (Apple) qua `config('app_payment.plans')`.
 - Tạo / update record per-provider (`GoogleSubscription` / `AppleSubscription`).
 - Gọi `SubscriptionService::activate()` hoặc `TrialService::startTrial()` cho phần chung.

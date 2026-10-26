@@ -14,6 +14,17 @@
   - `resources/views/admin/users/index.blade.php` — mẫu Blade: breadcrumb, card, form filter, table, paginate.
   - Route admin: `routes/admin.php`, prefix `/admin`, name `admin.<feature>.<action>`, trong group `middleware('auth:admin')`.
 
+## Admin surfaces
+
+Quy ước: [`docs/guides/admin-dual-surface.md`](../../../guides/admin-dual-surface.md) · Ma trận: [`fitness-web/docs/admin/module-matrix.md`](../../../../fitness-web/docs/admin/module-matrix.md).
+
+| Surface | Route / app | Trạng thái | Tài liệu UI |
+|---------|-------------|------------|-------------|
+| **Blade** | `/admin/programs`, nested lessons | ✅ Spec này | Views `admin/programs/*`, `admin/lessons/*` |
+| **FE React** | `fitness-web` `/admin/programs...` | 🔲 Plan phase 11b | [`kore-program-lesson.md`](../../../../fitness-web/docs/screens/admin/kore-program-lesson.md) |
+
+**`surfaces` (mục tiêu):** `fe` — UI admin trên React ([`kore-program-lesson.md`](../../../../fitness-web/docs/screens/admin/kore-program-lesson.md)). Blade hiện có = fallback ops.
+
 ## Phạm vi
 
 ### In-scope

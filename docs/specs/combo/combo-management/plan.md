@@ -4,6 +4,8 @@
 
 Tạo bảng combo + translation + pivot program + info items; Admin CRUD Blade (theo pattern Banner); Web API list/detail với trait tái dùng map program từ `ProgramController`.
 
+**FE admin (dual surface):** [`kore-combo.md`](../../../../fitness-web/docs/screens/admin/kore-combo.md) · [11-admin-modules.md](../../../../fitness-web/plan/11-admin-modules.md) phase 11d.
+
 ## Phụ thuộc
 
 - `Program` model đã có.

@@ -41,6 +41,13 @@ Chi tiết BE: rule `api-response`, `architecture`, `swagger`.
 - Mock hiện tại: `fitness-web/src/mocks/` — **chỉ dùng khi endpoint BE chưa tồn tại**
 - Path URL: đồng bộ `fitness-web/src/routes/paths.ts` + `AppRouter.tsx`
 
+## Admin (Blade + FE React)
+
+- Nghiệp vụ admin: spec `docs/specs/admin/<feature>/` (và phần Admin trong spec combo, …).
+- **Dual surface** — `kore-*.md` → React (`fe`); admin không có doc Kore → Blade (`blade`): [`docs/guides/admin-dual-surface.md`](../docs/guides/admin-dual-surface.md), [`fitness-web/docs/admin/README.md`](../../fitness-web/docs/admin/README.md).
+- Blade: form POST + session `auth:admin`. FE admin: screen `fitness-web/docs/screens/admin/kore-*.md`, plan [`fitness-web/plan/11-admin-modules.md`](../../fitness-web/plan/11-admin-modules.md) — có thể cần Admin JSON API trên BE trước UI React.
+- Member app dùng Web V1 JWT — **không** dùng guard admin cho CRUD nội dung.
+
 ## Khi nào hỏi user (ASK-FIRST)
 
 - Spec thiếu response shape hoặc UI behavior

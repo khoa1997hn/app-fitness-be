@@ -64,10 +64,10 @@ Giá cụ thể từng plan → env `PLAN_<TIER>_PRICE` (xem `.env.example`).
 - **End-user (API)**: JWT qua `tymon/jwt-auth`. Token gửi qua header `Authorization: Bearer <token>`.
 - **Admin (web)**: session-based, guard `auth:admin` riêng (KHÔNG dùng guard `web` mặc định).
 
-### Admin UI
-- Laravel Blade (KHÔNG dùng Filament / Nova / Backpack).
-- HTML template mẫu trong `resources/dashcode/`. Asset đã build sẵn ở `public/dashcode/`.
-- Toàn bộ label/message/button — tiếng Việt.
+### Admin UI (dual surface)
+- **Blade (Laravel)**: vận hành chính trên `/admin`, guard `auth:admin`, Dashcode — KHÔNG Filament/Nova/Backpack. Template `resources/dashcode/`, asset `public/dashcode/`. Label tiếng Việt.
+- **FE React (`fitness-web`)**: admin module có screen **`docs/screens/admin/kore-*.md`** → UI trên React (`surfaces: fe`). Admin **không** có `kore-*.md` → **Blade only** (`surfaces: blade`). Ma trận: [`fitness-web/docs/admin/module-matrix.md`](../../fitness-web/docs/admin/module-matrix.md). Quy tắc: [`fitness-web/docs/admin/README.md`](../../fitness-web/docs/admin/README.md), guide [`docs/guides/admin-dual-surface.md`](guides/admin-dual-surface.md).
+- Blade Dashcode vẫn chạy cho module Kore đã build — **fallback ops**, không phát triển UI mới trên Blade khi đã có `kore-*.md`.
 
 ### API
 - Web API V1 nằm trong `app/Web/Http/Controllers/API/V1/`.

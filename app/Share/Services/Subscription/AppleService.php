@@ -12,8 +12,9 @@ use App\Share\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Imdhemy\AppStore\Exceptions\InvalidReceiptException as ImdhemyInvalidReceiptException;
-use Imdhemy\Purchases\Facades\Subscription as ImdhemySubscription;
+use Imdhemy\AppStore\Jws\AppStoreJwsVerifier;
+use Imdhemy\AppStore\Jws\Parser;
+use Imdhemy\AppStore\ValueObjects\JwsTransactionInfo;
 use Psr\Log\LoggerInterface;
 
 class AppleService
@@ -28,36 +29,33 @@ class AppleService
     }
 
     /**
-     * Verify receipt from Apple App Store
+     * Verify StoreKit 2 signed transaction (JWS) from the client.
      */
-    public function verifyReceipt(string $receiptData, User $user): Subscription
+    public function verifyTransaction(string $signedTransaction, User $user): Subscription
     {
         try {
-            // Use verifyRenewable() for auto-renewable subscriptions
-            $response = ImdhemySubscription::appStore()
-                ->receiptData($receiptData)
-                ->verifyRenewable();
+            $transactionInfo = $this->decodeSignedTransaction($signedTransaction, $user);
 
-            // Get the receipt status and check if valid
-            $receiptStatus = $response->getStatus();
-            if (! $receiptStatus->isValid()) {
-                $this->logger->warning('[Apple] Receipt is invalid', [
-                    'user_id' => $user->id,
-                    'status' => $receiptStatus->getValue(),
-                ]);
-
-                throw new \RuntimeException('Receipt is invalid');
+            $bundleId = config('liap.appstore_bundle_id');
+            if (! $bundleId || $transactionInfo->getBundleId() !== $bundleId) {
+                throw new \RuntimeException('Bundle ID mismatch');
             }
 
-            $latestReceiptInfo = $response->getLatestReceiptInfo();
-            if (empty($latestReceiptInfo)) {
-                throw new \RuntimeException('No subscription found in receipt');
+            if ($transactionInfo->getRevocationDate() !== null) {
+                throw new \RuntimeException('Transaction has been revoked');
             }
 
-            $receipt = $latestReceiptInfo[0];
-            $productId = $receipt->getProductId();
-            $originalTransactionId = $receipt->getOriginalTransactionId();
-            $transactionId = $receipt->getTransactionId();
+            if ($transactionInfo->getType() !== JwsTransactionInfo::TYPE_AUTO_RENEWABLE) {
+                throw new \RuntimeException('Transaction is not an auto-renewable subscription');
+            }
+
+            $productId = $transactionInfo->getProductId();
+            $originalTransactionId = $transactionInfo->getOriginalTransactionId();
+            $transactionId = $transactionInfo->getTransactionId();
+
+            if (! $productId || ! $originalTransactionId || ! $transactionId) {
+                throw new \RuntimeException('Missing required transaction fields');
+            }
 
             $plan = $this->getPlanFromProductId($productId);
             if (! $plan) {
@@ -66,18 +64,15 @@ class AppleService
 
             $planConfig = config("app_payment.plans.{$plan->value}", []);
             $amount = (float) ($planConfig['price'] ?? 0);
-            $expiresDate = $receipt->getExpiresDate();
-            $expiresAt = $expiresDate?->toCarbon();
+            $expiresAt = $transactionInfo->getExpiresDate()?->toCarbon();
+            $isTrialPeriod = $this->isFreeTrialTransaction($transactionInfo);
 
-            // Check if this is a trial period from receipt
-            $isTrialPeriod = $receipt->getIsTrialPeriod() === true;
-
-            // If trial period but no expires date, throw error
             if ($isTrialPeriod && ! $expiresAt) {
                 throw new \RuntimeException('Expires date is required for trial period');
             }
 
-            // Use DB transaction for all database operations
+            $rawResponse = $transactionInfo->getClaims();
+
             return DB::transaction(function () use (
                 $user,
                 $plan,
@@ -85,13 +80,12 @@ class AppleService
                 $originalTransactionId,
                 $amount,
                 $expiresAt,
-                $receipt,
-                $response,
+                $transactionInfo,
                 $productId,
-                $transactionId
+                $transactionId,
+                $rawResponse
             ) {
                 if ($isTrialPeriod) {
-                    // Start trial if receipt indicates trial period
                     $subscriptionModel = $this->trialService->startTrial(
                         user: $user,
                         plan: $plan,
@@ -101,7 +95,6 @@ class AppleService
                         expiresAt: $expiresAt
                     );
                 } else {
-                    // Activate subscription (renew or upgrade)
                     $subscriptionModel = $this->subscriptionService->activate(
                         user: $user,
                         plan: $plan,
@@ -112,29 +105,23 @@ class AppleService
                     );
                 }
 
-                // Create or update Apple subscription record
                 $this->createOrUpdateSubscription(
                     $subscriptionModel,
                     $originalTransactionId,
                     $transactionId,
                     $productId,
-                    $receipt->getPurchaseDate()?->toCarbon(),
+                    $transactionInfo->getPurchaseDate()?->toCarbon(),
                     $expiresAt,
-                    $response->toArray(),
+                    $rawResponse,
                     AppleSubscriptionStatus::Active
                 );
 
                 return $subscriptionModel->load('appleSubscription');
             });
-        } catch (ImdhemyInvalidReceiptException $e) {
-            $this->logger->error('[Apple] Invalid receipt', [
-                'error' => $e->getMessage(),
-                'user_id' => $user->id,
-            ]);
-
-            throw new InvalidReceiptException('Invalid receipt: '.$e->getMessage());
+        } catch (InvalidReceiptException $e) {
+            throw $e;
         } catch (\Throwable $e) {
-            $this->logger->error('[Apple] Error during receipt verification', [
+            $this->logger->error('[Apple] Error during transaction verification', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
                 'user_id' => $user->id,
@@ -142,6 +129,51 @@ class AppleService
 
             throw $e;
         }
+    }
+
+    protected function decodeSignedTransaction(string $signedTransaction, User $user): JwsTransactionInfo
+    {
+        $signedTransaction = trim($signedTransaction);
+
+        if ($signedTransaction === '') {
+            throw new InvalidReceiptException('Invalid transaction: empty payload');
+        }
+
+        try {
+            $jws = Parser::toJws($signedTransaction);
+            $verifier = new AppStoreJwsVerifier;
+
+            if (! $verifier->verify($jws)) {
+                throw new InvalidReceiptException('Invalid transaction: signature verification failed');
+            }
+
+            return new JwsTransactionInfo($jws);
+        } catch (InvalidReceiptException $e) {
+            $this->logger->error('[Apple] Invalid transaction', [
+                'error' => $e->getMessage(),
+                'user_id' => $user->id,
+            ]);
+
+            throw $e;
+        } catch (\Throwable $e) {
+            $this->logger->error('[Apple] Invalid transaction', [
+                'error' => $e->getMessage(),
+                'user_id' => $user->id,
+            ]);
+
+            throw new InvalidReceiptException('Invalid transaction: '.$e->getMessage());
+        }
+    }
+
+    protected function isFreeTrialTransaction(JwsTransactionInfo $transactionInfo): bool
+    {
+        $claims = $transactionInfo->getClaims();
+
+        if (($claims['offerDiscountType'] ?? null) === 'FREE_TRIAL') {
+            return true;
+        }
+
+        return ($claims['isTrialPeriod'] ?? false) === true;
     }
 
     /**

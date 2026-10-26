@@ -2,7 +2,7 @@
 
 ## Service split
 - `SubscriptionService` — logic CHUNG: activate / renew / cancel / expire / refund.
-- `GoogleService`, `AppleService` — logic RIÊNG provider: verify token/receipt, parse plan từ config, tạo/update record per-provider.
+- `GoogleService`, `AppleService` — logic RIÊNG provider: Google verify purchase token; Apple verify StoreKit 2 JWS transaction, parse plan từ config, tạo/update record per-provider.
 - `TrialService` — start trial.
 - Provider mới (Stripe...) → service mới cùng pattern, KHÔNG ghép vào Google/Apple.
 

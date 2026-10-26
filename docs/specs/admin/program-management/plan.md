@@ -6,6 +6,8 @@
 
 Thêm Admin CRUD cho Program (chỉ edit + delete) và Lesson (CRUD đầy đủ, nested trong program), kèm upload/xem 1 video/lesson qua presigned S3 đã có sẵn. Code controller-first, Blade + Dashcode tiếng Việt, lặp động theo locale từ config. KHÔNG migration mới, KHÔNG package mới — chỉ bổ sung relation/enum label trên model có sẵn và build UI.
 
+**FE React (dual surface):** parity theo spec — [`fitness-web/plan/11-admin-modules.md`](../../../../fitness-web/plan/11-admin-modules.md), screen [`kore-program-lesson.md`](../../../../fitness-web/docs/screens/admin/kore-program-lesson.md). Admin JSON API: **TODO(ask)** khi bắt đầu FE.
+
 ## Phụ thuộc
 
 - Migration mới: KHÔNG (toàn bộ table đã tồn tại).

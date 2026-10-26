@@ -30,9 +30,9 @@ return [
     'server_error' => 'Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau.',
 
     // Subscription messages
-    'receipt_verified_successfully' => 'Xác thực receipt thành công.',
+    'receipt_verified_successfully' => 'Xác thực giao dịch thành công.',
     'purchase_verified_successfully' => 'Xác thực purchase thành công.',
-    'invalid_receipt' => 'Receipt không hợp lệ (:detail).',
+    'invalid_receipt' => 'Giao dịch không hợp lệ (:detail).',
 
     // Program selection
     'no_active_subscription' => 'Bạn chưa có gói đăng ký đang hoạt động.',

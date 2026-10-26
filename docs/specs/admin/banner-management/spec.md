@@ -4,6 +4,17 @@
 
 Admin cần CRUD banner hiển thị trong app. Model `Banner` + `BannerTranslation` đã tồn tại với migration. Chưa có màn hình Admin nào cho banner. Cần thêm list, create, edit, delete (không có detail).
 
+## Admin surfaces
+
+[`docs/guides/admin-dual-surface.md`](../../../guides/admin-dual-surface.md) · [`module-matrix.md`](../../../../fitness-web/docs/admin/module-matrix.md)
+
+| Surface | Trạng thái | Tài liệu |
+|---------|------------|----------|
+| **Blade** `/admin/banners` | ✅ (theo spec dưới) | Spec này |
+| **FE React** | 🔲 phase 11c | [`kore-banner.md`](../../../../fitness-web/docs/screens/admin/kore-banner.md) |
+
+**`surfaces`:** `fe` — React ([`kore-banner.md`](../../../../fitness-web/docs/screens/admin/kore-banner.md)). Blade = fallback.
+
 ## Phạm vi
 
 ### In-scope
