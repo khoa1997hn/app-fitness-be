@@ -83,6 +83,8 @@ return [
     'gym_notify_event_cancelled' => 'Sự kiện :name đã bị hủy.:reason Nếu đã thanh toán, phòng tập sẽ liên hệ hoàn tiền.',
     'gym_notify_event_cancelled_reason' => ' Lý do: :reason.',
     'gym_notify_event_hold_expired' => 'Đã hết thời gian giữ vé sự kiện :name, vé đã được nhả.',
+    'gym_redlight_unavailable' => 'Buổi này không dùng được Redlight, hoặc đã đặt thêm rồi.',
+    'gym_redlight_order_name' => 'Redlight — :name lúc :time',
     'gym_attendance_today_only' => 'Chỉ được điểm danh trong ngày diễn ra buổi học.',
     'gym_attendance_invalid_booking' => 'Học viên không còn trong buổi học này.',
     'gym_teaching_not_cancellable' => 'Lịch dạy này không thể hủy.',

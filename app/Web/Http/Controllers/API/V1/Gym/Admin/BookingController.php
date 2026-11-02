@@ -109,6 +109,8 @@ class BookingController extends BaseAPIController
                             new OA\Property(property: 'trainer_name', type: 'string', example: 'Nguyễn Thu Hà'),
                             new OA\Property(property: 'start_time', type: 'string', example: '2026-11-05T07:00:00'),
                             new OA\Property(property: 'status', type: 'string', enum: ['confirmed', 'cancelled'], example: 'confirmed'),
+                            new OA\Property(property: 'has_redlight', type: 'boolean', example: false),
+                            new OA\Property(property: 'needs_redlight_refund', description: 'Đã trả Redlight nhưng lịch bị hủy, hoàn tiền thủ công', type: 'boolean', example: false),
                             new OA\Property(property: 'is_deducted', description: 'Đã trừ buổi', type: 'boolean', example: false),
                         ], type: 'object')),
                         new OA\Property(property: 'private_requests', type: 'array', items: new OA\Items(properties: [
@@ -142,6 +144,8 @@ class BookingController extends BaseAPIController
                     'start_time' => $booking->classSchedule->start_time->format('Y-m-d\TH:i:s'),
                     'status' => $booking->status,
                     'is_deducted' => $booking->credit_deducted_at !== null,
+                    'has_redlight' => $booking->redlight_paid_at !== null,
+                    'needs_redlight_refund' => $booking->redlight_paid_at !== null && $booking->status->is(BookingStatus::Cancelled),
                 ])
                 ->all(),
             'private_requests' => $userPackage->privateRequests

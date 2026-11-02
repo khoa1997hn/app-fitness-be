@@ -35,6 +35,7 @@ use OpenApi\Attributes as OA;
             new OA\Property(property: 'package_name', type: 'string', example: '10 classes'),
             new OA\Property(property: 'absent_recent', description: 'Số buổi vắng trong 5 lần điểm danh gần nhất', type: 'integer', example: 1),
             new OA\Property(property: 'attendance_status', type: 'string', enum: ['present', 'absent'], nullable: true),
+            new OA\Property(property: 'has_redlight', description: 'Cần chuẩn bị thảm Redlight', type: 'boolean', example: false),
         ], type: 'object')),
     ]
 )]
@@ -187,6 +188,7 @@ class AttendanceController extends BaseAPIController
                 'package_name' => $booking->userPackage->name,
                 'absent_recent' => $absences[$booking->user_id] ?? 0,
                 'attendance_status' => $booking->attendanceRecord?->status,
+                'has_redlight' => $booking->redlight_paid_at !== null,
             ])->all(),
         ])->all();
     }

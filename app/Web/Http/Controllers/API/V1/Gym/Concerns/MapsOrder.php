@@ -11,7 +11,7 @@ use OpenApi\Attributes as OA;
     properties: [
         new OA\Property(property: 'id', type: 'integer', example: 12),
         new OA\Property(property: 'code', type: 'string', example: 'GYM-7K2M9QXA1B'),
-        new OA\Property(property: 'type', type: 'string', enum: ['package', 'therapy', 'extra_people', 'event'], example: 'package'),
+        new OA\Property(property: 'type', type: 'string', enum: ['package', 'therapy', 'extra_people', 'event', 'redlight'], example: 'package'),
         new OA\Property(property: 'quantity', description: 'Số suất với đơn người thêm', type: 'integer', example: 1),
         new OA\Property(property: 'name', type: 'string', example: '10 classes'),
         new OA\Property(property: 'amount', description: 'Giá chốt lúc tạo đơn (VNĐ)', type: 'integer', example: 2100000),
@@ -54,6 +54,7 @@ trait MapsOrder
             'code' => $order->code,
             'type' => $order->type,
             'event_id' => $order->event_id,
+            'booking_id' => $order->booking_id,
             'quantity' => $order->quantity,
             'name' => $order->name,
             'amount' => $order->amount,

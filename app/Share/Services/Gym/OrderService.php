@@ -27,10 +27,11 @@ class OrderService
     public function __construct(
         private readonly NotificationService $notificationService,
         private readonly EventService $eventService,
+        private readonly RedlightService $redlightService,
     ) {}
 
     /**
-     * @param  array{type: string, package_id?: int, therapy_service_id?: int, therapy_variant?: string, event_id?: int, quantity?: int}  $product
+     * @param  array{type: string, package_id?: int, therapy_service_id?: int, therapy_variant?: string, event_id?: int, booking_id?: int, quantity?: int}  $product
      */
     public function create(User $member, array $product, ?User $createdBy = null, ?string $note = null): Order
     {
@@ -40,6 +41,10 @@ class OrderService
 
         if ($product['type'] === OrderType::Event) {
             return $this->createEventOrder($member, (int) $product['event_id'], (int) $product['quantity'], $createdBy, $note);
+        }
+
+        if ($product['type'] === OrderType::Redlight) {
+            return $this->createRedlightOrder($member, (int) $product['booking_id'], $createdBy, $note);
         }
 
         return Order::query()->create([
@@ -56,6 +61,35 @@ class OrderService
                 OrderType::ExtraPeople => $this->extraPeopleFields($member, (int) $product['quantity']),
             },
         ]);
+    }
+
+    /**
+     * Mua trực tiếp, không cần ký điều khoản. Đã có đơn chờ thanh toán của buổi này thì dùng lại.
+     */
+    private function createRedlightOrder(User $member, int $bookingId, ?User $createdBy, ?string $note): Order
+    {
+        return DB::transaction(function () use ($member, $bookingId, $createdBy, $note) {
+            $booking = $this->redlightService->lockForPurchase($member, $bookingId);
+            $schedule = $booking->classSchedule;
+
+            return $booking->pendingRedlightOrder()->first() ?? Order::query()->create([
+                'code' => 'GYM-'.Str::upper(Str::random(10)),
+                'user_id' => $member->id,
+                'created_by' => $createdBy?->id,
+                'type' => OrderType::Redlight,
+                'booking_id' => $booking->id,
+                'name' => __('messages.gym_redlight_order_name', [
+                    'name' => $schedule->fitnessClass->name,
+                    'time' => $schedule->start_time->format('H:i d/m/Y'),
+                ]),
+                'amount' => (int) config('gym.redlight_price'),
+                'status' => OrderStatus::Pending,
+                'buyer_name' => trim($member->first_name.' '.$member->last_name),
+                'buyer_phone' => $member->phone,
+                'buyer_email' => $member->email,
+                'note' => $note,
+            ]);
+        });
     }
 
     /**
@@ -147,6 +181,10 @@ class OrderService
                 $this->eventService->assertHoldValid($locked);
             }
 
+            if ($locked->type->is(OrderType::Redlight)) {
+                $this->redlightService->assertPayable($locked);
+            }
+
             $locked->update([
                 'status' => OrderStatus::Success,
                 'payment_method' => $paymentMethod,
@@ -229,6 +267,12 @@ class OrderService
 
         if ($order->type->is(OrderType::Event)) {
             $this->eventService->markPaid($order);
+
+            return;
+        }
+
+        if ($order->type->is(OrderType::Redlight)) {
+            $this->redlightService->markPaid($order);
 
             return;
         }

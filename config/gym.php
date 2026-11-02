@@ -1,5 +1,7 @@
 <?php
 
+use App\Share\Enums\FitnessClassCategory;
+
 return [
     /*
     | Thanh toán mock: xác nhận thành công ngay, không qua cổng thật.
@@ -25,6 +27,12 @@ return [
 
     // Giữ vé sự kiện từng này phút chờ thanh toán, quá hạn tự nhả vé
     'event_hold_minutes' => (int) env('GYM_EVENT_HOLD_MINUTES', 30),
+
+    // Giá dùng thảm Redlight cho một buổi (VNĐ)
+    'redlight_price' => (int) env('GYM_REDLIGHT_PRICE', 30000),
+
+    // Nhóm lớp được dùng Redlight: Barre, Pilates
+    'redlight_categories' => [FitnessClassCategory::Barre, FitnessClassCategory::CorePilates],
 
     'rooms' => ['P101', 'P102', 'P202', 'P301'],
 

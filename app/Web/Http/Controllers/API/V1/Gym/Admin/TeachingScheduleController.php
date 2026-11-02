@@ -29,6 +29,7 @@ use OpenApi\Attributes as OA;
                 new OA\Property(property: 'package_name', type: 'string', example: '10 classes'),
                 new OA\Property(property: 'remaining_credits', type: 'integer', nullable: true, example: 4),
                 new OA\Property(property: 'status', type: 'string', example: 'confirmed'),
+                new OA\Property(property: 'has_redlight', description: 'Cần chuẩn bị thảm Redlight', type: 'boolean', example: false),
             ], type: 'object')),
         ]),
     ]
@@ -201,6 +202,7 @@ class TeachingScheduleController extends BaseAPIController
                         'package_name' => $booking->userPackage->name,
                         'remaining_credits' => $booking->userPackage->remaining_credits,
                         'status' => $booking->status,
+                        'has_redlight' => $booking->redlight_paid_at !== null,
                     ])->all(),
             ];
         }
@@ -216,6 +218,7 @@ class TeachingScheduleController extends BaseAPIController
                 'package_name' => $target->userPackage->name,
                 'remaining_credits' => $target->userPackage->remaining_credits,
                 'status' => $target->status,
+                'has_redlight' => false,
             ]],
         ];
     }

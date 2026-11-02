@@ -27,6 +27,7 @@ class OrderProductRequest extends FormRequest
             'package_id' => 'exclude_unless:type,'.OrderType::Package.'|required|integer',
             'therapy_service_id' => 'exclude_unless:type,'.OrderType::Therapy.'|required|integer|exists:therapy_services,id',
             'therapy_variant' => ['exclude_unless:type,'.OrderType::Therapy, 'required', Rule::in(TherapyVariant::getValues())],
+            'booking_id' => 'exclude_unless:type,'.OrderType::Redlight.'|required|integer',
             'event_id' => 'exclude_unless:type,'.OrderType::Event.'|required|integer|exists:events,id',
             'quantity' => 'exclude_unless:type,'.OrderType::ExtraPeople.','.OrderType::Event.'|required|integer|min:1|max:1000',
             'note' => 'nullable|string|max:1000',

@@ -13,4 +13,6 @@ class OrderType extends Enum
     public const ExtraPeople = 'extra_people';
 
     public const Event = 'event';
+
+    public const Redlight = 'redlight';
 }

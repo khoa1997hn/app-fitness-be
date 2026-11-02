@@ -18,7 +18,10 @@ use Illuminate\Support\Facades\DB;
  */
 class BookingService
 {
-    public function __construct(private readonly NotificationService $notificationService) {}
+    public function __construct(
+        private readonly NotificationService $notificationService,
+        private readonly RedlightService $redlightService,
+    ) {}
 
     public function book(User $member, int $userPackageId, ClassSchedule $schedule): Booking
     {
@@ -84,6 +87,7 @@ class BookingService
 
             $bookings = $schedule->confirmedBookings()->whereNull('credit_deducted_at');
             $memberIds = (clone $bookings)->pluck('user_id');
+            $this->redlightService->cancelPendingOrders((clone $bookings)->pluck('id'));
 
             $bookings->update([
                 'status' => BookingStatus::Cancelled,
@@ -135,6 +139,7 @@ class BookingService
                 }
 
                 $booking->update(['credit_deducted_at' => now()]);
+                $this->redlightService->cancelPendingOrders(collect([$booking->id]));
                 $processed++;
             });
         }
@@ -165,6 +170,8 @@ class BookingService
 
     private function markCancelled(Booking $booking, User $by): Booking
     {
+        $this->redlightService->cancelPendingOrders(collect([$booking->id]));
+
         $booking->update([
             'status' => BookingStatus::Cancelled,
             'cancelled_at' => now(),

@@ -10,6 +10,7 @@ use App\Share\Models\ClassSchedule;
 use App\Share\Models\User;
 use App\Share\Models\UserPackage;
 use App\Share\Services\Gym\BookingService;
+use App\Share\Services\Gym\RedlightService;
 use App\Share\Utils\ResponseAPI;
 use App\Web\Http\Controllers\API\V1\APIController as BaseAPIController;
 use App\Web\Http\Controllers\API\V1\Gym\Concerns\MapsSchedule;
@@ -25,6 +26,8 @@ use OpenApi\Attributes as OA;
         new OA\Schema(properties: [
             new OA\Property(property: 'is_full', type: 'boolean', example: false),
             new OA\Property(property: 'is_booked', description: 'Tôi đã đặt buổi này', type: 'boolean', example: false),
+            new OA\Property(property: 'redlight_available', description: 'Lớp Barre, Pilates chưa bắt đầu', type: 'boolean', example: true),
+            new OA\Property(property: 'redlight_price', type: 'integer', example: 30000),
         ]),
     ]
 )]
@@ -43,13 +46,20 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'package_name', type: 'string', example: '10 classes'),
         new OA\Property(property: 'status', description: '`booked` còn hủy được, `locked` trong vòng 8 tiếng, `completed` đã qua giờ', type: 'string', enum: ['booked', 'locked', 'completed'], example: 'booked'),
         new OA\Property(property: 'can_cancel', type: 'boolean', example: true),
+        new OA\Property(property: 'has_redlight', description: 'Đã trả tiền Redlight cho buổi này', type: 'boolean', example: false),
+        new OA\Property(property: 'redlight_available', description: 'Còn mua thêm Redlight được', type: 'boolean', example: true),
+        new OA\Property(property: 'redlight_price', type: 'integer', example: 30000),
+        new OA\Property(property: 'redlight_order_code', description: 'Đơn Redlight đang chờ thanh toán', type: 'string', nullable: true),
     ]
 )]
 class BookingController extends BaseAPIController
 {
     use MapsSchedule;
 
-    public function __construct(private readonly BookingService $bookingService) {}
+    public function __construct(
+        private readonly BookingService $bookingService,
+        private readonly RedlightService $redlightService,
+    ) {}
 
     #[OA\Get(
         path: '/schedules',
@@ -154,7 +164,7 @@ class BookingController extends BaseAPIController
     public function index(): JsonResponse
     {
         $bookings = Booking::query()
-            ->with(['classSchedule.fitnessClass', 'classSchedule.trainer', 'userPackage'])
+            ->with(['classSchedule.fitnessClass', 'classSchedule.trainer', 'userPackage', 'pendingRedlightOrder'])
             ->where('user_id', auth()->id())
             ->where('status', BookingStatus::Confirmed)
             ->orderByDesc('id')
@@ -201,7 +211,7 @@ class BookingController extends BaseAPIController
 
         $booking = $this->bookingService->book($user, $validated['user_package_id'], $schedule);
 
-        return ResponseAPI::success($this->mapBooking($booking->load(['classSchedule.fitnessClass', 'classSchedule.trainer', 'userPackage'])), code: 201);
+        return ResponseAPI::success($this->mapBooking($booking->load(['classSchedule.fitnessClass', 'classSchedule.trainer', 'userPackage', 'pendingRedlightOrder'])), code: 201);
     }
 
     #[OA\Patch(
@@ -258,6 +268,8 @@ class BookingController extends BaseAPIController
             ...$this->mapSchedule($schedule),
             'is_full' => $schedule->confirmed_bookings_count >= $schedule->max_slot,
             'is_booked' => $isBooked,
+            'redlight_available' => $this->redlightService->isAvailable($schedule),
+            'redlight_price' => (int) config('gym.redlight_price'),
         ];
     }
 
@@ -281,6 +293,10 @@ class BookingController extends BaseAPIController
             'package_name' => $booking->userPackage->name,
             'status' => $schedule->end_time->isPast() ? 'completed' : ($canCancel ? 'booked' : 'locked'),
             'can_cancel' => $canCancel,
+            'has_redlight' => $booking->redlight_paid_at !== null,
+            'redlight_available' => $booking->redlight_paid_at === null && $this->redlightService->isAvailable($schedule),
+            'redlight_price' => (int) config('gym.redlight_price'),
+            'redlight_order_code' => $booking->pendingRedlightOrder?->code,
         ];
     }
 }

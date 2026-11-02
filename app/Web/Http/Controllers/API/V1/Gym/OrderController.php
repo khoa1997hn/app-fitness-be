@@ -58,11 +58,12 @@ class OrderController extends BaseAPIController
         requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(
             required: ['type'],
             properties: [
-                new OA\Property(property: 'type', type: 'string', enum: ['package', 'therapy', 'extra_people', 'event'], example: 'package'),
+                new OA\Property(property: 'type', type: 'string', enum: ['package', 'therapy', 'extra_people', 'event', 'redlight'], example: 'package'),
                 new OA\Property(property: 'package_id', description: 'Bắt buộc khi type=package', type: 'integer', example: 3),
                 new OA\Property(property: 'therapy_service_id', description: 'Bắt buộc khi type=therapy', type: 'integer', example: 1),
                 new OA\Property(property: 'therapy_variant', description: 'Bắt buộc khi type=therapy', type: 'string', enum: ['single', 'combo5'], example: 'single'),
                 new OA\Property(property: 'event_id', description: 'Bắt buộc khi type=event', type: 'integer', example: 2),
+                new OA\Property(property: 'booking_id', description: 'Bắt buộc khi type=redlight', type: 'integer', example: 21),
                 new OA\Property(property: 'quantity', description: 'Bắt buộc khi type=extra_people hoặc event', type: 'integer', example: 5),
             ]
         )),

@@ -158,6 +158,7 @@ return [
         OrderType::Therapy => 'Trị liệu',
         OrderType::ExtraPeople => 'Suất người thêm',
         OrderType::Event => 'Sự kiện',
+        OrderType::Redlight => 'Redlight',
     ],
 
     OrderStatus::class => [
