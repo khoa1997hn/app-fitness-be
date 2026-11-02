@@ -8,3 +8,4 @@ Lộ trình và câu hỏi còn mở: [`fitness-web/plan/README.md`](../../../..
 |------|------------|
 | [roles](./roles/spec.md) | ✅ |
 | [packages](./packages/spec.md) | ✅ |
+| [orders](./orders/spec.md) | ✅ |

@@ -55,6 +55,10 @@ return Application::configure(basePath: dirname(__DIR__))
                 return ResponseAPI::error($e->getMessage(), 422);
             }
 
+            if ($e instanceof \App\Share\Exceptions\Gym\GymException) {
+                return ResponseAPI::error($e->getMessage(), 422);
+            }
+
             if ($e instanceof AuthenticationException) {
                 return ResponseAPI::error(
                     __('messages.authentication_error'),

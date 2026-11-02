@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 use App\Share\Enums\LessonType;
 use App\Share\Enums\Level;
+use App\Share\Enums\OrderStatus;
+use App\Share\Enums\OrderType;
 use App\Share\Enums\PackageStatus;
 use App\Share\Enums\PackageType;
+use App\Share\Enums\PaymentMethod;
 use App\Share\Enums\Plan;
 use App\Share\Enums\Role;
 use App\Share\Enums\SubscriptionProvider;
 use App\Share\Enums\SubscriptionStatus;
+use App\Share\Enums\TherapyVariant;
 
 // Label hiển thị cho enum (BenSampo LocalizedEnum).
 // Key: <EnumClass>::class => [<enum value> => 'label'].
@@ -61,6 +65,28 @@ return [
         PackageType::IntroDemo => 'Học thử',
         PackageType::PrivatePack => 'Private',
         PackageType::PrivateGroup => 'Private nhóm',
+    ],
+
+    OrderType::class => [
+        OrderType::Package => 'Gói tập',
+        OrderType::Therapy => 'Trị liệu',
+    ],
+
+    OrderStatus::class => [
+        OrderStatus::PendingTerms => 'Chờ ký điều khoản',
+        OrderStatus::Pending => 'Chờ thanh toán',
+        OrderStatus::Success => 'Đã thanh toán',
+    ],
+
+    PaymentMethod::class => [
+        PaymentMethod::Momo => 'MoMo',
+        PaymentMethod::Vnpay => 'VNPay',
+        PaymentMethod::Cash => 'Tiền mặt',
+    ],
+
+    TherapyVariant::class => [
+        TherapyVariant::Single => '1 buổi lẻ',
+        TherapyVariant::Combo5 => 'Combo 5 buổi',
     ],
 
     PackageStatus::class => [

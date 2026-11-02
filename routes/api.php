@@ -6,8 +6,13 @@ use App\Web\Http\Controllers\API\V1\Auth\ProfileController;
 use App\Web\Http\Controllers\API\V1\Auth\RegistrationController;
 use App\Web\Http\Controllers\API\V1\BannerController;
 use App\Web\Http\Controllers\API\V1\ComboController;
+use App\Web\Http\Controllers\API\V1\Gym\Admin\MemberController as AdminMemberController;
+use App\Web\Http\Controllers\API\V1\Gym\Admin\OrderController as AdminOrderController;
 use App\Web\Http\Controllers\API\V1\Gym\Admin\PackageController as AdminPackageController;
+use App\Web\Http\Controllers\API\V1\Gym\OrderController;
+use App\Web\Http\Controllers\API\V1\Gym\OwnedItemController;
 use App\Web\Http\Controllers\API\V1\Gym\PackageController;
+use App\Web\Http\Controllers\API\V1\Gym\TherapyServiceController;
 use App\Web\Http\Controllers\API\V1\LessonController;
 use App\Web\Http\Controllers\API\V1\LessonFavoriteController;
 use App\Web\Http\Controllers\API\V1\ProgramController;
@@ -77,6 +82,18 @@ Route::as('api.')
             // Hệ thống phòng tập offline (fitness-web)
             Route::get('packages', [PackageController::class, 'index'])->name('packages.index');
             Route::get('packages/{package}', [PackageController::class, 'show'])->name('packages.show');
+            Route::get('therapy-services', [TherapyServiceController::class, 'index'])->name('therapy-services.index');
+            Route::get('therapy-services/{therapyService:slug}', [TherapyServiceController::class, 'show'])->name('therapy-services.show');
+
+            Route::middleware(['auth:api', 'permission:student.portal'])->group(function () {
+                Route::get('users/me/orders', [OrderController::class, 'index'])->name('users.me.orders');
+                Route::get('users/me/packages', [OwnedItemController::class, 'packages'])->name('users.me.packages');
+                Route::get('users/me/therapies', [OwnedItemController::class, 'therapies'])->name('users.me.therapies');
+                Route::post('orders', [OrderController::class, 'store'])->name('orders.store');
+                Route::get('orders/{order:code}', [OrderController::class, 'show'])->name('orders.show');
+                Route::post('orders/{order:code}/accept-terms', [OrderController::class, 'acceptTerms'])->name('orders.accept-terms');
+                Route::post('payments', [OrderController::class, 'pay'])->name('payments.store');
+            });
 
             Route::as('admin.')
                 ->prefix('admin')
@@ -85,6 +102,21 @@ Route::as('api.')
                     Route::middleware('permission:packages.manage')->group(function () {
                         Route::patch('packages/{package}/status', [AdminPackageController::class, 'updateStatus'])->name('packages.status');
                         Route::apiResource('packages', AdminPackageController::class);
+                    });
+
+                    Route::middleware('permission:users.manage')->group(function () {
+                        Route::get('members', [AdminMemberController::class, 'index'])->name('members.index');
+                        Route::post('members', [AdminMemberController::class, 'store'])->name('members.store');
+                        Route::get('members/{user}', [AdminMemberController::class, 'show'])->name('members.show');
+                    });
+
+                    Route::post('users/{user}/orders', [AdminOrderController::class, 'store'])
+                        ->middleware('permission:orders.create')
+                        ->name('users.orders.store');
+
+                    Route::middleware('permission:payments.manage')->group(function () {
+                        Route::get('payments', [AdminOrderController::class, 'index'])->name('payments.index');
+                        Route::get('payments/{order}', [AdminOrderController::class, 'show'])->name('payments.show');
                     });
                 });
 

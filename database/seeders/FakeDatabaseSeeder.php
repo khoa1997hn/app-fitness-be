@@ -15,6 +15,7 @@ class FakeDatabaseSeeder extends Seeder
         $this->call(UsersSeeder::class);
         $this->call(GymDemoUsersSeeder::class);
         $this->call(PackagesSeeder::class);
+        $this->call(TherapyServicesSeeder::class);
         $this->call(BannersSeeder::class);
         $this->call(ProgramsSeeder::class);
         $this->call(SubscriptionsSeeder::class);

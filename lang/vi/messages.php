@@ -22,6 +22,14 @@ return [
     'login_failed' => 'Email hoặc mật khẩu không đúng.',
     'password_reset_email_sent' => 'Nếu email đã đăng ký, mật khẩu mới đã được gửi tới hộp thư của bạn.',
 
+    // Hệ thống phòng tập
+    'gym_package_unavailable' => 'Gói tập không còn mở bán.',
+    'gym_package_has_orders' => 'Gói đã có đơn hàng nên không thể xóa, hãy dùng Ẩn.',
+    'gym_member_required' => 'Chỉ tạo được đơn hàng cho tài khoản hội viên.',
+    'gym_terms_already_accepted' => 'Đơn hàng đã được xác nhận điều khoản.',
+    'gym_terms_required' => 'Vui lòng xác nhận điều khoản và ký trước khi thanh toán.',
+    'gym_payment_unavailable' => 'Thanh toán hiện chưa khả dụng.',
+
     // Error messages
     'validation_error' => 'Dữ liệu không hợp lệ.',
     'authentication_error' => 'Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn.',

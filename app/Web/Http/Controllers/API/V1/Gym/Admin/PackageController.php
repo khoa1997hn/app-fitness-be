@@ -4,6 +4,7 @@ namespace App\Web\Http\Controllers\API\V1\Gym\Admin;
 
 use App\Share\Enums\PackageStatus;
 use App\Share\Enums\PackageType;
+use App\Share\Exceptions\Gym\GymException;
 use App\Share\Models\Package;
 use App\Share\Utils\ResponseAPI;
 use App\Web\Http\Controllers\API\V1\APIController as BaseAPIController;
@@ -29,6 +30,15 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'extra_people_session_max', type: 'integer', example: 100),
     ]
 )]
+#[OA\Schema(
+    schema: 'GymAdminPackage',
+    allOf: [
+        new OA\Schema(ref: '#/components/schemas/GymPackage'),
+        new OA\Schema(properties: [
+            new OA\Property(property: 'can_delete', description: 'Gói đã có đơn hàng thì chỉ được ẩn', type: 'boolean', example: true),
+        ]),
+    ]
+)]
 class PackageController extends BaseAPIController
 {
     use MapsPackage;
@@ -51,7 +61,7 @@ class PackageController extends BaseAPIController
                     properties: [
                         new OA\Property(property: 'success', type: 'boolean', example: true),
                         new OA\Property(property: 'message', type: 'string', example: 'Success'),
-                        new OA\Property(property: 'data', type: 'array', items: new OA\Items(ref: '#/components/schemas/GymPackage')),
+                        new OA\Property(property: 'data', type: 'array', items: new OA\Items(ref: '#/components/schemas/GymAdminPackage')),
                     ]
                 )
             ),
@@ -69,13 +79,14 @@ class PackageController extends BaseAPIController
 
         $packages = Package::query()
             ->withTranslation()
+            ->withExists('orders')
             ->when($validated['q'] ?? null, fn ($query, string $q) => $query->whereTranslationLike('name', "%{$q}%"))
             ->when($validated['status'] ?? null, fn ($query, string $status) => $query->where('status', $status))
             ->orderByDesc('id')
             ->get();
 
         return ResponseAPI::success(
-            $packages->map(fn (Package $package) => $this->mapPackage($package))->all()
+            $packages->map(fn (Package $package) => $this->mapAdminPackage($package))->all()
         );
     }
 
@@ -96,7 +107,7 @@ class PackageController extends BaseAPIController
                     properties: [
                         new OA\Property(property: 'success', type: 'boolean', example: true),
                         new OA\Property(property: 'message', type: 'string', example: 'Success'),
-                        new OA\Property(property: 'data', ref: '#/components/schemas/GymPackage'),
+                        new OA\Property(property: 'data', ref: '#/components/schemas/GymAdminPackage'),
                     ]
                 )
             ),
@@ -107,7 +118,7 @@ class PackageController extends BaseAPIController
     )]
     public function show(Package $package): JsonResponse
     {
-        return ResponseAPI::success($this->mapPackage($package));
+        return ResponseAPI::success($this->mapAdminPackage($package->loadExists('orders')));
     }
 
     #[OA\Post(
@@ -125,7 +136,7 @@ class PackageController extends BaseAPIController
                     properties: [
                         new OA\Property(property: 'success', type: 'boolean', example: true),
                         new OA\Property(property: 'message', type: 'string', example: 'Success'),
-                        new OA\Property(property: 'data', ref: '#/components/schemas/GymPackage'),
+                        new OA\Property(property: 'data', ref: '#/components/schemas/GymAdminPackage'),
                     ]
                 )
             ),
@@ -138,7 +149,7 @@ class PackageController extends BaseAPIController
     {
         $package = Package::query()->create($this->validatePackage($request));
 
-        return ResponseAPI::success($this->mapPackage($package->refresh()), code: 201);
+        return ResponseAPI::success($this->mapAdminPackage($package->refresh()->loadExists('orders')), code: 201);
     }
 
     #[OA\Patch(
@@ -159,7 +170,7 @@ class PackageController extends BaseAPIController
                     properties: [
                         new OA\Property(property: 'success', type: 'boolean', example: true),
                         new OA\Property(property: 'message', type: 'string', example: 'Success'),
-                        new OA\Property(property: 'data', ref: '#/components/schemas/GymPackage'),
+                        new OA\Property(property: 'data', ref: '#/components/schemas/GymAdminPackage'),
                     ]
                 )
             ),
@@ -173,7 +184,7 @@ class PackageController extends BaseAPIController
     {
         $package->update($this->validatePackage($request));
 
-        return ResponseAPI::success($this->mapPackage($package->refresh()));
+        return ResponseAPI::success($this->mapAdminPackage($package->refresh()->loadExists('orders')));
     }
 
     #[OA\Patch(
@@ -200,7 +211,7 @@ class PackageController extends BaseAPIController
                     properties: [
                         new OA\Property(property: 'success', type: 'boolean', example: true),
                         new OA\Property(property: 'message', type: 'string', example: 'Success'),
-                        new OA\Property(property: 'data', ref: '#/components/schemas/GymPackage'),
+                        new OA\Property(property: 'data', ref: '#/components/schemas/GymAdminPackage'),
                     ]
                 )
             ),
@@ -218,12 +229,12 @@ class PackageController extends BaseAPIController
 
         $package->update(['status' => $validated['status']]);
 
-        return ResponseAPI::success($this->mapPackage($package->refresh()));
+        return ResponseAPI::success($this->mapAdminPackage($package->refresh()->loadExists('orders')));
     }
 
     #[OA\Delete(
         path: '/admin/packages/{package}',
-        description: 'Xóa cứng gói tập. Quyền `packages.manage`.',
+        description: 'Xóa cứng gói tập. Gói đã có đơn hàng trả 422, hãy dùng Ẩn. Quyền `packages.manage`.',
         summary: 'Admin: xóa gói tập',
         security: [['bearerAuth' => []]],
         tags: ['Gym Admin Packages'],
@@ -245,14 +256,31 @@ class PackageController extends BaseAPIController
             new OA\Response(response: 401, description: 'Chưa đăng nhập'),
             new OA\Response(response: 403, description: 'Không có quyền'),
             new OA\Response(response: 404, description: 'Không tìm thấy'),
+            new OA\Response(response: 422, description: 'Gói đã có đơn hàng'),
         ]
     )]
     public function destroy(Package $package): JsonResponse
     {
-        // Chưa có user_packages nên chưa thể chặn xóa gói đã bán — xem fitness-web/plan/phase-03-orders-payment.md.
+        if ($package->orders()->exists()) {
+            throw new GymException(__('messages.gym_package_has_orders'));
+        }
+
         $package->delete();
 
         return ResponseAPI::success();
+    }
+
+    /**
+     * Thêm `can_delete`: gói đã có đơn hàng thì chỉ được ẩn. Cần withExists/loadExists `orders`.
+     *
+     * @return array<string, mixed>
+     */
+    private function mapAdminPackage(Package $package): array
+    {
+        return [
+            ...$this->mapPackage($package),
+            'can_delete' => ! $package->orders_exists,
+        ];
     }
 
     /**

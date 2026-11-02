@@ -17,4 +17,16 @@ return [
     'packages' => [
         'manage' => [Role::Admin],
     ],
+    'users' => [
+        'manage' => [Role::Admin, Role::Receptionist, Role::Trainer],
+    ],
+    'orders' => [
+        'create' => [Role::Admin, Role::Receptionist, Role::Trainer],
+    ],
+    'payments' => [
+        'manage' => [Role::Admin, Role::Receptionist, Role::Trainer],
+    ],
+    'student' => [
+        'portal' => [Role::Member],
+    ],
 ];

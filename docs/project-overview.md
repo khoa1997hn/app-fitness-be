@@ -137,9 +137,11 @@ Giá cụ thể từng plan → env `PLAN_<TIER>_PRICE` (xem `.env.example`).
 - Role + phân quyền phòng tập: `users.role`, middleware `permission:*`, `GET /auth/profile` trả `role`. Spec [`gym/roles`](specs/gym/roles/spec.md).
 - Gói tập phòng tập: `Package` + `package_translations`. API `GET /api/v1/packages[/{id}]` + CRUD `/api/v1/admin/packages`. Spec [`gym/packages`](specs/gym/packages/spec.md).
 
+- Đơn hàng phòng tập: `Order`, `UserPackage`, `UserTherapy`, `TherapyService`; ký điều khoản, thanh toán **mock**, cấp gói qua `OrderService`; nhân viên tạo tài khoản và đơn hộ khách tại quầy. Spec [`gym/orders`](specs/gym/orders/spec.md).
+
 ### CHƯA có (phase tiếp)
 
-Hệ thống phòng tập: đơn hàng và thanh toán mock, thời khóa biểu và đặt lịch, Private/Trị liệu, điểm danh, quản lý user, sự kiện, vật phẩm, báo cáo — theo [`fitness-web/plan/`](../../fitness-web/plan/README.md).
+Hệ thống phòng tập: thời khóa biểu và đặt lịch, Private/Trị liệu, điểm danh, quản lý user, sự kiện, vật phẩm, báo cáo — theo [`fitness-web/plan/`](../../fitness-web/plan/README.md).
 
 > LLM thực hiện task: nếu task chạm các module **CHƯA có**, dùng `/implement-spec`. Nếu chạm module **đã có** mà phải đổi, dùng `/update-spec`.
 

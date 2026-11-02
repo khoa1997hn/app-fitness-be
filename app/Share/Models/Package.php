@@ -7,6 +7,7 @@ use App\Share\Enums\PackageType;
 use Astrotomic\Translatable\Contracts\Translatable as TranslatableContract;
 use Astrotomic\Translatable\Translatable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Gói tập tại phòng tập offline — không liên quan Plan/Subscription của app video.
@@ -46,6 +47,11 @@ class Package extends Model implements TranslatableContract
         'name',
         'description',
     ];
+
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class);
+    }
 
     protected function casts(): array
     {
