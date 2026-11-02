@@ -14,6 +14,7 @@ use App\Web\Http\Controllers\API\V1\Gym\Admin\EventController as AdminEventContr
 use App\Web\Http\Controllers\API\V1\Gym\Admin\MemberController as AdminMemberController;
 use App\Web\Http\Controllers\API\V1\Gym\Admin\OrderController as AdminOrderController;
 use App\Web\Http\Controllers\API\V1\Gym\Admin\PackageController as AdminPackageController;
+use App\Web\Http\Controllers\API\V1\Gym\Admin\ReportController as AdminReportController;
 use App\Web\Http\Controllers\API\V1\Gym\Admin\ScheduleCancelRequestController as AdminScheduleCancelRequestController;
 use App\Web\Http\Controllers\API\V1\Gym\Admin\TeachingScheduleController as AdminTeachingScheduleController;
 use App\Web\Http\Controllers\API\V1\Gym\Admin\TimetableController as AdminTimetableController;
@@ -209,6 +210,16 @@ Route::as('api.')
                     Route::middleware('permission:attendance.mark')->group(function () {
                         Route::post('attendance/records', [AdminAttendanceController::class, 'mark'])->name('attendance.records.store');
                         Route::post('attendance/sessions/{schedule}/mark-all-present', [AdminAttendanceController::class, 'markAllPresent'])->name('attendance.sessions.mark-all-present');
+                    });
+
+                    Route::get('dashboard', [AdminReportController::class, 'dashboard'])
+                        ->middleware('permission:dashboard.view')
+                        ->name('dashboard');
+                    Route::middleware('permission:reports.view')->group(function () {
+                        Route::get('reports/overview', [AdminReportController::class, 'overview'])->name('reports.overview');
+                        Route::get('reports/revenue', [AdminReportController::class, 'revenue'])->name('reports.revenue');
+                        Route::get('reports/members', [AdminReportController::class, 'members'])->name('reports.members');
+                        Route::get('reports/classes', [AdminReportController::class, 'classes'])->name('reports.classes');
                     });
 
                     Route::middleware('permission:events.manage')->group(function () {

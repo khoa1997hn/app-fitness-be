@@ -15,3 +15,4 @@ Lộ trình và câu hỏi còn mở: [`fitness-web/plan/README.md`](../../../..
 | [users-account](./users-account/spec.md) | ✅ |
 | [events](./events/spec.md) | ✅ |
 | [redlight](./redlight/spec.md) | ✅ |
+| [reports](./reports/spec.md) | ✅ |

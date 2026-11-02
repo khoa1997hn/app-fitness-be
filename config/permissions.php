@@ -59,6 +59,12 @@ return [
     'events' => [
         'manage' => [Role::Admin],
     ],
+    'reports' => [
+        'view' => [Role::Admin],
+    ],
+    'dashboard' => [
+        'view' => [Role::Admin, Role::Receptionist, Role::Trainer],
+    ],
     'student' => [
         'portal' => [Role::Member],
     ],
