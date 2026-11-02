@@ -14,6 +14,9 @@ return [
     'off_peak_morning_end' => env('GYM_OFF_PEAK_MORNING_END', '08:00'),
     'off_peak_evening_start' => env('GYM_OFF_PEAK_EVENING_START', '23:00'),
 
+    // Giá một suất người tham gia thêm (VNĐ)
+    'extra_people_price' => (int) env('GYM_EXTRA_PEOPLE_PRICE', 200000),
+
     'rooms' => ['P101', 'P102', 'P202', 'P301'],
 
     // Thời hạn sử dụng gói trị liệu sau khi mua (ngày)

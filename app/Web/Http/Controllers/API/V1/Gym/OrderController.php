@@ -52,16 +52,17 @@ class OrderController extends BaseAPIController
 
     #[OA\Post(
         path: '/orders',
-        description: 'Hội viên tự tạo đơn. Giá lấy từ server, đơn bắt đầu ở `pending_terms`.',
+        description: 'Hội viên tự tạo đơn. Giá lấy từ server. Đơn bắt đầu ở `pending_terms`, riêng `extra_people` vào thẳng `pending`.',
         summary: 'Tạo đơn hàng',
         security: [['bearerAuth' => []]],
         requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(
             required: ['type'],
             properties: [
-                new OA\Property(property: 'type', type: 'string', enum: ['package', 'therapy'], example: 'package'),
+                new OA\Property(property: 'type', type: 'string', enum: ['package', 'therapy', 'extra_people'], example: 'package'),
                 new OA\Property(property: 'package_id', description: 'Bắt buộc khi type=package', type: 'integer', example: 3),
                 new OA\Property(property: 'therapy_service_id', description: 'Bắt buộc khi type=therapy', type: 'integer', example: 1),
                 new OA\Property(property: 'therapy_variant', description: 'Bắt buộc khi type=therapy', type: 'string', enum: ['single', 'combo5'], example: 'single'),
+                new OA\Property(property: 'quantity', description: 'Bắt buộc khi type=extra_people', type: 'integer', example: 5),
             ]
         )),
         tags: ['Gym Orders'],

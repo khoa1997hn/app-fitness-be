@@ -24,7 +24,7 @@ use Illuminate\Support\Str;
 class OrderService
 {
     /**
-     * @param  array{type: string, package_id?: int, therapy_service_id?: int, therapy_variant?: string}  $product
+     * @param  array{type: string, package_id?: int, therapy_service_id?: int, therapy_variant?: string, quantity?: int}  $product
      */
     public function create(User $member, array $product, ?User $createdBy = null, ?string $note = null): Order
     {
@@ -37,11 +37,14 @@ class OrderService
             'user_id' => $member->id,
             'created_by' => $createdBy?->id,
             'type' => $product['type'],
-            'status' => OrderStatus::PendingTerms,
+            // Suất người thêm mua trực tiếp, không cần ký điều khoản
+            'status' => $product['type'] === OrderType::ExtraPeople ? OrderStatus::Pending : OrderStatus::PendingTerms,
             'note' => $note,
-            ...($product['type'] === OrderType::Package
-                ? $this->packageFields((int) $product['package_id'])
-                : $this->therapyFields((int) $product['therapy_service_id'], $product['therapy_variant'])),
+            ...match ($product['type']) {
+                OrderType::Package => $this->packageFields((int) $product['package_id']),
+                OrderType::Therapy => $this->therapyFields((int) $product['therapy_service_id'], $product['therapy_variant']),
+                OrderType::ExtraPeople => $this->extraPeopleFields($member, (int) $product['quantity']),
+            },
         ]);
     }
 
@@ -136,8 +139,28 @@ class OrderService
         ];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
+    private function extraPeopleFields(User $member, int $quantity): array
+    {
+        return [
+            'quantity' => $quantity,
+            'name' => __('messages.gym_extra_people_order_name', ['quantity' => $quantity]),
+            'amount' => $quantity * (int) config('gym.extra_people_price'),
+            'buyer_name' => trim($member->first_name.' '.$member->last_name),
+            'buyer_phone' => $member->phone,
+            'buyer_email' => $member->email,
+        ];
+    }
+
     private function fulfill(Order $order): void
     {
+        // Số dư suất người thêm tính trực tiếp từ đơn đã thanh toán
+        if ($order->type->is(OrderType::ExtraPeople)) {
+            return;
+        }
+
         if ($order->type->is(OrderType::Package)) {
             $package = $order->package;
 

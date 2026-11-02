@@ -7,11 +7,13 @@ use App\Web\Http\Controllers\API\V1\Auth\RegistrationController;
 use App\Web\Http\Controllers\API\V1\BannerController;
 use App\Web\Http\Controllers\API\V1\ComboController;
 use App\Web\Http\Controllers\API\V1\Gym\Admin\BookingController as AdminBookingController;
+use App\Web\Http\Controllers\API\V1\Gym\Admin\BookingRequestController as AdminBookingRequestController;
 use App\Web\Http\Controllers\API\V1\Gym\Admin\MemberController as AdminMemberController;
 use App\Web\Http\Controllers\API\V1\Gym\Admin\OrderController as AdminOrderController;
 use App\Web\Http\Controllers\API\V1\Gym\Admin\PackageController as AdminPackageController;
 use App\Web\Http\Controllers\API\V1\Gym\Admin\TimetableController as AdminTimetableController;
 use App\Web\Http\Controllers\API\V1\Gym\BookingController;
+use App\Web\Http\Controllers\API\V1\Gym\BookingRequestController;
 use App\Web\Http\Controllers\API\V1\Gym\OrderController;
 use App\Web\Http\Controllers\API\V1\Gym\OwnedItemController;
 use App\Web\Http\Controllers\API\V1\Gym\PackageController;
@@ -102,6 +104,14 @@ Route::as('api.')
                 Route::get('users/me/bookings', [BookingController::class, 'index'])->name('users.me.bookings');
                 Route::post('bookings', [BookingController::class, 'store'])->name('bookings.store');
                 Route::patch('bookings/{booking}/cancel', [BookingController::class, 'cancel'])->name('bookings.cancel');
+
+                Route::get('users/me/extra-people', [BookingRequestController::class, 'extraPeople'])->name('users.me.extra-people');
+                Route::get('users/me/private-requests', [BookingRequestController::class, 'privateRequests'])->name('users.me.private-requests');
+                Route::post('private-requests', [BookingRequestController::class, 'storePrivate'])->name('private-requests.store');
+                Route::patch('private-requests/{privateRequest}/cancel', [BookingRequestController::class, 'cancelPrivate'])->name('private-requests.cancel');
+                Route::get('users/me/therapy-requests', [BookingRequestController::class, 'therapyRequests'])->name('users.me.therapy-requests');
+                Route::post('therapy-requests', [BookingRequestController::class, 'storeTherapy'])->name('therapy-requests.store');
+                Route::patch('therapy-requests/{therapyRequest}/cancel', [BookingRequestController::class, 'cancelTherapy'])->name('therapy-requests.cancel');
             });
 
             Route::as('admin.')
@@ -140,6 +150,29 @@ Route::as('api.')
                     Route::middleware('permission:bookings.manage')->group(function () {
                         Route::get('bookings/members', [AdminBookingController::class, 'members'])->name('bookings.members');
                         Route::get('bookings/members/{userPackage}', [AdminBookingController::class, 'member'])->name('bookings.member');
+                        Route::get('bookings/therapy-members', [AdminBookingRequestController::class, 'therapyMembers'])->name('bookings.therapy-members');
+                        Route::get('private-requests', [AdminBookingRequestController::class, 'privateIndex'])->name('private-requests.index');
+                        Route::get('private-requests/{privateRequest}', [AdminBookingRequestController::class, 'privateShow'])->name('private-requests.show');
+                        Route::get('therapy-requests', [AdminBookingRequestController::class, 'therapyIndex'])->name('therapy-requests.index');
+                        Route::get('therapy-requests/{therapyRequest}', [AdminBookingRequestController::class, 'therapyShow'])->name('therapy-requests.show');
+                    });
+
+                    Route::middleware('permission:bookings.private.edit_form')->group(function () {
+                        Route::patch('private-requests/{privateRequest}', [AdminBookingRequestController::class, 'privateUpdate'])->name('private-requests.update');
+                        Route::patch('therapy-requests/{therapyRequest}', [AdminBookingRequestController::class, 'therapyUpdate'])->name('therapy-requests.update');
+                    });
+
+                    Route::middleware('permission:bookings.private.approve')->group(function () {
+                        Route::patch('private-requests/{privateRequest}/approve', [AdminBookingRequestController::class, 'privateApprove'])->name('private-requests.approve');
+                        Route::patch('private-requests/{privateRequest}/reject', [AdminBookingRequestController::class, 'privateReject'])->name('private-requests.reject');
+                        Route::patch('private-requests/{privateRequest}/complete', [AdminBookingRequestController::class, 'privateComplete'])->name('private-requests.complete');
+                        Route::patch('therapy-requests/{therapyRequest}/approve', [AdminBookingRequestController::class, 'therapyApprove'])->name('therapy-requests.approve');
+                        Route::patch('therapy-requests/{therapyRequest}/reject', [AdminBookingRequestController::class, 'therapyReject'])->name('therapy-requests.reject');
+                    });
+
+                    Route::middleware('permission:bookings.cancel_class')->group(function () {
+                        Route::patch('private-requests/{privateRequest}/cancel', [AdminBookingRequestController::class, 'privateCancel'])->name('private-requests.cancel');
+                        Route::patch('therapy-requests/{therapyRequest}/cancel', [AdminBookingRequestController::class, 'therapyCancel'])->name('therapy-requests.cancel');
                     });
                     Route::patch('bookings/{booking}/cancel', [AdminBookingController::class, 'cancel'])
                         ->middleware('permission:bookings.cancel_class')

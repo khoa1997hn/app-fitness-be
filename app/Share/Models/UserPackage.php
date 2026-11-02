@@ -49,6 +49,11 @@ class UserPackage extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function privateRequests(): HasMany
+    {
+        return $this->hasMany(PrivateRequest::class);
+    }
+
     public function bookings(): HasMany
     {
         return $this->hasMany(Booking::class);

@@ -34,6 +34,10 @@ return [
     'bookings' => [
         'manage' => [Role::Admin, Role::Receptionist],
         'cancel_class' => [Role::Admin],
+        'private' => [
+            'approve' => [Role::Admin],
+            'edit_form' => [Role::Admin],
+        ],
     ],
     'student' => [
         'portal' => [Role::Member],

@@ -2,9 +2,11 @@
 
 namespace App\Web\Http\Controllers\API\V1\Gym\Admin;
 
+use App\Share\Enums\BookingRequestStatus;
 use App\Share\Enums\BookingStatus;
 use App\Share\Enums\PackageType;
 use App\Share\Models\Booking;
+use App\Share\Models\PrivateRequest;
 use App\Share\Models\User;
 use App\Share\Models\UserPackage;
 use App\Share\Services\Gym\BookingService;
@@ -38,12 +40,13 @@ class BookingController extends BaseAPIController
 
     #[OA\Get(
         path: '/admin/bookings/members',
-        description: 'Học viên gói thường, theo từng gói đã mua. Quyền `bookings.manage`.',
-        summary: 'Admin: học viên gói thường',
+        description: 'Học viên gói thường hoặc Private, theo từng gói đã mua. Quyền `bookings.manage`.',
+        summary: 'Admin: học viên theo gói',
         security: [['bearerAuth' => []]],
         tags: ['Gym Admin Bookings'],
         parameters: [
             new OA\Parameter(name: 'q', description: 'Tìm theo tên học viên, tên gói', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'group', description: 'Mặc định `regular`', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['regular', 'private'])),
         ],
         responses: [
             new OA\Response(response: 200, description: 'Thành công', content: new OA\JsonContent(properties: [
@@ -58,14 +61,20 @@ class BookingController extends BaseAPIController
     )]
     public function members(Request $request): JsonResponse
     {
-        $validated = $request->validate(['q' => 'nullable|string|max:255']);
+        $validated = $request->validate([
+            'q' => 'nullable|string|max:255',
+            'group' => 'nullable|in:regular,private',
+        ]);
+        $privateTypes = [PackageType::PrivatePack, PackageType::PrivateGroup];
 
         $packages = UserPackage::query()
             ->with('user')
-            ->withCount(['bookings as completed_count' => fn ($query) => $query
-                ->where('status', BookingStatus::Confirmed)
-                ->whereNotNull('credit_deducted_at')])
-            ->whereNotIn('package_type', [PackageType::PrivatePack, PackageType::PrivateGroup])
+            ->withCount($this->completedCounts())
+            ->when(
+                ($validated['group'] ?? 'regular') === 'private',
+                fn ($query) => $query->whereIn('package_type', $privateTypes),
+                fn ($query) => $query->whereNotIn('package_type', $privateTypes),
+            )
             ->when($validated['q'] ?? null, function ($query, string $q) {
                 $like = "%{$q}%";
                 $query->where(fn ($inner) => $inner
@@ -102,6 +111,12 @@ class BookingController extends BaseAPIController
                             new OA\Property(property: 'status', type: 'string', enum: ['confirmed', 'cancelled'], example: 'confirmed'),
                             new OA\Property(property: 'is_deducted', description: 'Đã trừ buổi', type: 'boolean', example: false),
                         ], type: 'object')),
+                        new OA\Property(property: 'private_requests', type: 'array', items: new OA\Items(properties: [
+                            new OA\Property(property: 'id', type: 'integer', example: 5),
+                            new OA\Property(property: 'discipline', type: 'string', example: 'Yoga'),
+                            new OA\Property(property: 'requested_at', type: 'string', example: '2026-11-20T15:00:00'),
+                            new OA\Property(property: 'status', type: 'string', enum: ['pending', 'confirmed', 'rejected', 'cancelled', 'completed'], example: 'pending'),
+                        ], type: 'object')),
                     ]),
                 ]),
             ])),
@@ -112,10 +127,8 @@ class BookingController extends BaseAPIController
     )]
     public function member(UserPackage $userPackage): JsonResponse
     {
-        $userPackage->load(['user', 'bookings.classSchedule.fitnessClass', 'bookings.classSchedule.trainer'])
-            ->loadCount(['bookings as completed_count' => fn ($query) => $query
-                ->where('status', BookingStatus::Confirmed)
-                ->whereNotNull('credit_deducted_at')]);
+        $userPackage->load(['user', 'bookings.classSchedule.fitnessClass', 'bookings.classSchedule.trainer', 'privateRequests'])
+            ->loadCount($this->completedCounts());
 
         return ResponseAPI::success([
             ...$this->mapMember($userPackage),
@@ -129,6 +142,16 @@ class BookingController extends BaseAPIController
                     'start_time' => $booking->classSchedule->start_time->format('Y-m-d\TH:i:s'),
                     'status' => $booking->status,
                     'is_deducted' => $booking->credit_deducted_at !== null,
+                ])
+                ->all(),
+            'private_requests' => $userPackage->privateRequests
+                ->sortByDesc('id')
+                ->values()
+                ->map(fn (PrivateRequest $request) => [
+                    'id' => $request->id,
+                    'discipline' => $request->discipline,
+                    'requested_at' => $request->requested_at->format('Y-m-d\TH:i:s'),
+                    'status' => $request->status,
                 ])
                 ->all(),
         ]);
@@ -165,7 +188,21 @@ class BookingController extends BaseAPIController
     }
 
     /**
-     * Cần load `user` và withCount `completed_count`.
+     * @return array<string, \Closure>
+     */
+    private function completedCounts(): array
+    {
+        return [
+            'bookings as completed_bookings_count' => fn ($query) => $query
+                ->where('status', BookingStatus::Confirmed)
+                ->whereNotNull('credit_deducted_at'),
+            'privateRequests as completed_private_count' => fn ($query) => $query
+                ->where('status', BookingRequestStatus::Completed),
+        ];
+    }
+
+    /**
+     * Cần load `user` và withCount `completedCounts()`.
      *
      * @return array<string, mixed>
      */
@@ -188,7 +225,7 @@ class BookingController extends BaseAPIController
             'package_type' => $package->package_type,
             'total_credits' => $package->total_credits,
             'remaining_credits' => $package->remaining_credits,
-            'completed_count' => $package->completed_count,
+            'completed_count' => $package->completed_bookings_count + $package->completed_private_count,
             'end_date' => $package->end_date->toDateString(),
             'status' => $status,
         ];

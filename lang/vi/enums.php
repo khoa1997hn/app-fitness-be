@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Share\Enums\BookingRequestStatus;
 use App\Share\Enums\BookingStatus;
 use App\Share\Enums\ClassScheduleStatus;
 use App\Share\Enums\FitnessClassCategory;
@@ -13,6 +14,7 @@ use App\Share\Enums\PackageStatus;
 use App\Share\Enums\PackageType;
 use App\Share\Enums\PaymentMethod;
 use App\Share\Enums\Plan;
+use App\Share\Enums\PrivateDiscipline;
 use App\Share\Enums\Role;
 use App\Share\Enums\SubscriptionProvider;
 use App\Share\Enums\SubscriptionStatus;
@@ -79,6 +81,20 @@ return [
         FitnessClassCategory::DanceCardio => 'DANCE & CARDIO',
     ],
 
+    PrivateDiscipline::class => [
+        PrivateDiscipline::Yoga => 'Yoga',
+        PrivateDiscipline::Pilates => 'Pilates',
+        PrivateDiscipline::Barre => 'Barre',
+    ],
+
+    BookingRequestStatus::class => [
+        BookingRequestStatus::Pending => 'Chưa duyệt',
+        BookingRequestStatus::Confirmed => 'Đã duyệt',
+        BookingRequestStatus::Rejected => 'Đã từ chối',
+        BookingRequestStatus::Cancelled => 'Đã hủy',
+        BookingRequestStatus::Completed => 'Đã tập',
+    ],
+
     ClassScheduleStatus::class => [
         ClassScheduleStatus::Active => 'Đang mở',
         ClassScheduleStatus::Cancelled => 'Đã hủy',
@@ -92,6 +108,7 @@ return [
     OrderType::class => [
         OrderType::Package => 'Gói tập',
         OrderType::Therapy => 'Trị liệu',
+        OrderType::ExtraPeople => 'Suất người thêm',
     ],
 
     OrderStatus::class => [

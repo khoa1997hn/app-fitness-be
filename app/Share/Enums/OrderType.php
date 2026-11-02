@@ -9,4 +9,6 @@ class OrderType extends Enum
     public const Package = 'package';
 
     public const Therapy = 'therapy';
+
+    public const ExtraPeople = 'extra_people';
 }

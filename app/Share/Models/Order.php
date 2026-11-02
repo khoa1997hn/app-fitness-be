@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int|null $package_id
  * @property int|null $therapy_service_id
  * @property TherapyVariant|null $therapy_variant
+ * @property int $quantity Số suất với đơn người thêm, các loại khác là 1
  * @property string $name
  * @property int $amount Giá chốt lúc tạo đơn
  * @property OrderStatus $status
@@ -46,6 +47,7 @@ class Order extends Model
         'package_id',
         'therapy_service_id',
         'therapy_variant',
+        'quantity',
         'name',
         'amount',
         'status',
@@ -69,6 +71,7 @@ class Order extends Model
         return [
             'type' => OrderType::class,
             'therapy_variant' => TherapyVariant::class,
+            'quantity' => 'integer',
             'amount' => 'integer',
             'status' => OrderStatus::class,
             'terms_accepted_at' => 'datetime',
