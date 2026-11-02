@@ -5,6 +5,7 @@ namespace App\Share\Models;
 use App\Share\Enums\BookingStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * @property int $id
@@ -18,6 +19,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property-read User $user
  * @property-read UserPackage $userPackage
  * @property-read ClassSchedule $classSchedule
+ * @property-read AttendanceRecord|null $attendanceRecord
  */
 class Booking extends Model
 {
@@ -53,5 +55,10 @@ class Booking extends Model
     public function classSchedule(): BelongsTo
     {
         return $this->belongsTo(ClassSchedule::class);
+    }
+
+    public function attendanceRecord(): HasOne
+    {
+        return $this->hasOne(AttendanceRecord::class);
     }
 }

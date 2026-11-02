@@ -4,8 +4,10 @@ namespace App\Share\Models;
 
 use App\Share\Enums\BookingRequestStatus;
 use App\Share\Enums\PrivateDiscipline;
+use App\Share\Enums\ScheduleCancelRequestStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property int $id
@@ -66,5 +68,10 @@ class PrivateRequest extends Model
     public function trainer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'trainer_id');
+    }
+
+    public function pendingCancelRequests(): HasMany
+    {
+        return $this->hasMany(ScheduleCancelRequest::class)->where('status', ScheduleCancelRequestStatus::Pending);
     }
 }

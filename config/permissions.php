@@ -30,6 +30,18 @@ return [
         'timetable' => [
             'manage' => [Role::Admin],
         ],
+        'teaching' => [
+            'view' => [Role::Admin, Role::Trainer],
+            'cancel' => [Role::Admin],
+        ],
+        'cancel_request' => [
+            'create' => [Role::Trainer],
+            'review' => [Role::Admin],
+        ],
+    ],
+    'attendance' => [
+        'view' => [Role::Admin, Role::Receptionist, Role::Trainer],
+        'mark' => [Role::Admin, Role::Receptionist, Role::Trainer],
     ],
     'bookings' => [
         'manage' => [Role::Admin, Role::Receptionist],

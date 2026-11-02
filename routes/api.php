@@ -6,11 +6,14 @@ use App\Web\Http\Controllers\API\V1\Auth\ProfileController;
 use App\Web\Http\Controllers\API\V1\Auth\RegistrationController;
 use App\Web\Http\Controllers\API\V1\BannerController;
 use App\Web\Http\Controllers\API\V1\ComboController;
+use App\Web\Http\Controllers\API\V1\Gym\Admin\AttendanceController as AdminAttendanceController;
 use App\Web\Http\Controllers\API\V1\Gym\Admin\BookingController as AdminBookingController;
 use App\Web\Http\Controllers\API\V1\Gym\Admin\BookingRequestController as AdminBookingRequestController;
 use App\Web\Http\Controllers\API\V1\Gym\Admin\MemberController as AdminMemberController;
 use App\Web\Http\Controllers\API\V1\Gym\Admin\OrderController as AdminOrderController;
 use App\Web\Http\Controllers\API\V1\Gym\Admin\PackageController as AdminPackageController;
+use App\Web\Http\Controllers\API\V1\Gym\Admin\ScheduleCancelRequestController as AdminScheduleCancelRequestController;
+use App\Web\Http\Controllers\API\V1\Gym\Admin\TeachingScheduleController as AdminTeachingScheduleController;
 use App\Web\Http\Controllers\API\V1\Gym\Admin\TimetableController as AdminTimetableController;
 use App\Web\Http\Controllers\API\V1\Gym\BookingController;
 use App\Web\Http\Controllers\API\V1\Gym\BookingRequestController;
@@ -147,6 +150,33 @@ Route::as('api.')
                         Route::patch('timetable/{schedule}/cancel', [AdminTimetableController::class, 'cancel'])->name('timetable.cancel');
                     });
 
+                    Route::middleware('permission:schedules.teaching.view')->group(function () {
+                        Route::get('schedules', [AdminTeachingScheduleController::class, 'index'])->name('schedules.index');
+                        Route::get('schedules/{type}/{id}', [AdminTeachingScheduleController::class, 'show'])
+                            ->whereIn('type', ['class', 'private'])
+                            ->whereNumber('id')
+                            ->name('schedules.show');
+                    });
+                    Route::patch('schedules/{type}/{id}/cancel', [AdminTeachingScheduleController::class, 'cancel'])
+                        ->middleware('permission:schedules.teaching.cancel')
+                        ->whereIn('type', ['class', 'private'])
+                        ->whereNumber('id')
+                        ->name('schedules.cancel');
+
+                    Route::middleware('permission:schedules.cancel_request.review')->group(function () {
+                        Route::get('schedule-cancel-requests', [AdminScheduleCancelRequestController::class, 'index'])->name('schedule-cancel-requests.index');
+                        Route::patch('schedule-cancel-requests/{scheduleCancelRequest}/approve', [AdminScheduleCancelRequestController::class, 'approve'])->name('schedule-cancel-requests.approve');
+                        Route::patch('schedule-cancel-requests/{scheduleCancelRequest}/reject', [AdminScheduleCancelRequestController::class, 'reject'])->name('schedule-cancel-requests.reject');
+                    });
+
+                    Route::get('attendance/sessions', [AdminAttendanceController::class, 'sessions'])
+                        ->middleware('permission:attendance.view')
+                        ->name('attendance.sessions');
+                    Route::middleware('permission:attendance.mark')->group(function () {
+                        Route::post('attendance/records', [AdminAttendanceController::class, 'mark'])->name('attendance.records.store');
+                        Route::post('attendance/sessions/{schedule}/mark-all-present', [AdminAttendanceController::class, 'markAllPresent'])->name('attendance.sessions.mark-all-present');
+                    });
+
                     Route::middleware('permission:bookings.manage')->group(function () {
                         Route::get('bookings/members', [AdminBookingController::class, 'members'])->name('bookings.members');
                         Route::get('bookings/members/{userPackage}', [AdminBookingController::class, 'member'])->name('bookings.member');
@@ -178,6 +208,12 @@ Route::as('api.')
                         ->middleware('permission:bookings.cancel_class')
                         ->name('bookings.cancel');
                 });
+
+            Route::post('instructor/schedules/{type}/{id}/cancel-request', [AdminScheduleCancelRequestController::class, 'store'])
+                ->middleware(['auth:api', 'permission:schedules.cancel_request.create'])
+                ->whereIn('type', ['class', 'private'])
+                ->whereNumber('id')
+                ->name('instructor.schedules.cancel-request');
 
             Route::middleware('auth:api')->group(function () {
                 Route::get('programs', [ProgramController::class, 'index'])->name('programs.index');

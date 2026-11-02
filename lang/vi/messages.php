@@ -49,6 +49,13 @@ return [
     'gym_booking_already_cancelled' => 'Lịch này đã được hủy trước đó.',
     'gym_booking_cancel_locked' => 'Không thể hủy trong vòng :hours tiếng trước giờ tập.',
     'gym_booking_already_deducted' => 'Buổi này đã trừ, không thể hủy.',
+    'gym_attendance_today_only' => 'Chỉ được điểm danh trong ngày diễn ra buổi học.',
+    'gym_attendance_invalid_booking' => 'Học viên không còn trong buổi học này.',
+    'gym_teaching_not_cancellable' => 'Lịch dạy này không thể hủy.',
+    'gym_cancel_request_started' => 'Buổi dạy đã bắt đầu, không thể gửi yêu cầu hủy.',
+    'gym_cancel_request_duplicate' => 'Lịch này đã có yêu cầu hủy đang chờ duyệt.',
+    'gym_cancel_request_reviewed' => 'Yêu cầu hủy này đã được xử lý.',
+    'gym_cancel_request_trainer_changed' => 'Lớp đã đổi HLV, yêu cầu hủy này không còn áp dụng.',
 
     // Error messages
     'validation_error' => 'Dữ liệu không hợp lệ.',

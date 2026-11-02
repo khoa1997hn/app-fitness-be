@@ -4,6 +4,7 @@ namespace App\Share\Models;
 
 use App\Share\Enums\BookingStatus;
 use App\Share\Enums\ClassScheduleStatus;
+use App\Share\Enums\ScheduleCancelRequestStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -64,5 +65,10 @@ class ClassSchedule extends Model
     public function confirmedBookings(): HasMany
     {
         return $this->bookings()->where('status', BookingStatus::Confirmed);
+    }
+
+    public function pendingCancelRequests(): HasMany
+    {
+        return $this->hasMany(ScheduleCancelRequest::class)->where('status', ScheduleCancelRequestStatus::Pending);
     }
 }

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Share\Enums\AttendanceStatus;
 use App\Share\Enums\BookingRequestStatus;
 use App\Share\Enums\BookingStatus;
 use App\Share\Enums\ClassScheduleStatus;
@@ -16,6 +17,7 @@ use App\Share\Enums\PaymentMethod;
 use App\Share\Enums\Plan;
 use App\Share\Enums\PrivateDiscipline;
 use App\Share\Enums\Role;
+use App\Share\Enums\ScheduleCancelRequestStatus;
 use App\Share\Enums\SubscriptionProvider;
 use App\Share\Enums\SubscriptionStatus;
 use App\Share\Enums\TherapyVariant;
@@ -85,6 +87,17 @@ return [
         PrivateDiscipline::Yoga => 'Yoga',
         PrivateDiscipline::Pilates => 'Pilates',
         PrivateDiscipline::Barre => 'Barre',
+    ],
+
+    AttendanceStatus::class => [
+        AttendanceStatus::Present => 'Có mặt',
+        AttendanceStatus::Absent => 'Vắng',
+    ],
+
+    ScheduleCancelRequestStatus::class => [
+        ScheduleCancelRequestStatus::Pending => 'Chờ duyệt',
+        ScheduleCancelRequestStatus::Approved => 'Đã duyệt',
+        ScheduleCancelRequestStatus::Rejected => 'Đã từ chối',
     ],
 
     BookingRequestStatus::class => [
