@@ -15,5 +15,6 @@ alwaysApply: false
 - Response: `$model->file_field` tự serialize (`{ path, name, extension, size, url }`).
 - Disk: `s3` only — presigned upload/get cho mọi FileType.
 - Admin JS: `AdminS3Upload.upload(file, type)` — `public/js/admin/s3-presigned-upload.js`.
+- Flow presigned: client POST `/admin/files/presigned-upload` (session) với `{ type, filename, mimetype, size }` → BE validate theo config + trả `upload_url`, `headers`, `file` qua `ResponseAPI::success()` → client PUT lên S3 → lưu `file` vào entity.
 
 Chi tiết: [`docs/rules/12-file-upload.md`](../../docs/rules/12-file-upload.md)

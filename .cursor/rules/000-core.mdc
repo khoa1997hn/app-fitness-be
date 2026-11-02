@@ -14,3 +14,15 @@ alwaysApply: true
 Chi tiết: [`docs/rules/00-core.md`](../../docs/rules/00-core.md)
 
 Quy trình hỏi: [`docs/guides/ask-protocol.md`](../../docs/guides/ask-protocol.md)
+
+## Ràng buộc nghiêm
+
+- **LUÔN dùng Laravel Sail** cho MỌI lệnh PHP-related: `sail exec --user sail laravel.test <command>`. Xem rule `sail-commands`.
+- KHÔNG tự `git commit` / `git push`. Finalizer chỉ HỎI, user duyệt mới làm. Xem [`docs/guides/commit-protocol.md`](../../docs/guides/commit-protocol.md).
+- KHÔNG skip vai trò trong workflow.
+- Khi làm task → tự xác định rule liên quan trong [`docs/rules/`](../../docs/rules/) và đọc file tương ứng.
+
+## Ánh xạ trong Cursor
+
+- `AskUserQuestion` trong `docs/` = công cụ hỏi user của Cursor. Không có công cụ đó → hỏi trong chat rồi DỪNG chờ trả lời. Subagent không hỏi được → trả câu hỏi về agent cha, KHÔNG tự đoán.
+- Vai trò trong `docs/agents/` = subagent `.cursor/agents/<name>.md`. Workflow = `/implement-spec`, `/update-spec`, `/fix-bug` (`.cursor/commands/`).

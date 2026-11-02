@@ -22,7 +22,7 @@ Toàn bộ kit dùng chung với Cursor — source of truth ở `docs/`. Ánh x�
 |---|---|---|
 | Core rule (always) | `.cursor/rules/000-core.mdc` | File này (`CLAUDE.md`) |
 | Rule theo folder | `.cursor/rules/*.mdc` (glob) | Nested `CLAUDE.md` trong folder + `docs/rules/*.md` |
-| Subagent | (prompt template) | `.claude/agents/*.md` |
+| Subagent | `.cursor/agents/*.md` | `.claude/agents/*.md` |
 | Slash command | `.cursor/commands/*.md` | `.claude/commands/*.md` |
 | Rule chi tiết / guide / template | `docs/rules/`, `docs/guides/`, `docs/templates/` | (dùng chung) |
 

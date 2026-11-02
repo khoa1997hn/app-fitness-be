@@ -5,14 +5,14 @@ Sửa lại spec đã có (sau khi đã `/implement-spec` xong). Đọc `docs/co
 ## RULE HIGH (bắt buộc tuyệt đối)
 
 1. **TUYỆT ĐỐI KHÔNG BỊA** — Cấm tự suy diễn phần update, nghiệp vụ, field, hành vi FE… không có trong yêu cầu user.
-2. **LUÔN HỎI TRƯỚC KHI CODE** — Yêu cầu update mơ hồ, thiếu input, có ≥ 2 cách hiểu → **BẮT BUỐC** `AskUserQuestion`. **CẤM** tự suy diễn rồi implement.
+2. **LUÔN HỎI TRƯỚC KHI CODE** — Yêu cầu update mơ hồ, thiếu input, có ≥ 2 cách hiểu → **BẮT BUỘC** `AskUserQuestion`. **CẤM** tự suy diễn rồi implement.
 3. **CẤM GIẢ ĐỊNH FE/CLIENT** — Trừ khi user nói rõ hoặc spec đã chốt.
 4. **CÒN `TODO(ask)` → CHƯA ĐƯỢC QUA `implementer`**.
 5. Chi tiết: [`docs/rules/00-core.md`](../../docs/rules/00-core.md), [`docs/guides/ask-protocol.md`](../../docs/guides/ask-protocol.md).
 
 ## Bạn (Cursor) PHẢI làm
 
-Chạy tuần tự 11 vai trò giống `/implement-spec`, nhưng 3 vai trò đầu hành xử KHÁC:
+Chạy tuần tự 16 vai trò giống `/implement-spec` (giao cho subagent trong `.cursor/agents/<name>.md`, truyền kèm mode tương ứng), nhưng 3 vai trò sau hành xử KHÁC:
 
 ### spec-analyzer
 - BẮT BUỘC TÌM spec hiện có. KHÔNG tạo mới.

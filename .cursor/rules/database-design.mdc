@@ -15,6 +15,8 @@ alwaysApply: false
 - **FK**: chỉ FK tới bảng tồn tại + có trong spec; `onDelete()` quyết định theo nghiệp vụ.
 - **Tên**: table số nhiều snake_case; FK `<singular>_id`; boolean `is_`/`has_`; datetime `_at`; date `_date`.
 - **Migration**: BẮT BUỘC `artisan make:migration`. 1 migration = 1 thay đổi logic.
+- **Tên migration**: `create_<table>_table`, `add_<col>_to_<table>_table`, `change_<col>_in_<table>_table`.
+- **Migration đã chạy production**: KHÔNG sửa file gốc, tạo migration mới.
 
 Mơ hồ về field → DỪNG, hỏi user.
 

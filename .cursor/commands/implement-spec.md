@@ -12,9 +12,11 @@ Triển khai feature MỚI theo spec-driven workflow. Đọc `docs/commands/impl
 ## Bạn (Cursor) PHẢI làm
 
 Chạy tuần tự 16 vai trò sau. Với MỖI vai trò:
-1. Đọc file prompt template tương ứng.
-2. Đóng vai theo đúng mô tả trong file đó (Mục tiêu / Input / Output / Quy trình / Cấm).
+1. Giao cho subagent cùng tên trong `.cursor/agents/<name>.md`. Subagent không thấy lịch sử chat → truyền đủ path spec/plan/task + Output vai trò trước.
+2. Subagent không hỏi user trực tiếp được → nhận danh sách câu hỏi nó trả về, hỏi user, rồi chạy lại vai trò đó với câu trả lời.
 3. Hoàn thành Output rồi mới chuyển vai tiếp theo.
+
+Không gọi được subagent → đọc prompt template trong `docs/agents/` và tự đóng vai.
 
 | # | Vai trò | Prompt template |
 |---|---|---|

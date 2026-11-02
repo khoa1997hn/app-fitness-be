@@ -6,6 +6,7 @@ alwaysApply: false
 
 # Admin Blade
 
+- Auth: session-based, guard `auth:admin` (KHÔNG dùng `auth:api` của Web).
 - Mọi label, message, button, validation text trong Admin **dùng tiếng Việt**. Không cần đa ngôn ngữ.
 - HTML mẫu nằm trong `resources/dashcode/` — Blade build theo mẫu này.
 - Asset đã có ở `public/dashcode/`. Gọi qua `asset('dashcode/...')`.

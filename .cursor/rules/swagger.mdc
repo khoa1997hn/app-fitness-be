@@ -11,6 +11,7 @@ alwaysApply: false
 - Base controller đã định nghĩa `OA\Info`, `OA\Server`, `OA\SecurityScheme` — không lặp lại trong sub-controller.
 - Mỗi endpoint cần: `path`, `summary`, `description`, `tags`, `parameters` (nếu có), `requestBody` (nếu có), `responses` nested đầy đủ field theo mapping thực tế, status codes đầy đủ (200/4xx/500), `security` nếu cần auth.
 - Đổi mapping field response → BẮT BUỘC đổi attribute cho khớp.
+- `path` không kèm `/api/v1`. Endpoint cần auth: `security: [['bearerAuth' => []]]`.
 - Sau khi sửa: `sail exec --user sail laravel.test php artisan l5-swagger:generate`.
 - **CẤM schema mơ hồ**: `type: 'object'` không có `properties` → vi phạm. File/media fields (cover, thumbnail, image, file, ...) bắt buộc khai báo đủ `{ path, name, extension, size, url }`.
 

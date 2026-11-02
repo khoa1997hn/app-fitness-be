@@ -1,6 +1,6 @@
 # Agents (LLM-agnostic)
 
-Mỗi file là **prompt template** cho một vai trò chuyên biệt. Cursor commands và Claude Code subagents đều reference vào đây.
+Mỗi file là **prompt template** cho một vai trò chuyên biệt. Cursor subagents/commands và Claude Code subagents đều reference vào đây.
 
 ## Format mỗi file
 

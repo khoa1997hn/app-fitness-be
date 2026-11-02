@@ -7,6 +7,7 @@ alwaysApply: false
 # Enum
 
 - Package: `bensampo/laravel-enum`. Vị trí: `app/Share/Enums/`. Base class chung: `app/Share/Enums/Enum.php`.
+- Mọi enum extends base `App\Share\Enums\Enum` (KHÔNG extends `BenSampo\Enum\Enum` trực tiếp).
 - Tên class: PascalCase, KHÔNG suffix `Enum` (`Plan`, KHÔNG `PlanEnum`). Const PascalCase, value snake_case.
 - **Model**: BẮT BUỘC cast trong `casts()` (`'plan' => Plan::class`) + PHPDoc `@property Plan $plan`.
 - **Response JSON**: dùng `$model->field` — KHÔNG `$model->field->value` (BenSampo tự `__toString()`).

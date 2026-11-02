@@ -15,5 +15,7 @@ alwaysApply: false
 - Exception: `app/Share/Exceptions/Subscription/` (base `SubscriptionException`). CẤM throw `\Exception` raw.
 - Plan price + provider ID: `config('app_payment.plans.<key>')`. CẤM hardcode.
 - Listener: mỗi event 1 file, extends `BaseGoogleListener` / `BaseAppleListener`.
+- CẤM gọi imdhemy SDK trực tiếp từ Controller — qua Google/Apple service. CẤM update `subscriptions` từ controller — qua `SubscriptionService`.
+- Provider mới → service mới cùng pattern, KHÔNG ghép vào Google/Apple.
 
 Chi tiết: [`docs/rules/13-subscription-iap.md`](../../docs/rules/13-subscription-iap.md)

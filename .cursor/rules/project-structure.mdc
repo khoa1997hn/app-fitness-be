@@ -1,0 +1,15 @@
+---
+description: Cấu trúc app/ — chỉ có Admin, Web, Share; code dùng chung và Model đặt trong Share.
+globs: app/**/*.php
+alwaysApply: false
+---
+
+# Project structure
+
+- `app/` chỉ có 3 folder: `Admin`, `Web`, `Share`.
+- `Share/` là folder CORE — chứa MỌI code dùng chung. Model BẮT BUỘC ở `app/Share/Models/`; Admin/Web KHÔNG có Model riêng.
+- Tách vào `Web/` hoặc `Admin/` chỉ khi thực sự CHỈ 1 module dùng (controller, request, view).
+- Admin: `app/Admin/Http/{Controllers,Requests}/`, view `resources/views/admin/`, route `routes/admin.php`.
+- Web: `app/Web/Http/{Controllers,Requests}/`, route `routes/api.php`.
+
+Chi tiết: [`docs/rules/03-project-structure.md`](../../docs/rules/03-project-structure.md)

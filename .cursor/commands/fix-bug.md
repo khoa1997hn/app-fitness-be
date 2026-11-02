@@ -13,7 +13,8 @@ Fix bug. Đọc `docs/commands/fix-bug.md` để hiểu đầy đủ.
 ## Bạn (Cursor) PHẢI làm
 
 1. **Đầu tiên** chạy `bug-classifier` → xác định bug **DỄ** hay **KHÓ**, tạo folder `docs/specs/<big>/<detail>/bug-<slug>-<YYYY-MM-DD>/`.
-2. Theo phân loại, chạy chuỗi vai trò tương ứng.
+2. Theo phân loại, chạy chuỗi vai trò tương ứng. Mỗi vai trò giao cho subagent cùng tên trong `.cursor/agents/<name>.md`, truyền đủ path folder bug + Output vai trò trước.
+3. Subagent không hỏi user trực tiếp được → nhận danh sách câu hỏi nó trả về, hỏi user, rồi chạy lại vai trò đó với câu trả lời.
 
 ## Nhánh DỄ
 

@@ -54,11 +54,12 @@ Check quy trình có đổi không:
 - Cách chạy test / verify đổi → `pint-format.md` hoặc tạo guide mới.
 - Quy trình review thay đổi → `code-review-checklist.md`.
 
-### 4. `docs/agents/*.md` + `docs/commands/*.md` + `.cursor/commands/*.md` + `.cursor/rules/*.mdc`
+### 4. `docs/agents/*.md` + `docs/commands/*.md` + `.cursor/agents/*.md` + `.cursor/commands/*.md` + `.cursor/rules/*.mdc`
 
 Check workflow/agent definitions:
 
 - Thêm vai trò mới → cập nhật agents README + command file chuỗi.
+- Thêm/đổi vai trò → đồng bộ `.cursor/agents/<name>.md` (description + `readonly`).
 - Đổi chuỗi vai trò → đồng bộ giữa `docs/commands/` và `.cursor/commands/`.
 - Đổi Cursor MDC scope (glob) → đồng bộ với `docs/rules/`.
 
