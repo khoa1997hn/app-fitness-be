@@ -46,6 +46,7 @@ class ProfileController extends BaseAPIController
                                 new OA\Property(property: 'dob', description: 'Ngày sinh', type: 'string', format: 'date', example: '1990-01-01', nullable: true),
                                 new OA\Property(property: 'plan', description: 'Gói subscription hiện tại', type: 'string', enum: ['basic', 'plus', 'all'], example: 'all', nullable: true),
                                 new OA\Property(property: 'subscription_status', description: 'Trạng thái subscription', type: 'string', enum: ['trial', 'active', 'expired', 'cancelled', 'grace_period', 'refunded'], example: 'active', nullable: true),
+                                new OA\Property(property: 'role', description: 'Vai trò hệ thống phòng tập', type: 'string', enum: ['admin', 'receptionist', 'trainer', 'member'], example: 'member'),
                                 new OA\Property(property: 'created_at', description: 'Thời gian tạo', type: 'string', format: 'date-time', example: '2026-01-30T09:00:00.000000Z'),
                                 new OA\Property(property: 'updated_at', description: 'Thời gian cập nhật', type: 'string', format: 'date-time', example: '2026-01-30T09:00:00.000000Z'),
                                 new OA\Property(
@@ -127,6 +128,7 @@ class ProfileController extends BaseAPIController
             'dob' => $user->dob,
             'plan' => $user->plan?->value,
             'subscription_status' => $user->subscription_status?->value,
+            'role' => $user->role->value,
             'created_at' => $user->created_at,
             'updated_at' => $user->updated_at,
             'favorited_programs' => $favoritedPrograms,

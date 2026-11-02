@@ -4,6 +4,7 @@ namespace App\Share\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Share\Enums\Plan;
+use App\Share\Enums\Role;
 use App\Share\Enums\SubscriptionStatus;
 use App\Share\Models\Traits\User\ManagesSubscription;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -23,6 +24,7 @@ use Tymon\JWTAuth\Contracts\JWTSubject;
  * @property \Carbon\Carbon|null $dob
  * @property SubscriptionStatus|null $subscription_status
  * @property Plan|null $plan
+ * @property Role $role
  * @property-read Subscription|null $subscription
  * @property-read Subscription|null $validSubscription
  * @property \Carbon\Carbon|null $deleted_at
@@ -57,6 +59,7 @@ class User extends Authenticatable implements JWTSubject
         'dob',
         'subscription_status',
         'plan',
+        'role',
     ];
 
     /**
@@ -80,6 +83,7 @@ class User extends Authenticatable implements JWTSubject
             'dob' => 'date',
             'subscription_status' => SubscriptionStatus::class,
             'plan' => Plan::class,
+            'role' => Role::class,
         ];
     }
 
@@ -93,6 +97,14 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->belongsToMany(Program::class, 'program_favorites')
             ->withTimestamps();
+    }
+
+    /**
+     * Kiểm tra quyền theo `config/permissions.php`. Deny by default.
+     */
+    public function hasPermission(string $permission): bool
+    {
+        return in_array($this->role?->value, config("permissions.{$permission}", []), true);
     }
 
     public function getJWTIdentifier()

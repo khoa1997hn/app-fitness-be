@@ -1,0 +1,20 @@
+<?php
+
+use App\Share\Enums\Role;
+
+/*
+|--------------------------------------------------------------------------
+| Ma trận quyền API hệ thống phòng tập
+|--------------------------------------------------------------------------
+|
+| Key: <nhóm>.<hành động>, dùng qua middleware `permission:<nhóm>.<hành động>`.
+| Deny by default: không khai báo = không ai được.
+| Contract đầy đủ: fitness-web/docs/auth/permissions.md — thêm key khi API của màn đó ra đời.
+|
+*/
+
+return [
+    'packages' => [
+        'manage' => [Role::Admin],
+    ],
+];

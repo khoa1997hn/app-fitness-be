@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 use App\Share\Enums\LessonType;
 use App\Share\Enums\Level;
+use App\Share\Enums\PackageStatus;
+use App\Share\Enums\PackageType;
 use App\Share\Enums\Plan;
+use App\Share\Enums\Role;
 use App\Share\Enums\SubscriptionProvider;
 use App\Share\Enums\SubscriptionStatus;
 
@@ -42,5 +45,26 @@ return [
         SubscriptionProvider::GoogleIap => 'Google IAP',
         SubscriptionProvider::AppleIap => 'Apple IAP',
         SubscriptionProvider::Admin => 'Admin (thủ công)',
+    ],
+
+    Role::class => [
+        Role::Admin => 'Quản trị hệ thống',
+        Role::Receptionist => 'Lễ tân',
+        Role::Trainer => 'Huấn luyện viên',
+        Role::Member => 'Hội viên',
+    ],
+
+    PackageType::class => [
+        PackageType::DropIn => 'Drop-in',
+        PackageType::ClassPack => 'Gói theo buổi',
+        PackageType::Unlimited => 'Không giới hạn',
+        PackageType::IntroDemo => 'Học thử',
+        PackageType::PrivatePack => 'Private',
+        PackageType::PrivateGroup => 'Private nhóm',
+    ],
+
+    PackageStatus::class => [
+        PackageStatus::Active => 'Đang bán',
+        PackageStatus::Hidden => 'Đã ẩn',
     ],
 ];

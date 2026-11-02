@@ -28,6 +28,9 @@ return Application::configure(basePath: dirname(__DIR__))
         \App\Share\Console\Commands\PutBucketCorsCommand::class,
     ])
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->alias([
+            'permission' => \App\Share\Http\Middleware\RequirePermission::class,
+        ]);
         $middleware->redirectGuestsTo(fn () => route('admin.login'));
         $middleware->redirectUsersTo(fn () => route('admin.dashboard'));
     })

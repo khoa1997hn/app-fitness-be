@@ -13,6 +13,8 @@ class FakeDatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call(UsersSeeder::class);
+        $this->call(GymDemoUsersSeeder::class);
+        $this->call(PackagesSeeder::class);
         $this->call(BannersSeeder::class);
         $this->call(ProgramsSeeder::class);
         $this->call(SubscriptionsSeeder::class);

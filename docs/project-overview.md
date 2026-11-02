@@ -4,10 +4,15 @@ File này MỌI LLM phải đọc TRƯỚC khi làm bất kỳ task nào trên d
 
 ## Sản phẩm
 
-Backend API cho **native app tập thể thao tại nhà qua video**.
+Backend này phục vụ **hai sản phẩm tách biệt**, chỉ dùng chung `users` và `/auth/*`:
+
+1. **App video** — native app tập tại nhà. Người dùng mua subscription IAP để xem video. Admin nội dung chạy trên Blade.
+2. **Hệ thống phòng tập offline** — web `fitness-web`. Hội viên mua gói buổi, đặt lịch, đăng ký sự kiện, thanh toán (tạm mock). Lễ tân, HLV, admin quản lý trên React. Spec: [`docs/specs/gym/`](specs/gym/README.md), lộ trình: [`fitness-web/plan/`](../../fitness-web/plan/README.md).
+
+**Không trộn hai bên:** entity phòng tập không tham chiếu Program/Lesson/Subscription và ngược lại. Phần "Nghiệp vụ cốt lõi" dưới đây là của **app video**.
 
 - **End-user (app)**: người dùng cuối, mở app, mua gói subscription để unlock video bài tập.
-- **Admin (web)**: nhân viên vận hành — quản lý nội dung (program, bài học, banner), user, thanh toán.
+- **Admin (web Blade)**: nhân viên vận hành — quản lý nội dung (program, bài học, banner), user, thanh toán.
 
 ## Nghiệp vụ cốt lõi
 
@@ -62,12 +67,12 @@ Giá cụ thể từng plan → env `PLAN_<TIER>_PRICE` (xem `.env.example`).
 
 ### Authentication
 - **End-user (API)**: JWT qua `tymon/jwt-auth`. Token gửi qua header `Authorization: Bearer <token>`.
-- **Admin (web)**: session-based, guard `auth:admin` riêng (KHÔNG dùng guard `web` mặc định).
+- **Admin Blade**: session-based, guard `auth:admin` riêng (KHÔNG dùng guard `web` mặc định).
+- **Nhân viên phòng tập**: JWT như end-user, phân quyền theo `users.role` (`admin`, `receptionist`, `trainer`, `member`) + `config/permissions.php`.
 
-### Admin UI (dual surface)
-- **Blade (Laravel)**: vận hành chính trên `/admin`, guard `auth:admin`, Dashcode — KHÔNG Filament/Nova/Backpack. Template `resources/dashcode/`, asset `public/dashcode/`. Label tiếng Việt.
-- **FE React (`fitness-web`)**: admin module có screen **`docs/screens/admin/kore-*.md`** → UI trên React (`surfaces: fe`). Admin **không** có `kore-*.md` → **Blade only** (`surfaces: blade`). Ma trận: [`fitness-web/docs/admin/module-matrix.md`](../../fitness-web/docs/admin/module-matrix.md). Quy tắc: [`fitness-web/docs/admin/README.md`](../../fitness-web/docs/admin/README.md), guide [`docs/guides/admin-dual-surface.md`](guides/admin-dual-surface.md).
-- Blade Dashcode vẫn chạy cho module Kore đã build — **fallback ops**, không phát triển UI mới trên Blade khi đã có `kore-*.md`.
+### Admin UI (hai sản phẩm)
+- **Blade (Laravel)**: admin **app video** trên `/admin`, guard `auth:admin`, Dashcode — KHÔNG Filament/Nova/Backpack. Template `resources/dashcode/`, asset `public/dashcode/`. Label tiếng Việt.
+- **React (`fitness-web`)**: admin **phòng tập**, JWT + `users.role`, API `/api/v1/admin/*` + middleware `permission:*`. Xem [`docs/guides/admin-dual-surface.md`](guides/admin-dual-surface.md).
 
 ### API
 - Web API V1 nằm trong `app/Web/Http/Controllers/API/V1/`.
@@ -129,7 +134,12 @@ Giá cụ thể từng plan → env `PLAN_<TIER>_PRICE` (xem `.env.example`).
 - Admin CRUD Banner: `BannerController` (index/create/store/edit/update/destroy). Views Blade `admin/banners/{index,create,edit}`; list phân trang 20/trang sort `id` DESC, hiển thị locale vi; form đa ngôn ngữ (vi/en) gồm `image` (presigned PUT, `FileType::BannerImage`), `link_url`, `order`, `is_active` per locale + `description` dùng chung; menu sidebar "Banner". Model `Banner`/`BannerTranslation` + migration đã có từ trước.
 - Combo (gói nhiều program): model `Combo` + `combo_translations` (name, cover), pivot `combo_program` (2–7 program, sort), `ComboInfo` + `combo_info_translations` (tối đa 3 info: icon PNG dùng chung + text đa ngôn ngữ max 100 ký tự). API `GET /api/v1/combos` (list card: id, name, cover, program_count, infos; sort combo có program favorite lên trước) + `GET /api/v1/combos/{combo}` (detail kèm programs full như program detail). Admin CRUD `ComboController` — views `admin/combos/{index,create,edit}`; menu sidebar "Combo".
 
+- Role + phân quyền phòng tập: `users.role`, middleware `permission:*`, `GET /auth/profile` trả `role`. Spec [`gym/roles`](specs/gym/roles/spec.md).
+- Gói tập phòng tập: `Package` + `package_translations`. API `GET /api/v1/packages[/{id}]` + CRUD `/api/v1/admin/packages`. Spec [`gym/packages`](specs/gym/packages/spec.md).
+
 ### CHƯA có (phase tiếp)
+
+Hệ thống phòng tập: đơn hàng và thanh toán mock, thời khóa biểu và đặt lịch, Private/Trị liệu, điểm danh, quản lý user, sự kiện, vật phẩm, báo cáo — theo [`fitness-web/plan/`](../../fitness-web/plan/README.md).
 
 > LLM thực hiện task: nếu task chạm các module **CHƯA có**, dùng `/implement-spec`. Nếu chạm module **đã có** mà phải đổi, dùng `/update-spec`.
 

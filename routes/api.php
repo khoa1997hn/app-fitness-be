@@ -6,6 +6,8 @@ use App\Web\Http\Controllers\API\V1\Auth\ProfileController;
 use App\Web\Http\Controllers\API\V1\Auth\RegistrationController;
 use App\Web\Http\Controllers\API\V1\BannerController;
 use App\Web\Http\Controllers\API\V1\ComboController;
+use App\Web\Http\Controllers\API\V1\Gym\Admin\PackageController as AdminPackageController;
+use App\Web\Http\Controllers\API\V1\Gym\PackageController;
 use App\Web\Http\Controllers\API\V1\LessonController;
 use App\Web\Http\Controllers\API\V1\LessonFavoriteController;
 use App\Web\Http\Controllers\API\V1\ProgramController;
@@ -71,6 +73,20 @@ Route::as('api.')
                 });
 
             Route::get('banners', [BannerController::class, 'index'])->name('banners.index');
+
+            // Hệ thống phòng tập offline (fitness-web)
+            Route::get('packages', [PackageController::class, 'index'])->name('packages.index');
+            Route::get('packages/{package}', [PackageController::class, 'show'])->name('packages.show');
+
+            Route::as('admin.')
+                ->prefix('admin')
+                ->middleware('auth:api')
+                ->group(function () {
+                    Route::middleware('permission:packages.manage')->group(function () {
+                        Route::patch('packages/{package}/status', [AdminPackageController::class, 'updateStatus'])->name('packages.status');
+                        Route::apiResource('packages', AdminPackageController::class);
+                    });
+                });
 
             Route::middleware('auth:api')->group(function () {
                 Route::get('programs', [ProgramController::class, 'index'])->name('programs.index');

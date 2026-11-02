@@ -1,55 +1,24 @@
-# Admin dual surface — Blade + FE React
+# Admin: Blade và React
 
-## Quy tắc phân bổ (chốt)
+Hai khu vực admin thuộc **hai sản phẩm khác nhau**.
 
-| Surface | Khi nào | Spec UI |
-|---------|---------|---------|
-| **FE React** (`surfaces: fe`) | Có [`fitness-web/docs/screens/admin/kore-*.md`](../../../fitness-web/docs/screens/admin/) | Screen doc `kore-*` + nghiệp vụ [`docs/specs/admin/`](../../specs/admin/) |
-| **Blade** (`surfaces: blade`) | Admin **không** có `kore-*.md` tương ứng | Spec admin BE + [`docs/rules/05-admin-blade.md`](../rules/05-admin-blade.md) |
+| | Blade | React (`fitness-web`) |
+|---|---|---|
+| Sản phẩm | App video | Hệ thống phòng tập offline |
+| Module | Program, Lesson, Banner, Combo, User + subscription | Gói tập, lịch, booking, điểm danh, thanh toán, sự kiện, user, báo cáo |
+| Auth | Session `auth:admin`, bảng `admins` | JWT `auth:api`, `users.role` |
+| Quyền | Mọi admin | Middleware `permission:<nhóm>.<hành động>`, `config/permissions.php` |
+| Route | `routes/admin.php` | `routes/api.php`, prefix `/api/v1/admin` |
+| Controller | `app/Admin/Http/Controllers/` | `app/Web/Http/Controllers/API/V1/Gym/Admin/` |
+| Spec | `docs/specs/admin/` | `docs/specs/gym/` + `fitness-web/docs/screens/admin/` |
 
-File `docs/screens/admin/*.md` **không** prefix `kore-` = prototype cũ trên FE repo — **không** thuộc Kore video app.
-
-Module Kore đã có Blade (program, banner, …): Blade **giữ fallback**; feature UI mới chỉ cập nhật spec `kore-*.md` và React — **không** `both` như hai sản phẩm song song.
+Quyết định 2026-11-02: không làm React cho module app video. Spec `kore-*` cũ lưu ở `fitness-web/docs/archive/video-app/`.
 
 Ma trận: [`fitness-web/docs/admin/module-matrix.md`](../../../fitness-web/docs/admin/module-matrix.md).
 
-## Stack
+## Thêm API admin phòng tập
 
-| Surface | Stack | Auth |
-|---------|--------|------|
-| **Blade** | Laravel + Dashcode, `routes/admin.php` | Session `auth:admin` |
-| **FE React** | `fitness-web`, `/admin/...` | **TODO(ask)** — Admin JSON hoặc session SPA |
-
-Nghiệp vụ **một nguồn**: spec admin BE. React **không** tự thêm field/validation.
-
-## Khai báo trong spec BE
-
-Section **`## Admin surfaces`**: `surfaces: fe` hoặc `blade`, link `kore-*.md` nếu `fe`.
-
-## Thứ tự triển khai (module `fe`)
-
-1. Nghiệp vụ đã rõ trên spec BE (Blade fallback đã chạy nếu có).
-2. Admin JSON API (nếu chọn A) mirror action Blade.
-3. React theo `kore-*.md` + [`fitness-web/plan/11-admin-modules.md`](../../../fitness-web/plan/11-admin-modules.md).
-
-## Auth & API cho Admin FE
-
-| Phương án | Ghi chú |
-|-----------|---------|
-| **A. Admin JSON API** | `ResponseAPI`, guard `auth:admin` — mirror Blade |
-| **B. Session SPA** | `credentials: 'include'`, cùng domain BE |
-| **C. Hybrid tạm** | Module `blade` only cho đến khi có API |
-
-**TODO(ask)**: PO chọn A / B — ghi vào `module-matrix.md`.
-
-Presigned upload: pattern `FileController` + `HandlesPresignedFileUpload`.
-
-## Workflow
-
-- Blade-only module: `/update-spec` trên `docs/specs/admin/...`
-- Module `fe`: sửa `kore-*.md` + plan 11; API mới → spec `admin-api/<feature>` nếu cần
-
-## Liên quan
-
-- [`docs/rules/04-api-response.md`](../rules/04-api-response.md)
-- [fullstack-flow.mdc](../../.cursor/rules/fullstack-flow.mdc)
+1. Thêm key vào `config/permissions.php`, khớp `fitness-web/docs/auth/permissions.md`
+2. Route trong group `admin` của `routes/api.php`, bọc `permission:<key>`
+3. Dữ liệu chỉ thuộc về người thực hiện (ví dụ lịch của HLV): kiểm tra thêm trong controller, middleware quyền không đủ
+4. Test role bị từ chối, không chỉ role được phép
