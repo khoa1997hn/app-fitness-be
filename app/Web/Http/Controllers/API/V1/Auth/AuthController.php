@@ -2,6 +2,8 @@
 
 namespace App\Web\Http\Controllers\API\V1\Auth;
 
+use App\Share\Enums\UserStatus;
+use App\Share\Models\User;
 use App\Share\Utils\ResponseAPI;
 use App\Web\Http\Controllers\API\V1\APIController as BaseAPIController;
 use Illuminate\Http\JsonResponse;
@@ -96,6 +98,15 @@ class AuthController extends BaseAPIController
                 __('messages.login_failed'),
                 401
             );
+        }
+
+        /** @var User $user */
+        $user = auth('api')->user();
+
+        if ($user->status->is(UserStatus::Locked)) {
+            auth('api')->logout();
+
+            return ResponseAPI::error(__('messages.gym_account_locked'), 403);
         }
 
         return $this->respondWithToken($token);

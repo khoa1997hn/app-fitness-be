@@ -27,11 +27,13 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withCommands([
         \App\Share\Console\Commands\PutBucketCorsCommand::class,
         \App\Share\Console\Commands\DeductBookingCreditsCommand::class,
+        \App\Share\Console\Commands\SendGymRemindersCommand::class,
     ])
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'permission' => \App\Share\Http\Middleware\RequirePermission::class,
         ]);
+        $middleware->api(append: [\App\Share\Http\Middleware\RejectLockedUser::class]);
         $middleware->redirectGuestsTo(fn () => route('admin.login'));
         $middleware->redirectUsersTo(fn () => route('admin.dashboard'));
     })

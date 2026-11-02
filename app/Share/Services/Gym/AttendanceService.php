@@ -10,6 +10,7 @@ use App\Share\Models\AttendanceRecord;
 use App\Share\Models\Booking;
 use App\Share\Models\ClassSchedule;
 use App\Share\Models\User;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -48,6 +49,25 @@ class AttendanceService
     public function isMarkable(ClassSchedule $schedule): bool
     {
         return $schedule->status->is(ClassScheduleStatus::Active) && $schedule->start_time->isToday();
+    }
+
+    /**
+     * Số buổi vắng trong 5 lần điểm danh gần nhất của từng học viên.
+     *
+     * @param  Collection<int, int>  $userIds
+     * @return array<int, int>
+     */
+    public function recentAbsences(Collection $userIds): array
+    {
+        return AttendanceRecord::query()
+            ->join('bookings', 'bookings.id', '=', 'attendance_records.booking_id')
+            ->whereIn('bookings.user_id', $userIds)
+            ->where('bookings.status', BookingStatus::Confirmed)
+            ->orderByDesc('attendance_records.attendance_date')
+            ->get(['bookings.user_id', 'attendance_records.status'])
+            ->groupBy('user_id')
+            ->map(fn (Collection $records) => $records->take(5)->filter(fn (AttendanceRecord $record) => $record->status->is(AttendanceStatus::Absent))->count())
+            ->all();
     }
 
     private function assertMarkable(ClassSchedule $schedule): void

@@ -2,6 +2,7 @@
 
 namespace App\Share\Services\Gym;
 
+use App\Share\Enums\NotificationType;
 use App\Share\Enums\OrderStatus;
 use App\Share\Enums\OrderType;
 use App\Share\Enums\PackageStatus;
@@ -23,6 +24,8 @@ use Illuminate\Support\Str;
  */
 class OrderService
 {
+    public function __construct(private readonly NotificationService $notificationService) {}
+
     /**
      * @param  array{type: string, package_id?: int, therapy_service_id?: int, therapy_variant?: string, quantity?: int}  $product
      */
@@ -98,6 +101,11 @@ class OrderService
             ]);
 
             $this->fulfill($locked);
+            $this->notificationService->send(
+                $locked->user_id,
+                NotificationType::Payment,
+                __('messages.gym_notify_payment_success', ['name' => $locked->name]),
+            );
 
             return $locked;
         });

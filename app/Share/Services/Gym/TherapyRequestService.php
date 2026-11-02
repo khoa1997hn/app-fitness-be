@@ -3,6 +3,7 @@
 namespace App\Share\Services\Gym;
 
 use App\Share\Enums\BookingRequestStatus;
+use App\Share\Enums\NotificationType;
 use App\Share\Exceptions\Gym\GymException;
 use App\Share\Models\TherapyRequest;
 use App\Share\Models\User;
@@ -15,6 +16,8 @@ use Illuminate\Support\Facades\DB;
  */
 class TherapyRequestService
 {
+    public function __construct(private readonly NotificationService $notificationService) {}
+
     /**
      * @param  array{user_therapy_id: int, preferred_at: string, note?: string|null}  $data
      */
@@ -84,6 +87,7 @@ class TherapyRequestService
 
             $therapy->update(['sessions_remaining' => $therapy->sessions_remaining - 1]);
             $locked->update(['status' => BookingRequestStatus::Confirmed, 'reviewed_by' => $staff->id]);
+            $this->notify($locked, 'messages.gym_notify_request_approved');
 
             return $locked;
         });
@@ -94,6 +98,7 @@ class TherapyRequestService
         $this->assertStatus($request, BookingRequestStatus::Pending);
 
         $request->update(['status' => BookingRequestStatus::Rejected, 'reviewed_by' => $staff->id]);
+        $this->notify($request, 'messages.gym_notify_request_rejected');
 
         return $request;
     }
@@ -114,7 +119,18 @@ class TherapyRequestService
     {
         $this->assertStatus($request, BookingRequestStatus::Confirmed);
 
-        return $this->cancel($request, $staff);
+        $cancelled = $this->cancel($request, $staff);
+        $this->notify($cancelled, 'messages.gym_notify_booking_cancelled');
+
+        return $cancelled;
+    }
+
+    private function notify(TherapyRequest $request, string $messageKey): void
+    {
+        $this->notificationService->send($request->user_id, NotificationType::Schedule, __($messageKey, [
+            'name' => $request->userTherapy->name,
+            'time' => $request->preferred_at->format('H:i d/m/Y'),
+        ]));
     }
 
     public function canMemberCancel(TherapyRequest $request): bool

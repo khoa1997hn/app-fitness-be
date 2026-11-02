@@ -3,10 +3,8 @@
 namespace App\Web\Http\Controllers\API\V1\Gym\Admin;
 
 use App\Share\Enums\AttendanceStatus;
-use App\Share\Enums\BookingStatus;
 use App\Share\Enums\ClassScheduleStatus;
 use App\Share\Enums\Role;
-use App\Share\Models\AttendanceRecord;
 use App\Share\Models\Booking;
 use App\Share\Models\ClassSchedule;
 use App\Share\Models\User;
@@ -15,7 +13,6 @@ use App\Share\Utils\ResponseAPI;
 use App\Web\Http\Controllers\API\V1\APIController as BaseAPIController;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 use OpenApi\Attributes as OA;
 
@@ -172,7 +169,7 @@ class AttendanceController extends BaseAPIController
             ->orderBy('start_time')
             ->get();
 
-        $absences = $this->recentAbsences($schedules->flatMap(fn (ClassSchedule $schedule) => $schedule->confirmedBookings->pluck('user_id'))->unique());
+        $absences = $this->attendanceService->recentAbsences($schedules->flatMap(fn (ClassSchedule $schedule) => $schedule->confirmedBookings->pluck('user_id'))->unique());
 
         return $schedules->map(fn (ClassSchedule $schedule) => [
             'id' => $schedule->id,
@@ -192,24 +189,5 @@ class AttendanceController extends BaseAPIController
                 'attendance_status' => $booking->attendanceRecord?->status,
             ])->all(),
         ])->all();
-    }
-
-    /**
-     * Số buổi vắng trong 5 lần điểm danh gần nhất của từng học viên.
-     *
-     * @param  Collection<int, int>  $userIds
-     * @return array<int, int>
-     */
-    private function recentAbsences(Collection $userIds): array
-    {
-        return AttendanceRecord::query()
-            ->join('bookings', 'bookings.id', '=', 'attendance_records.booking_id')
-            ->whereIn('bookings.user_id', $userIds)
-            ->where('bookings.status', BookingStatus::Confirmed)
-            ->orderByDesc('attendance_records.attendance_date')
-            ->get(['bookings.user_id', 'attendance_records.status'])
-            ->groupBy('user_id')
-            ->map(fn (Collection $records) => $records->take(5)->filter(fn (AttendanceRecord $record) => $record->status->is(AttendanceStatus::Absent))->count())
-            ->all();
     }
 }

@@ -4,6 +4,7 @@ namespace App\Web\Http\Controllers\API\V1\Auth;
 
 use App\Share\Models\Program;
 use App\Share\Models\User;
+use App\Share\Services\Gym\UserAccountService;
 use App\Share\Services\Subscription\SubscriptionManager;
 use App\Share\Utils\ResponseAPI;
 use App\Web\Http\Controllers\API\V1\APIController as BaseAPIController;
@@ -16,7 +17,10 @@ class ProfileController extends BaseAPIController
 {
     use MapsProgramForApi;
 
-    public function __construct(private readonly SubscriptionManager $subscriptionManager) {}
+    public function __construct(
+        private readonly SubscriptionManager $subscriptionManager,
+        private readonly UserAccountService $userAccountService,
+    ) {}
 
     /**
      * Lấy thông tin user đang đăng nhập
@@ -46,6 +50,7 @@ class ProfileController extends BaseAPIController
                                 new OA\Property(property: 'dob', description: 'Ngày sinh', type: 'string', format: 'date', example: '1990-01-01', nullable: true),
                                 new OA\Property(property: 'plan', description: 'Gói subscription hiện tại', type: 'string', enum: ['basic', 'plus', 'all'], example: 'all', nullable: true),
                                 new OA\Property(property: 'subscription_status', description: 'Trạng thái subscription', type: 'string', enum: ['trial', 'active', 'expired', 'cancelled', 'grace_period', 'refunded'], example: 'active', nullable: true),
+                                new OA\Property(property: 'gender', description: 'Giới tính', type: 'string', enum: ['male', 'female', 'other'], nullable: true),
                                 new OA\Property(property: 'role', description: 'Vai trò hệ thống phòng tập', type: 'string', enum: ['admin', 'receptionist', 'trainer', 'member'], example: 'member'),
                                 new OA\Property(property: 'created_at', description: 'Thời gian tạo', type: 'string', format: 'date-time', example: '2026-01-30T09:00:00.000000Z'),
                                 new OA\Property(property: 'updated_at', description: 'Thời gian cập nhật', type: 'string', format: 'date-time', example: '2026-01-30T09:00:00.000000Z'),
@@ -126,6 +131,7 @@ class ProfileController extends BaseAPIController
             'last_name' => $user->last_name,
             'phone' => $user->phone,
             'dob' => $user->dob,
+            'gender' => $user->gender?->value,
             'plan' => $user->plan?->value,
             'subscription_status' => $user->subscription_status?->value,
             'role' => $user->role->value,
@@ -140,7 +146,7 @@ class ProfileController extends BaseAPIController
      */
     #[OA\Delete(
         path: '/auth/me',
-        description: 'Soft-delete tài khoản của user hiện tại. Nếu có subscription Google Play đang active: hủy phía Google trước (dừng auto-renew, user vẫn dùng đến hết kỳ) — nếu Google API fail thì trả 500, không xóa account. Apple subscription: bỏ qua (user hủy thủ công qua App Store). Sau khi provider cancel xong: JWT bị invalidate rồi soft-delete user. DB subscription được cập nhật qua webhook từ Google.',
+        description: 'Soft-delete tài khoản của user hiện tại. Tài khoản đã có gói, đơn hàng phòng tập hoặc lịch dạy không xóa được (422). Nếu có subscription Google Play đang active: hủy phía Google trước (dừng auto-renew, user vẫn dùng đến hết kỳ) — nếu Google API fail thì trả 500, không xóa account. Apple subscription: bỏ qua (user hủy thủ công qua App Store). Sau khi provider cancel xong: JWT bị invalidate rồi soft-delete user. DB subscription được cập nhật qua webhook từ Google.',
         summary: 'Tự xóa tài khoản',
         security: [['bearerAuth' => []]],
         tags: ['Authentication'],
@@ -164,6 +170,8 @@ class ProfileController extends BaseAPIController
     {
         /** @var User $user */
         $user = auth()->user();
+
+        $this->userAccountService->assertDeletable($user);
 
         $subscription = $user->validSubscription()->with('googleSubscription')->first();
 

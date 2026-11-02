@@ -3,9 +3,11 @@
 namespace App\Share\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Share\Enums\Gender;
 use App\Share\Enums\Plan;
 use App\Share\Enums\Role;
 use App\Share\Enums\SubscriptionStatus;
+use App\Share\Enums\UserStatus;
 use App\Share\Models\Traits\User\ManagesSubscription;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -25,6 +27,8 @@ use Tymon\JWTAuth\Contracts\JWTSubject;
  * @property SubscriptionStatus|null $subscription_status
  * @property Plan|null $plan
  * @property Role $role
+ * @property UserStatus $status
+ * @property Gender|null $gender
  * @property-read Subscription|null $subscription
  * @property-read Subscription|null $validSubscription
  * @property \Carbon\Carbon|null $deleted_at
@@ -57,6 +61,8 @@ class User extends Authenticatable implements JWTSubject
         'password',
         'phone',
         'dob',
+        'gender',
+        'status',
         'subscription_status',
         'plan',
         'role',
@@ -84,6 +90,8 @@ class User extends Authenticatable implements JWTSubject
             'subscription_status' => SubscriptionStatus::class,
             'plan' => Plan::class,
             'role' => Role::class,
+            'status' => UserStatus::class,
+            'gender' => Gender::class,
         ];
     }
 

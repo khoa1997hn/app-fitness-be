@@ -6,6 +6,7 @@ use App\Web\Http\Controllers\API\V1\Auth\ProfileController;
 use App\Web\Http\Controllers\API\V1\Auth\RegistrationController;
 use App\Web\Http\Controllers\API\V1\BannerController;
 use App\Web\Http\Controllers\API\V1\ComboController;
+use App\Web\Http\Controllers\API\V1\Gym\AccountController;
 use App\Web\Http\Controllers\API\V1\Gym\Admin\AttendanceController as AdminAttendanceController;
 use App\Web\Http\Controllers\API\V1\Gym\Admin\BookingController as AdminBookingController;
 use App\Web\Http\Controllers\API\V1\Gym\Admin\BookingRequestController as AdminBookingRequestController;
@@ -15,8 +16,10 @@ use App\Web\Http\Controllers\API\V1\Gym\Admin\PackageController as AdminPackageC
 use App\Web\Http\Controllers\API\V1\Gym\Admin\ScheduleCancelRequestController as AdminScheduleCancelRequestController;
 use App\Web\Http\Controllers\API\V1\Gym\Admin\TeachingScheduleController as AdminTeachingScheduleController;
 use App\Web\Http\Controllers\API\V1\Gym\Admin\TimetableController as AdminTimetableController;
+use App\Web\Http\Controllers\API\V1\Gym\Admin\UserController as AdminUserController;
 use App\Web\Http\Controllers\API\V1\Gym\BookingController;
 use App\Web\Http\Controllers\API\V1\Gym\BookingRequestController;
+use App\Web\Http\Controllers\API\V1\Gym\NotificationController;
 use App\Web\Http\Controllers\API\V1\Gym\OrderController;
 use App\Web\Http\Controllers\API\V1\Gym\OwnedItemController;
 use App\Web\Http\Controllers\API\V1\Gym\PackageController;
@@ -93,7 +96,14 @@ Route::as('api.')
             Route::get('therapy-services', [TherapyServiceController::class, 'index'])->name('therapy-services.index');
             Route::get('therapy-services/{therapyService:slug}', [TherapyServiceController::class, 'show'])->name('therapy-services.show');
 
+            Route::patch('users/me/password', [AccountController::class, 'changePassword'])
+                ->middleware('auth:api')
+                ->name('users.me.password');
+
             Route::middleware(['auth:api', 'permission:student.portal'])->group(function () {
+                Route::patch('users/me', [AccountController::class, 'update'])->name('users.me.update');
+                Route::get('users/me/notifications', [NotificationController::class, 'index'])->name('users.me.notifications');
+                Route::patch('notifications/{notification}/read', [NotificationController::class, 'read'])->name('notifications.read');
                 Route::get('users/me/orders', [OrderController::class, 'index'])->name('users.me.orders');
                 Route::get('users/me/packages', [OwnedItemController::class, 'packages'])->name('users.me.packages');
                 Route::get('users/me/therapies', [OwnedItemController::class, 'therapies'])->name('users.me.therapies');
@@ -127,9 +137,26 @@ Route::as('api.')
                     });
 
                     Route::middleware('permission:users.manage')->group(function () {
+                        Route::get('users', [AdminUserController::class, 'index'])->name('users.index');
+                        Route::post('users', [AdminUserController::class, 'store'])->name('users.store');
+                        Route::get('users/{user}', [AdminUserController::class, 'show'])->name('users.show');
+                        Route::patch('users/{user}', [AdminUserController::class, 'update'])->name('users.update');
+                        Route::patch('users/{user}/status', [AdminUserController::class, 'updateStatus'])->name('users.status');
+                        Route::post('users/{user}/reset-password', [AdminUserController::class, 'resetPassword'])->name('users.reset-password');
                         Route::get('members', [AdminMemberController::class, 'index'])->name('members.index');
                         Route::post('members', [AdminMemberController::class, 'store'])->name('members.store');
                         Route::get('members/{user}', [AdminMemberController::class, 'show'])->name('members.show');
+                    });
+
+                    Route::patch('users/{user}/role', [AdminUserController::class, 'updateRole'])
+                        ->middleware('permission:users.change_role')
+                        ->name('users.role');
+                    Route::delete('users/{user}', [AdminUserController::class, 'destroy'])
+                        ->middleware('permission:records.delete')
+                        ->name('users.destroy');
+                    Route::middleware('permission:users.extend_package')->group(function () {
+                        Route::patch('users/{user}/packages/{userPackage}/extend', [AdminUserController::class, 'extendPackage'])->name('users.packages.extend');
+                        Route::patch('users/{user}/therapies/{userTherapy}/extend', [AdminUserController::class, 'extendTherapy'])->name('users.therapies.extend');
                     });
 
                     Route::post('users/{user}/orders', [AdminOrderController::class, 'store'])

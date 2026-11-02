@@ -4,6 +4,7 @@ namespace App\Share\Services\Gym;
 
 use App\Share\Enums\BookingStatus;
 use App\Share\Enums\ClassScheduleStatus;
+use App\Share\Enums\NotificationType;
 use App\Share\Enums\PackageType;
 use App\Share\Exceptions\Gym\GymException;
 use App\Share\Models\Booking;
@@ -17,6 +18,8 @@ use Illuminate\Support\Facades\DB;
  */
 class BookingService
 {
+    public function __construct(private readonly NotificationService $notificationService) {}
+
     public function book(User $member, int $userPackageId, ClassSchedule $schedule): Booking
     {
         return DB::transaction(function () use ($member, $userPackageId, $schedule) {
@@ -65,7 +68,10 @@ class BookingService
             throw new GymException(__('messages.gym_booking_already_deducted'));
         }
 
-        return $this->markCancelled($booking, $staff);
+        $this->markCancelled($booking, $staff);
+        $this->notifyCancelled($booking->user_id, $booking->classSchedule);
+
+        return $booking;
     }
 
     /**
@@ -76,13 +82,16 @@ class BookingService
         return DB::transaction(function () use ($schedule, $staff) {
             $schedule->update(['status' => ClassScheduleStatus::Cancelled]);
 
-            $schedule->confirmedBookings()
-                ->whereNull('credit_deducted_at')
-                ->update([
-                    'status' => BookingStatus::Cancelled,
-                    'cancelled_at' => now(),
-                    'cancelled_by' => $staff->id,
-                ]);
+            $bookings = $schedule->confirmedBookings()->whereNull('credit_deducted_at');
+            $memberIds = (clone $bookings)->pluck('user_id');
+
+            $bookings->update([
+                'status' => BookingStatus::Cancelled,
+                'cancelled_at' => now(),
+                'cancelled_by' => $staff->id,
+            ]);
+
+            $memberIds->each(fn (int $memberId) => $this->notifyCancelled($memberId, $schedule));
 
             return $schedule;
         });
@@ -144,6 +153,14 @@ class BookingService
 
         return $startTime <= config('gym.off_peak_morning_end')
             || $startTime >= config('gym.off_peak_evening_start');
+    }
+
+    private function notifyCancelled(int $memberId, ClassSchedule $schedule): void
+    {
+        $this->notificationService->send($memberId, NotificationType::Schedule, __('messages.gym_notify_booking_cancelled', [
+            'name' => $schedule->fitnessClass->name,
+            'time' => $schedule->start_time->format('H:i d/m/Y'),
+        ]));
     }
 
     private function markCancelled(Booking $booking, User $by): Booking

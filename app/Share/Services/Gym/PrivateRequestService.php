@@ -3,6 +3,7 @@
 namespace App\Share\Services\Gym;
 
 use App\Share\Enums\BookingRequestStatus;
+use App\Share\Enums\NotificationType;
 use App\Share\Enums\PackageType;
 use App\Share\Exceptions\Gym\GymException;
 use App\Share\Models\PrivateRequest;
@@ -16,7 +17,10 @@ use Illuminate\Support\Facades\DB;
  */
 class PrivateRequestService
 {
-    public function __construct(private readonly ExtraPeopleService $extraPeopleService) {}
+    public function __construct(
+        private readonly ExtraPeopleService $extraPeopleService,
+        private readonly NotificationService $notificationService,
+    ) {}
 
     /**
      * @param  array{user_package_id: int, discipline: string, requested_at: string, people_count: int, extra_people_count?: int, note?: string|null}  $data
@@ -90,6 +94,7 @@ class PrivateRequestService
         }
 
         $request->update(['status' => BookingRequestStatus::Confirmed, 'reviewed_by' => $staff->id]);
+        $this->notify($request, 'messages.gym_notify_request_approved');
 
         return $request;
     }
@@ -99,6 +104,7 @@ class PrivateRequestService
         $this->assertStatus($request, BookingRequestStatus::Pending);
 
         $request->update(['status' => BookingRequestStatus::Rejected, 'reviewed_by' => $staff->id]);
+        $this->notify($request, 'messages.gym_notify_request_rejected');
 
         return $request;
     }
@@ -153,8 +159,17 @@ class PrivateRequestService
         $this->assertStatus($request, BookingRequestStatus::Confirmed);
 
         $request->update(['status' => BookingRequestStatus::Cancelled, 'reviewed_by' => $staff->id]);
+        $this->notify($request, 'messages.gym_notify_booking_cancelled');
 
         return $request;
+    }
+
+    private function notify(PrivateRequest $request, string $messageKey): void
+    {
+        $this->notificationService->send($request->user_id, NotificationType::Schedule, __($messageKey, [
+            'name' => 'Private '.$request->discipline,
+            'time' => $request->requested_at->format('H:i d/m/Y'),
+        ]));
     }
 
     public function canMemberCancel(PrivateRequest $request): bool

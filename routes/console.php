@@ -9,3 +9,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('gym:deduct-credits')->everyFiveMinutes()->withoutOverlapping();
+Schedule::command('gym:send-reminders')->hourly()->withoutOverlapping();

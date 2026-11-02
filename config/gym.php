@@ -17,6 +17,12 @@ return [
     // Giá một suất người tham gia thêm (VNĐ)
     'extra_people_price' => (int) env('GYM_EXTRA_PEOPLE_PRICE', 200000),
 
+    // Nhắc lịch trước giờ tập từng này tiếng
+    'reminder_hours' => (int) env('GYM_REMINDER_HOURS', 24),
+
+    // Báo gói sắp hết hạn trước từng này ngày
+    'package_expiry_notice_days' => (int) env('GYM_PACKAGE_EXPIRY_NOTICE_DAYS', 7),
+
     'rooms' => ['P101', 'P102', 'P202', 'P301'],
 
     // Thời hạn sử dụng gói trị liệu sau khi mua (ngày)

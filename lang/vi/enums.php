@@ -7,8 +7,10 @@ use App\Share\Enums\BookingRequestStatus;
 use App\Share\Enums\BookingStatus;
 use App\Share\Enums\ClassScheduleStatus;
 use App\Share\Enums\FitnessClassCategory;
+use App\Share\Enums\Gender;
 use App\Share\Enums\LessonType;
 use App\Share\Enums\Level;
+use App\Share\Enums\NotificationType;
 use App\Share\Enums\OrderStatus;
 use App\Share\Enums\OrderType;
 use App\Share\Enums\PackageStatus;
@@ -21,6 +23,7 @@ use App\Share\Enums\ScheduleCancelRequestStatus;
 use App\Share\Enums\SubscriptionProvider;
 use App\Share\Enums\SubscriptionStatus;
 use App\Share\Enums\TherapyVariant;
+use App\Share\Enums\UserStatus;
 
 // Label hiển thị cho enum (BenSampo LocalizedEnum).
 // Key: <EnumClass>::class => [<enum value> => 'label'].
@@ -87,6 +90,23 @@ return [
         PrivateDiscipline::Yoga => 'Yoga',
         PrivateDiscipline::Pilates => 'Pilates',
         PrivateDiscipline::Barre => 'Barre',
+    ],
+
+    UserStatus::class => [
+        UserStatus::Active => 'Đang hoạt động',
+        UserStatus::Locked => 'Đã khóa',
+    ],
+
+    Gender::class => [
+        Gender::Male => 'Nam',
+        Gender::Female => 'Nữ',
+        Gender::Other => 'Khác',
+    ],
+
+    NotificationType::class => [
+        NotificationType::Payment => 'Thanh toán',
+        NotificationType::Schedule => 'Lịch tập',
+        NotificationType::Package => 'Gói tập',
     ],
 
     AttendanceStatus::class => [

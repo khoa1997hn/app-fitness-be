@@ -19,6 +19,11 @@ return [
     ],
     'users' => [
         'manage' => [Role::Admin, Role::Receptionist, Role::Trainer],
+        'change_role' => [Role::Admin],
+        'extend_package' => [Role::Admin],
+    ],
+    'records' => [
+        'delete' => [Role::Admin],
     ],
     'orders' => [
         'create' => [Role::Admin, Role::Receptionist, Role::Trainer],
