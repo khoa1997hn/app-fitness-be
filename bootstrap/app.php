@@ -28,6 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
         \App\Share\Console\Commands\PutBucketCorsCommand::class,
         \App\Share\Console\Commands\DeductBookingCreditsCommand::class,
         \App\Share\Console\Commands\SendGymRemindersCommand::class,
+        \App\Share\Console\Commands\ReleaseEventHoldsCommand::class,
     ])
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([

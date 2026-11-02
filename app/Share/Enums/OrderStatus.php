@@ -11,4 +11,6 @@ class OrderStatus extends Enum
     public const Pending = 'pending';
 
     public const Success = 'success';
+
+    public const Cancelled = 'cancelled';
 }

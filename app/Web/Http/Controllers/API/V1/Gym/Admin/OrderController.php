@@ -72,7 +72,7 @@ class OrderController extends BaseAPIController
         tags: ['Gym Admin Orders'],
         parameters: [
             new OA\Parameter(name: 'q', description: 'Tìm theo mã đơn, mã giao dịch, tên hoặc email học viên', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
-            new OA\Parameter(name: 'status', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['pending_terms', 'pending', 'success'])),
+            new OA\Parameter(name: 'status', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['pending_terms', 'pending', 'success', 'cancelled'])),
             new OA\Parameter(name: 'type', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['package', 'therapy'])),
         ],
         responses: [

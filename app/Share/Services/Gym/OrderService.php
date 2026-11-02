@@ -24,15 +24,22 @@ use Illuminate\Support\Str;
  */
 class OrderService
 {
-    public function __construct(private readonly NotificationService $notificationService) {}
+    public function __construct(
+        private readonly NotificationService $notificationService,
+        private readonly EventService $eventService,
+    ) {}
 
     /**
-     * @param  array{type: string, package_id?: int, therapy_service_id?: int, therapy_variant?: string, quantity?: int}  $product
+     * @param  array{type: string, package_id?: int, therapy_service_id?: int, therapy_variant?: string, event_id?: int, quantity?: int}  $product
      */
     public function create(User $member, array $product, ?User $createdBy = null, ?string $note = null): Order
     {
         if (! $member->role->is(Role::Member)) {
             throw new GymException(__('messages.gym_member_required'));
+        }
+
+        if ($product['type'] === OrderType::Event) {
+            return $this->createEventOrder($member, (int) $product['event_id'], (int) $product['quantity'], $createdBy, $note);
         }
 
         return Order::query()->create([
@@ -52,12 +59,51 @@ class OrderService
     }
 
     /**
+     * Giữ vé ngay khi tạo đơn. Khóa dòng sự kiện để không bán vượt số vé.
+     */
+    private function createEventOrder(User $member, int $eventId, int $quantity, ?User $createdBy, ?string $note): Order
+    {
+        return DB::transaction(function () use ($member, $eventId, $quantity, $createdBy, $note) {
+            $event = $this->eventService->lockForSale($eventId, $member, $quantity);
+
+            if ($event->ticket_price <= 0) {
+                throw new GymException(__('messages.gym_event_paid_only'));
+            }
+
+            $order = Order::query()->create([
+                'code' => 'GYM-'.Str::upper(Str::random(10)),
+                'user_id' => $member->id,
+                'created_by' => $createdBy?->id,
+                'type' => OrderType::Event,
+                'event_id' => $event->id,
+                'quantity' => $quantity,
+                'name' => __('messages.gym_event_order_name', ['name' => $event->name, 'quantity' => $quantity]),
+                'amount' => $event->ticket_price * $quantity,
+                'status' => OrderStatus::PendingTerms,
+                'note' => $note,
+            ]);
+
+            $this->eventService->hold($event, $member, $order, $quantity);
+
+            return $order;
+        });
+    }
+
+    /**
      * @param  array{buyer_name: string, buyer_phone: string, buyer_email: string, signature_data: string}  $terms
      */
     public function acceptTerms(Order $order, array $terms): Order
     {
+        if ($order->status->is(OrderStatus::Cancelled)) {
+            throw new GymException(__('messages.gym_order_cancelled'));
+        }
+
         if (! $order->status->is(OrderStatus::PendingTerms)) {
             throw new GymException(__('messages.gym_terms_already_accepted'));
+        }
+
+        if ($order->type->is(OrderType::Event)) {
+            $this->eventService->assertHoldValid($order);
         }
 
         $order->update([
@@ -89,8 +135,16 @@ class OrderService
                 return $locked;
             }
 
+            if ($locked->status->is(OrderStatus::Cancelled)) {
+                throw new GymException(__('messages.gym_order_cancelled'));
+            }
+
             if ($locked->status->is(OrderStatus::PendingTerms)) {
                 throw new GymException(__('messages.gym_terms_required'));
+            }
+
+            if ($locked->type->is(OrderType::Event)) {
+                $this->eventService->assertHoldValid($locked);
             }
 
             $locked->update([
@@ -101,11 +155,15 @@ class OrderService
             ]);
 
             $this->fulfill($locked);
-            $this->notificationService->send(
-                $locked->user_id,
-                NotificationType::Payment,
-                __('messages.gym_notify_payment_success', ['name' => $locked->name]),
-            );
+
+            // Thông báo vé kèm mã vé do EventService gửi
+            if (! $locked->type->is(OrderType::Event)) {
+                $this->notificationService->send(
+                    $locked->user_id,
+                    NotificationType::Payment,
+                    __('messages.gym_notify_payment_success', ['name' => $locked->name]),
+                );
+            }
 
             return $locked;
         });
@@ -166,6 +224,12 @@ class OrderService
     {
         // Số dư suất người thêm tính trực tiếp từ đơn đã thanh toán
         if ($order->type->is(OrderType::ExtraPeople)) {
+            return;
+        }
+
+        if ($order->type->is(OrderType::Event)) {
+            $this->eventService->markPaid($order);
+
             return;
         }
 

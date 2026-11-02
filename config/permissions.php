@@ -56,6 +56,9 @@ return [
             'edit_form' => [Role::Admin],
         ],
     ],
+    'events' => [
+        'manage' => [Role::Admin],
+    ],
     'student' => [
         'portal' => [Role::Member],
     ],

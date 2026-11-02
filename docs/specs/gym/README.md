@@ -13,3 +13,4 @@ Lộ trình và câu hỏi còn mở: [`fitness-web/plan/README.md`](../../../..
 | [private-therapy](./private-therapy/spec.md) | ✅ |
 | [attendance-teaching](./attendance-teaching/spec.md) | ✅ |
 | [users-account](./users-account/spec.md) | ✅ |
+| [events](./events/spec.md) | ✅ |

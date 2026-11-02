@@ -10,3 +10,4 @@ Artisan::command('inspire', function () {
 
 Schedule::command('gym:deduct-credits')->everyFiveMinutes()->withoutOverlapping();
 Schedule::command('gym:send-reminders')->hourly()->withoutOverlapping();
+Schedule::command('gym:release-event-holds')->everyMinute()->withoutOverlapping();

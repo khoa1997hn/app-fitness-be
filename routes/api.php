@@ -10,6 +10,7 @@ use App\Web\Http\Controllers\API\V1\Gym\AccountController;
 use App\Web\Http\Controllers\API\V1\Gym\Admin\AttendanceController as AdminAttendanceController;
 use App\Web\Http\Controllers\API\V1\Gym\Admin\BookingController as AdminBookingController;
 use App\Web\Http\Controllers\API\V1\Gym\Admin\BookingRequestController as AdminBookingRequestController;
+use App\Web\Http\Controllers\API\V1\Gym\Admin\EventController as AdminEventController;
 use App\Web\Http\Controllers\API\V1\Gym\Admin\MemberController as AdminMemberController;
 use App\Web\Http\Controllers\API\V1\Gym\Admin\OrderController as AdminOrderController;
 use App\Web\Http\Controllers\API\V1\Gym\Admin\PackageController as AdminPackageController;
@@ -19,6 +20,7 @@ use App\Web\Http\Controllers\API\V1\Gym\Admin\TimetableController as AdminTimeta
 use App\Web\Http\Controllers\API\V1\Gym\Admin\UserController as AdminUserController;
 use App\Web\Http\Controllers\API\V1\Gym\BookingController;
 use App\Web\Http\Controllers\API\V1\Gym\BookingRequestController;
+use App\Web\Http\Controllers\API\V1\Gym\EventController;
 use App\Web\Http\Controllers\API\V1\Gym\NotificationController;
 use App\Web\Http\Controllers\API\V1\Gym\OrderController;
 use App\Web\Http\Controllers\API\V1\Gym\OwnedItemController;
@@ -96,12 +98,17 @@ Route::as('api.')
             Route::get('therapy-services', [TherapyServiceController::class, 'index'])->name('therapy-services.index');
             Route::get('therapy-services/{therapyService:slug}', [TherapyServiceController::class, 'show'])->name('therapy-services.show');
 
+            Route::get('events', [EventController::class, 'index'])->name('events.index');
+            Route::get('events/{event}', [EventController::class, 'show'])->name('events.show');
+
             Route::patch('users/me/password', [AccountController::class, 'changePassword'])
                 ->middleware('auth:api')
                 ->name('users.me.password');
 
             Route::middleware(['auth:api', 'permission:student.portal'])->group(function () {
                 Route::patch('users/me', [AccountController::class, 'update'])->name('users.me.update');
+                Route::post('events/{event}/register', [EventController::class, 'register'])->name('events.register');
+                Route::get('users/me/event-registrations', [EventController::class, 'myRegistrations'])->name('users.me.event-registrations');
                 Route::get('users/me/notifications', [NotificationController::class, 'index'])->name('users.me.notifications');
                 Route::patch('notifications/{notification}/read', [NotificationController::class, 'read'])->name('notifications.read');
                 Route::get('users/me/orders', [OrderController::class, 'index'])->name('users.me.orders');
@@ -202,6 +209,16 @@ Route::as('api.')
                     Route::middleware('permission:attendance.mark')->group(function () {
                         Route::post('attendance/records', [AdminAttendanceController::class, 'mark'])->name('attendance.records.store');
                         Route::post('attendance/sessions/{schedule}/mark-all-present', [AdminAttendanceController::class, 'markAllPresent'])->name('attendance.sessions.mark-all-present');
+                    });
+
+                    Route::middleware('permission:events.manage')->group(function () {
+                        Route::get('events', [AdminEventController::class, 'index'])->name('events.index');
+                        Route::post('events', [AdminEventController::class, 'store'])->name('events.store');
+                        Route::get('events/{event}', [AdminEventController::class, 'show'])->name('events.show');
+                        Route::patch('events/{event}', [AdminEventController::class, 'update'])->name('events.update');
+                        Route::patch('events/{event}/status', [AdminEventController::class, 'updateStatus'])->name('events.status');
+                        Route::get('events/{event}/registrations', [AdminEventController::class, 'registrations'])->name('events.registrations');
+                        Route::patch('registrations/{registration}/checkin', [AdminEventController::class, 'checkin'])->name('registrations.checkin');
                     });
 
                     Route::middleware('permission:bookings.manage')->group(function () {

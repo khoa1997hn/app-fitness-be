@@ -47,6 +47,7 @@ class Order extends Model
         'package_id',
         'therapy_service_id',
         'therapy_variant',
+        'event_id',
         'quantity',
         'name',
         'amount',
@@ -98,5 +99,10 @@ class Order extends Model
     public function therapyService(): BelongsTo
     {
         return $this->belongsTo(TherapyService::class);
+    }
+
+    public function event(): BelongsTo
+    {
+        return $this->belongsTo(Event::class);
     }
 }

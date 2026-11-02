@@ -6,6 +6,7 @@ use App\Share\Enums\NotificationType;
 use App\Share\Enums\Role;
 use App\Share\Exceptions\Gym\GymException;
 use App\Share\Models\ClassSchedule;
+use App\Share\Models\EventRegistration;
 use App\Share\Models\Order;
 use App\Share\Models\PrivateRequest;
 use App\Share\Models\User;
@@ -45,7 +46,8 @@ class UserAccountService
     {
         $hasGymData = Order::query()->where('user_id', $user->id)->exists()
             || UserPackage::query()->where('user_id', $user->id)->exists()
-            || UserTherapy::query()->where('user_id', $user->id)->exists();
+            || UserTherapy::query()->where('user_id', $user->id)->exists()
+            || EventRegistration::query()->where('user_id', $user->id)->exists();
 
         if ($hasGymData) {
             throw new GymException(__('messages.gym_account_has_gym_data'));

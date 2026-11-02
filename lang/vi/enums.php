@@ -6,6 +6,8 @@ use App\Share\Enums\AttendanceStatus;
 use App\Share\Enums\BookingRequestStatus;
 use App\Share\Enums\BookingStatus;
 use App\Share\Enums\ClassScheduleStatus;
+use App\Share\Enums\EventRegistrationStatus;
+use App\Share\Enums\EventStatus;
 use App\Share\Enums\FitnessClassCategory;
 use App\Share\Enums\Gender;
 use App\Share\Enums\LessonType;
@@ -92,6 +94,18 @@ return [
         PrivateDiscipline::Barre => 'Barre',
     ],
 
+    EventStatus::class => [
+        EventStatus::Open => 'Đang mở',
+        EventStatus::Closed => 'Đã đóng',
+        EventStatus::Cancelled => 'Đã hủy',
+    ],
+
+    EventRegistrationStatus::class => [
+        EventRegistrationStatus::Pending => 'Chờ thanh toán',
+        EventRegistrationStatus::Paid => 'Đã thanh toán',
+        EventRegistrationStatus::Cancelled => 'Đã hủy',
+    ],
+
     UserStatus::class => [
         UserStatus::Active => 'Đang hoạt động',
         UserStatus::Locked => 'Đã khóa',
@@ -107,6 +121,7 @@ return [
         NotificationType::Payment => 'Thanh toán',
         NotificationType::Schedule => 'Lịch tập',
         NotificationType::Package => 'Gói tập',
+        NotificationType::Event => 'Sự kiện',
     ],
 
     AttendanceStatus::class => [
@@ -142,12 +157,14 @@ return [
         OrderType::Package => 'Gói tập',
         OrderType::Therapy => 'Trị liệu',
         OrderType::ExtraPeople => 'Suất người thêm',
+        OrderType::Event => 'Sự kiện',
     ],
 
     OrderStatus::class => [
         OrderStatus::PendingTerms => 'Chờ ký điều khoản',
         OrderStatus::Pending => 'Chờ thanh toán',
         OrderStatus::Success => 'Đã thanh toán',
+        OrderStatus::Cancelled => 'Đã hủy',
     ],
 
     PaymentMethod::class => [

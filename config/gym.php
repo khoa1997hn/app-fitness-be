@@ -23,6 +23,9 @@ return [
     // Báo gói sắp hết hạn trước từng này ngày
     'package_expiry_notice_days' => (int) env('GYM_PACKAGE_EXPIRY_NOTICE_DAYS', 7),
 
+    // Giữ vé sự kiện từng này phút chờ thanh toán, quá hạn tự nhả vé
+    'event_hold_minutes' => (int) env('GYM_EVENT_HOLD_MINUTES', 30),
+
     'rooms' => ['P101', 'P102', 'P202', 'P301'],
 
     // Thời hạn sử dụng gói trị liệu sau khi mua (ngày)

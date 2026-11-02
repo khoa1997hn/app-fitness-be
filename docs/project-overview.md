@@ -142,10 +142,11 @@ Giá cụ thể từng plan → env `PLAN_<TIER>_PRICE` (xem `.env.example`).
 - Yêu cầu Private, Trị liệu: `PrivateRequest`, `TherapyRequest`; suất người thêm theo tài khoản, chỉ gói `private_pack`, số dư tính từ đơn và yêu cầu (`ExtraPeopleService`). Spec [`gym/private-therapy`](specs/gym/private-therapy/spec.md).
 - Điểm danh lớp gói thường, lịch dạy, yêu cầu hủy của HLV. Spec [`gym/attendance-teaching`](specs/gym/attendance-teaching/spec.md).
 - Quản lý user, khóa tài khoản (chặn cả token còn hạn trên mọi API), hồ sơ hội viên, đổi mật khẩu, thông báo trong web. Spec [`gym/users-account`](specs/gym/users-account/spec.md).
+- Sự kiện: vé miễn phí và có phí, giữ vé 30 phút khi chờ thanh toán, check-in, hủy sự kiện. Spec [`gym/events`](specs/gym/events/spec.md).
 
 ### CHƯA có (phase tiếp)
 
-Hệ thống phòng tập: sự kiện, vật phẩm, báo cáo — theo [`fitness-web/plan/`](../../fitness-web/plan/README.md).
+Hệ thống phòng tập: vật phẩm, báo cáo — theo [`fitness-web/plan/`](../../fitness-web/plan/README.md).
 
 > LLM thực hiện task: nếu task chạm các module **CHƯA có**, dùng `/implement-spec`. Nếu chạm module **đã có** mà phải đổi, dùng `/update-spec`.
 

@@ -11,4 +11,6 @@ class NotificationType extends Enum
     public const Schedule = 'schedule';
 
     public const Package = 'package';
+
+    public const Event = 'event';
 }

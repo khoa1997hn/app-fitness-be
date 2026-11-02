@@ -5,8 +5,11 @@ namespace App\Share\Services\Gym;
 use App\Share\Enums\BookingRequestStatus;
 use App\Share\Enums\BookingStatus;
 use App\Share\Enums\ClassScheduleStatus;
+use App\Share\Enums\EventRegistrationStatus;
+use App\Share\Enums\EventStatus;
 use App\Share\Enums\NotificationType;
 use App\Share\Models\Booking;
+use App\Share\Models\EventRegistration;
 use App\Share\Models\PrivateRequest;
 use App\Share\Models\TherapyRequest;
 use App\Share\Models\UserNotification;
@@ -34,6 +37,7 @@ class NotificationService
         return $this->remindBookings()
             + $this->remindPrivateRequests()
             + $this->remindTherapyRequests()
+            + $this->remindEvents()
             + $this->noticeExpiringPackages()
             + $this->noticeExpiringTherapies();
     }
@@ -90,6 +94,27 @@ class NotificationService
                 $sent += $this->sendOnce($request->user_id, NotificationType::Schedule, "therapy-{$request->id}", __('messages.gym_notify_reminder', [
                     'name' => $request->userTherapy->name,
                     'time' => $request->preferred_at->format('H:i d/m/Y'),
+                ]));
+            });
+
+        return $sent;
+    }
+
+    private function remindEvents(): int
+    {
+        $sent = 0;
+
+        EventRegistration::query()
+            ->with('event')
+            ->where('status', EventRegistrationStatus::Paid)
+            ->whereHas('event', fn ($query) => $query
+                ->where('status', '!=', EventStatus::Cancelled)
+                ->whereBetween('event_date', $this->reminderWindow()))
+            ->get()
+            ->each(function (EventRegistration $registration) use (&$sent) {
+                $sent += $this->sendOnce($registration->user_id, NotificationType::Event, "event-{$registration->id}", __('messages.gym_notify_reminder', [
+                    'name' => $registration->event->name,
+                    'time' => $registration->event->event_date->format('H:i d/m/Y'),
                 ]));
             });
 
