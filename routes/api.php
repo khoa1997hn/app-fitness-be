@@ -6,9 +6,12 @@ use App\Web\Http\Controllers\API\V1\Auth\ProfileController;
 use App\Web\Http\Controllers\API\V1\Auth\RegistrationController;
 use App\Web\Http\Controllers\API\V1\BannerController;
 use App\Web\Http\Controllers\API\V1\ComboController;
+use App\Web\Http\Controllers\API\V1\Gym\Admin\BookingController as AdminBookingController;
 use App\Web\Http\Controllers\API\V1\Gym\Admin\MemberController as AdminMemberController;
 use App\Web\Http\Controllers\API\V1\Gym\Admin\OrderController as AdminOrderController;
 use App\Web\Http\Controllers\API\V1\Gym\Admin\PackageController as AdminPackageController;
+use App\Web\Http\Controllers\API\V1\Gym\Admin\TimetableController as AdminTimetableController;
+use App\Web\Http\Controllers\API\V1\Gym\BookingController;
 use App\Web\Http\Controllers\API\V1\Gym\OrderController;
 use App\Web\Http\Controllers\API\V1\Gym\OwnedItemController;
 use App\Web\Http\Controllers\API\V1\Gym\PackageController;
@@ -93,6 +96,12 @@ Route::as('api.')
                 Route::get('orders/{order:code}', [OrderController::class, 'show'])->name('orders.show');
                 Route::post('orders/{order:code}/accept-terms', [OrderController::class, 'acceptTerms'])->name('orders.accept-terms');
                 Route::post('payments', [OrderController::class, 'pay'])->name('payments.store');
+
+                Route::get('schedules', [BookingController::class, 'schedules'])->name('schedules.index');
+                Route::get('schedules/{schedule}', [BookingController::class, 'schedule'])->name('schedules.show');
+                Route::get('users/me/bookings', [BookingController::class, 'index'])->name('users.me.bookings');
+                Route::post('bookings', [BookingController::class, 'store'])->name('bookings.store');
+                Route::patch('bookings/{booking}/cancel', [BookingController::class, 'cancel'])->name('bookings.cancel');
             });
 
             Route::as('admin.')
@@ -118,6 +127,23 @@ Route::as('api.')
                         Route::get('payments', [AdminOrderController::class, 'index'])->name('payments.index');
                         Route::get('payments/{order}', [AdminOrderController::class, 'show'])->name('payments.show');
                     });
+
+                    Route::middleware('permission:schedules.timetable.manage')->group(function () {
+                        Route::get('timetable/options', [AdminTimetableController::class, 'options'])->name('timetable.options');
+                        Route::get('timetable', [AdminTimetableController::class, 'index'])->name('timetable.index');
+                        Route::post('timetable', [AdminTimetableController::class, 'store'])->name('timetable.store');
+                        Route::get('timetable/{schedule}', [AdminTimetableController::class, 'show'])->name('timetable.show');
+                        Route::patch('timetable/{schedule}', [AdminTimetableController::class, 'update'])->name('timetable.update');
+                        Route::patch('timetable/{schedule}/cancel', [AdminTimetableController::class, 'cancel'])->name('timetable.cancel');
+                    });
+
+                    Route::middleware('permission:bookings.manage')->group(function () {
+                        Route::get('bookings/members', [AdminBookingController::class, 'members'])->name('bookings.members');
+                        Route::get('bookings/members/{userPackage}', [AdminBookingController::class, 'member'])->name('bookings.member');
+                    });
+                    Route::patch('bookings/{booking}/cancel', [AdminBookingController::class, 'cancel'])
+                        ->middleware('permission:bookings.cancel_class')
+                        ->name('bookings.cancel');
                 });
 
             Route::middleware('auth:api')->group(function () {

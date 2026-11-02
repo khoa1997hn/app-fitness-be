@@ -7,6 +7,15 @@ return [
     */
     'payment_mock_enabled' => (bool) env('GYM_PAYMENT_MOCK_ENABLED', env('APP_ENV', 'production') !== 'production'),
 
+    // Trong vòng từng này tiếng trước giờ học thì học viên không hủy được
+    'cancel_lock_hours' => (int) env('GYM_CANCEL_LOCK_HOURS', 8),
+
+    // Gói off-peak chỉ đặt được lớp bắt đầu từ giờ này trở về trước, hoặc từ giờ kia trở đi
+    'off_peak_morning_end' => env('GYM_OFF_PEAK_MORNING_END', '08:00'),
+    'off_peak_evening_start' => env('GYM_OFF_PEAK_EVENING_START', '23:00'),
+
+    'rooms' => ['P101', 'P102', 'P202', 'P301'],
+
     // Thời hạn sử dụng gói trị liệu sau khi mua (ngày)
     'therapy_validity_days' => (int) env('GYM_THERAPY_VALIDITY_DAYS', 90),
 ];

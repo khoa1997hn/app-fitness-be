@@ -29,6 +29,16 @@ return [
     'gym_terms_already_accepted' => 'Đơn hàng đã được xác nhận điều khoản.',
     'gym_terms_required' => 'Vui lòng xác nhận điều khoản và ký trước khi thanh toán.',
     'gym_payment_unavailable' => 'Thanh toán hiện chưa khả dụng.',
+    'gym_booking_private_package' => 'Gói Private đặt lịch bằng form yêu cầu.',
+    'gym_booking_schedule_unavailable' => 'Buổi học không còn mở đặt.',
+    'gym_booking_package_expired' => 'Gói hết hạn trước ngày học.',
+    'gym_booking_off_peak_only' => 'Gói off-peak chỉ đặt được lớp trong khung giờ off-peak.',
+    'gym_booking_duplicate' => 'Bạn đã đặt buổi này.',
+    'gym_booking_full' => 'Buổi học đã hết chỗ.',
+    'gym_booking_no_credits' => 'Gói không còn buổi để đặt.',
+    'gym_booking_already_cancelled' => 'Lịch này đã được hủy trước đó.',
+    'gym_booking_cancel_locked' => 'Không thể hủy trong vòng :hours tiếng trước giờ tập.',
+    'gym_booking_already_deducted' => 'Buổi này đã trừ, không thể hủy.',
 
     // Error messages
     'validation_error' => 'Dữ liệu không hợp lệ.',

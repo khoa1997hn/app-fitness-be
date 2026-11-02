@@ -26,6 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withCommands([
         \App\Share\Console\Commands\PutBucketCorsCommand::class,
+        \App\Share\Console\Commands\DeductBookingCreditsCommand::class,
     ])
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([

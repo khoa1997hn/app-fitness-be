@@ -4,6 +4,8 @@ namespace App\Share\Models;
 
 use App\Share\Enums\PackageType;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Gói hội viên đã mua. Các field của gói được chụp lại lúc cấp, sửa gói gốc không ảnh hưởng.
@@ -22,6 +24,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $extra_people_session_max
  * @property \Carbon\Carbon $start_date
  * @property \Carbon\Carbon $end_date
+ * @property-read User $user
  */
 class UserPackage extends Model
 {
@@ -40,6 +43,16 @@ class UserPackage extends Model
         'start_date',
         'end_date',
     ];
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function bookings(): HasMany
+    {
+        return $this->hasMany(Booking::class);
+    }
 
     protected function casts(): array
     {

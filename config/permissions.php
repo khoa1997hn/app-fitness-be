@@ -26,6 +26,15 @@ return [
     'payments' => [
         'manage' => [Role::Admin, Role::Receptionist, Role::Trainer],
     ],
+    'schedules' => [
+        'timetable' => [
+            'manage' => [Role::Admin],
+        ],
+    ],
+    'bookings' => [
+        'manage' => [Role::Admin, Role::Receptionist],
+        'cancel_class' => [Role::Admin],
+    ],
     'student' => [
         'portal' => [Role::Member],
     ],

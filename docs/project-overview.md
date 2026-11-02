@@ -138,10 +138,11 @@ Giá cụ thể từng plan → env `PLAN_<TIER>_PRICE` (xem `.env.example`).
 - Gói tập phòng tập: `Package` + `package_translations`. API `GET /api/v1/packages[/{id}]` + CRUD `/api/v1/admin/packages`. Spec [`gym/packages`](specs/gym/packages/spec.md).
 
 - Đơn hàng phòng tập: `Order`, `UserPackage`, `UserTherapy`, `TherapyService`; ký điều khoản, thanh toán **mock**, cấp gói qua `OrderService`; nhân viên tạo tài khoản và đơn hộ khách tại quầy. Spec [`gym/orders`](specs/gym/orders/spec.md).
+- Thời khóa biểu và đặt lịch gói thường: `FitnessClass`, `ClassSchedule`, `Booking`, `BookingService`; hủy trước 8 tiếng, buổi bị trừ sau giờ học kể cả vắng (`gym:deduct-credits`, cần chạy scheduler); lọc off-peak. Spec [`gym/bookings`](specs/gym/bookings/spec.md).
 
 ### CHƯA có (phase tiếp)
 
-Hệ thống phòng tập: thời khóa biểu và đặt lịch, Private/Trị liệu, điểm danh, quản lý user, sự kiện, vật phẩm, báo cáo — theo [`fitness-web/plan/`](../../fitness-web/plan/README.md).
+Hệ thống phòng tập: Private/Trị liệu, điểm danh, quản lý user, sự kiện, vật phẩm, báo cáo — theo [`fitness-web/plan/`](../../fitness-web/plan/README.md).
 
 > LLM thực hiện task: nếu task chạm các module **CHƯA có**, dùng `/implement-spec`. Nếu chạm module **đã có** mà phải đổi, dùng `/update-spec`.
 

@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Share\Enums\BookingStatus;
+use App\Share\Enums\ClassScheduleStatus;
+use App\Share\Enums\FitnessClassCategory;
 use App\Share\Enums\LessonType;
 use App\Share\Enums\Level;
 use App\Share\Enums\OrderStatus;
@@ -65,6 +68,25 @@ return [
         PackageType::IntroDemo => 'Học thử',
         PackageType::PrivatePack => 'Private',
         PackageType::PrivateGroup => 'Private nhóm',
+    ],
+
+    FitnessClassCategory::class => [
+        FitnessClassCategory::Sculpt => 'SCULPT',
+        FitnessClassCategory::CorePilates => 'CORE & PILATES',
+        FitnessClassCategory::YogaSound => 'YOGA & SOUND HEALING',
+        FitnessClassCategory::Barre => 'BARRE',
+        FitnessClassCategory::MeditationSound => 'MEDITATION & SOUND HEALING',
+        FitnessClassCategory::DanceCardio => 'DANCE & CARDIO',
+    ],
+
+    ClassScheduleStatus::class => [
+        ClassScheduleStatus::Active => 'Đang mở',
+        ClassScheduleStatus::Cancelled => 'Đã hủy',
+    ],
+
+    BookingStatus::class => [
+        BookingStatus::Confirmed => 'Đã đặt',
+        BookingStatus::Cancelled => 'Đã hủy',
     ],
 
     OrderType::class => [
