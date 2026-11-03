@@ -29,10 +29,11 @@ Nhân viên điểm danh lớp gói thường, xem lịch dạy thật, HLV xin 
 - `absent_recent`: số buổi vắng trong 5 lần điểm danh gần nhất, bỏ qua booking đã hủy
 
 ### Lịch dạy
-- Gồm lớp đã từng có người đặt và buổi Private đã được admin duyệt
+- Gồm mọi lớp trên thời khóa biểu, kể cả chưa có người đặt, và buổi Private đã được admin duyệt
 - Trạng thái lớp: `cancelled` nếu lớp hủy, `completed` nếu đã qua giờ kết thúc, còn lại `confirmed`
 - Trạng thái Private lấy theo yêu cầu. Yêu cầu chưa từng được duyệt không hiện
 - HLV chỉ thấy lịch có `trainer_id` của mình, kiểm tra bằng ID ở BE
+- Lễ tân xem được lịch của mọi HLV, không hủy và không gửi yêu cầu hủy
 - Admin hủy lịch `confirmed`: học viên không bị trừ buổi, suất người thêm được trả lại
 
 ### Yêu cầu hủy của HLV
@@ -47,7 +48,7 @@ Nhân viên điểm danh lớp gói thường, xem lịch dạy thật, HLV xin 
 - [x] Điểm danh không trừ buổi; học viên vắng vẫn bị trừ sau giờ học
 - [x] Không điểm danh được ngoài ngày học hoặc với booking đã hủy
 - [x] HLV không xem, không thao tác được trên lịch của HLV khác
-- [x] Lễ tân điểm danh được nhưng không xem được lịch dạy
+- [x] Lễ tân điểm danh được, xem được lịch dạy nhưng không hủy được
 - [x] HLV gửi yêu cầu trong vòng 8 tiếng được; duyệt xong học viên không mất buổi, kể cả sau khi job trừ buổi chạy
 - [x] Từ chối thì lịch giữ nguyên; không xử lý một yêu cầu hai lần
 

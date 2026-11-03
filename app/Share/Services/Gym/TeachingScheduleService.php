@@ -11,7 +11,7 @@ use App\Share\Models\PrivateRequest;
 use App\Share\Models\User;
 
 /**
- * Lịch dạy gồm lớp gói thường đã có người đặt và buổi Private đã được duyệt.
+ * Lịch dạy gồm mọi lớp gói thường trên thời khóa biểu và buổi Private đã được duyệt.
  */
 class TeachingScheduleService
 {
@@ -30,7 +30,7 @@ class TeachingScheduleService
     public function find(string $type, int $id, User $viewer): ClassSchedule|PrivateRequest
     {
         $query = $type === self::TypeClass
-            ? ClassSchedule::query()->whereHas('bookings')
+            ? ClassSchedule::query()
             : PrivateRequest::query()
                 ->whereNotNull('reviewed_by')
                 ->whereIn('status', [BookingRequestStatus::Confirmed, BookingRequestStatus::Completed, BookingRequestStatus::Cancelled]);

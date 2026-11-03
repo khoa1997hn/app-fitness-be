@@ -245,25 +245,27 @@ class AttendanceTeachingFlowTest extends TestCase
             ->assertOk()->assertJsonPath('data.0.members.0.absent_recent', 1);
     }
 
-    public function test_teaching_list_shows_booked_classes_and_reviewed_privates(): void
+    public function test_teaching_list_shows_all_classes_and_reviewed_privates(): void
     {
         $booked = $this->createSchedule();
         $this->createBooking($booked);
-        $this->createSchedule('2026-11-10 19:00:00');
+        $unbooked = $this->createSchedule('2026-11-10 19:00:00');
         $private = $this->createPrivate();
         $this->createPrivate(status: BookingRequestStatus::Pending);
         $this->createPrivate(status: BookingRequestStatus::Cancelled)->update(['reviewed_by' => null]);
 
-        $response = $this->as($this->admin)->getJson('/api/v1/admin/schedules')->assertOk()->assertJsonCount(2, 'data');
-        $response->assertJsonPath('data.0.type', 'class')->assertJsonPath('data.0.id', $booked->id);
-        $response->assertJsonPath('data.1.type', 'private')->assertJsonPath('data.1.id', $private->id);
-        $response->assertJsonPath('data.1.end_time', '2026-11-10T16:00:00');
+        $response = $this->as($this->admin)->getJson('/api/v1/admin/schedules')->assertOk()->assertJsonCount(3, 'data');
+        $response->assertJsonPath('data.0.id', $unbooked->id)->assertJsonPath('data.0.student_count', 0);
+        $response->assertJsonPath('data.1.type', 'class')->assertJsonPath('data.1.id', $booked->id);
+        $response->assertJsonPath('data.2.type', 'private')->assertJsonPath('data.2.id', $private->id);
+        $response->assertJsonPath('data.2.end_time', '2026-11-10T16:00:00');
+        $this->as($this->admin)->getJson("/api/v1/admin/schedules/class/{$unbooked->id}")->assertOk()->assertJsonCount(0, 'data.students');
 
         $this->as($this->admin)->getJson('/api/v1/admin/schedules?type=private')->assertJsonCount(1, 'data');
         $this->as($this->admin)->getJson('/api/v1/admin/schedules?status=completed')->assertJsonCount(0, 'data');
     }
 
-    public function test_trainer_only_sees_own_teaching_and_receptionist_is_forbidden(): void
+    public function test_trainer_only_sees_own_teaching_and_receptionist_only_views(): void
     {
         $own = $this->createSchedule();
         $this->createBooking($own);
@@ -276,7 +278,11 @@ class AttendanceTeachingFlowTest extends TestCase
         $trainer->getJson("/api/v1/admin/schedules/class/{$other->id}")->assertNotFound();
         $trainer->patchJson("/api/v1/admin/schedules/class/{$own->id}/cancel")->assertForbidden();
 
-        $this->as($this->receptionist)->getJson('/api/v1/admin/schedules')->assertForbidden();
+        $receptionist = $this->as($this->receptionist);
+        $receptionist->getJson('/api/v1/admin/schedules')->assertOk()->assertJsonCount(2, 'data');
+        $receptionist->getJson("/api/v1/admin/schedules/class/{$other->id}")->assertOk();
+        $receptionist->patchJson("/api/v1/admin/schedules/class/{$own->id}/cancel")->assertForbidden();
+        $receptionist->postJson("/api/v1/instructor/schedules/class/{$own->id}/cancel-request", ['reason' => 'Bận'])->assertForbidden();
     }
 
     public function test_admin_cancels_teaching_without_deducting(): void

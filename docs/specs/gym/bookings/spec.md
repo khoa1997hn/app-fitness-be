@@ -26,6 +26,8 @@ Hội viên dùng gói đã mua để đặt lớp trên thời khóa biểu do 
 
 **Trừ buổi:** `gym:deduct-credits` trừ 1 buổi cho mọi booking còn hiệu lực đã qua giờ kết thúc, **kể cả học viên không đến**. Chạy lại không trừ lần hai nhờ `credit_deducted_at`. Gói `unlimited` không đổi số buổi.
 
+**Xếp lịch:** lịch mới phải bắt đầu ở tương lai và ở trạng thái `active`. Khi sửa, đổi giờ bắt đầu thì giờ mới phải ở tương lai.
+
 **Nhân viên hủy** (một booking hoặc cả lớp) không trừ buổi, trừ khi buổi đã bị trừ. Không giảm được `max_slot` xuống dưới số đã đặt.
 
 **Off-peak:** gói `is_off_peak` chỉ đặt được lớp bắt đầu từ 08:00 trở về trước, hoặc từ 23:00 trở đi. Tính theo giờ bắt đầu, cấu hình `GYM_OFF_PEAK_MORNING_END`, `GYM_OFF_PEAK_EVENING_START`.

@@ -105,6 +105,7 @@ return [
     'gym_dashboard_today' => 'Hôm nay',
     'gym_attendance_today_only' => 'Chỉ được điểm danh trong ngày diễn ra buổi học.',
     'gym_attendance_invalid_booking' => 'Học viên không còn trong buổi học này.',
+    'gym_schedule_start_in_past' => 'Thời gian bắt đầu phải ở tương lai.',
     'gym_teaching_not_cancellable' => 'Lịch dạy này không thể hủy.',
     'gym_cancel_request_started' => 'Buổi dạy đã bắt đầu, không thể gửi yêu cầu hủy.',
     'gym_cancel_request_duplicate' => 'Lịch này đã có yêu cầu hủy đang chờ duyệt.',

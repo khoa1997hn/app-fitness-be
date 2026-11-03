@@ -39,7 +39,7 @@ return [
             'manage' => [Role::Admin],
         ],
         'teaching' => [
-            'view' => [Role::Admin, Role::Trainer],
+            'view' => [Role::Admin, Role::Receptionist, Role::Trainer],
             'cancel' => [Role::Admin],
         ],
         'cancel_request' => [

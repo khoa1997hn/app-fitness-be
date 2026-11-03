@@ -42,7 +42,7 @@ class TeachingScheduleController extends BaseAPIController
 
     #[OA\Get(
         path: '/admin/schedules',
-        description: 'Lớp gói thường đã có người đặt và buổi Private đã duyệt, mới nhất trước. HLV chỉ thấy lịch của mình. Quyền `schedules.teaching.view`.',
+        description: 'Mọi lớp gói thường trên thời khóa biểu và buổi Private đã duyệt, mới nhất trước. HLV chỉ thấy lịch của mình. Quyền `schedules.teaching.view`.',
         summary: 'Danh sách lịch dạy',
         security: [['bearerAuth' => []]],
         tags: ['Gym Admin Teaching'],
@@ -83,7 +83,6 @@ class TeachingScheduleController extends BaseAPIController
             ->with(['fitnessClass', 'trainer'])
             ->withCount('confirmedBookings')
             ->withExists('pendingCancelRequests')
-            ->whereHas('bookings')
             ->when($ownOnly, fn ($query) => $query->where('trainer_id', $viewer->id))
             ->when($date, fn ($query) => $query->whereDate('start_time', $date))
             ->when($q, function ($query, string $q) use ($trainerLike) {

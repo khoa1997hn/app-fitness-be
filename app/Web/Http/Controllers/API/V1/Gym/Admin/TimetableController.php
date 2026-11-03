@@ -11,6 +11,8 @@ use App\Share\Services\Gym\BookingService;
 use App\Share\Utils\ResponseAPI;
 use App\Web\Http\Controllers\API\V1\APIController as BaseAPIController;
 use App\Web\Http\Controllers\API\V1\Gym\Concerns\MapsSchedule;
+use Carbon\Carbon;
+use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -161,7 +163,7 @@ class TimetableController extends BaseAPIController
 
     #[OA\Post(
         path: '/admin/timetable',
-        description: 'Thêm lịch. Quyền `schedules.timetable.manage`.',
+        description: 'Thêm lịch. Giờ bắt đầu phải ở tương lai, trạng thái phải là `active`. Quyền `schedules.timetable.manage`.',
         summary: 'Admin: thêm lịch',
         security: [['bearerAuth' => []]],
         requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(ref: '#/components/schemas/GymTimetableInput')),
@@ -186,7 +188,7 @@ class TimetableController extends BaseAPIController
 
     #[OA\Patch(
         path: '/admin/timetable/{schedule}',
-        description: 'Sửa lịch. `max_slot` không được nhỏ hơn số đã đặt. Đổi sang `cancelled` sẽ hủy các booking, không trừ buổi. Quyền `schedules.timetable.manage`.',
+        description: 'Sửa lịch. Đổi giờ bắt đầu thì giờ mới phải ở tương lai. `max_slot` không được nhỏ hơn số đã đặt. Đổi sang `cancelled` sẽ hủy các booking, không trừ buổi. Quyền `schedules.timetable.manage`.',
         summary: 'Admin: sửa lịch',
         security: [['bearerAuth' => []]],
         requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(ref: '#/components/schemas/GymTimetableInput')),
@@ -263,10 +265,17 @@ class TimetableController extends BaseAPIController
             'fitness_class_id' => 'required|integer|exists:fitness_classes,id',
             'trainer_id' => ['required', 'integer', Rule::exists('users', 'id')->where('role', Role::Trainer)->whereNull('deleted_at')],
             'room' => ['required', Rule::in(config('gym.rooms'))],
-            'start_time' => 'required|date',
+            'start_time' => ['bail', 'required', 'date', function (string $attribute, mixed $value, Closure $fail) use ($schedule) {
+                $startTime = Carbon::parse($value);
+
+                // Sửa lớp đã diễn ra mà giữ nguyên giờ thì vẫn được
+                if ($startTime->isPast() && ! $schedule?->start_time->eq($startTime)) {
+                    $fail(__('messages.gym_schedule_start_in_past'));
+                }
+            }],
             'end_time' => 'required|date|after:start_time',
             'max_slot' => "required|integer|min:{$minSlot}|max:65535",
-            'status' => ['required', Rule::in(ClassScheduleStatus::getValues())],
+            'status' => ['required', Rule::in($schedule ? ClassScheduleStatus::getValues() : [ClassScheduleStatus::Active])],
             'notes' => 'nullable|string|max:1000',
         ]);
     }

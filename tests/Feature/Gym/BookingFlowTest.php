@@ -407,6 +407,49 @@ class BookingFlowTest extends TestCase
             ->assertJsonValidationErrors(['fitness_class_id', 'trainer_id', 'room', 'end_time', 'max_slot', 'status']);
     }
 
+    public function test_new_schedule_must_start_in_future_and_be_active(): void
+    {
+        $client = $this->withToken(auth('api')->login(User::factory()->create(['role' => Role::Admin])));
+        $body = [
+            'fitness_class_id' => $this->class->id,
+            'trainer_id' => $this->trainer->id,
+            'room' => 'P101',
+            'start_time' => '2026-11-10T09:00',
+            'end_time' => '2026-11-10T10:30',
+            'max_slot' => 10,
+            'status' => ClassScheduleStatus::Active,
+        ];
+
+        $client->postJson('/api/v1/admin/timetable', $body)
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['start_time']);
+        $client->postJson('/api/v1/admin/timetable', [...$body, 'start_time' => '2026-11-20T09:00', 'end_time' => '2026-11-20T10:00', 'status' => ClassScheduleStatus::Cancelled])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['status']);
+    }
+
+    public function test_past_schedule_can_be_edited_only_when_start_time_is_kept(): void
+    {
+        $client = $this->withToken(auth('api')->login(User::factory()->create(['role' => Role::Admin])));
+        $body = [
+            'fitness_class_id' => $this->class->id,
+            'trainer_id' => $this->trainer->id,
+            'room' => 'P101',
+            'start_time' => '2026-11-10T12:00',
+            'end_time' => '2026-11-10T13:00',
+            'max_slot' => 10,
+            'status' => ClassScheduleStatus::Active,
+        ];
+        $id = $client->postJson('/api/v1/admin/timetable', $body)->assertCreated()->json('data.id');
+
+        Carbon::setTestNow('2026-11-10 14:00:00');
+
+        $client->patchJson("/api/v1/admin/timetable/{$id}", [...$body, 'room' => 'P202'])->assertOk();
+        $client->patchJson("/api/v1/admin/timetable/{$id}", [...$body, 'start_time' => '2026-11-10T11:00'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['start_time']);
+    }
+
     public function test_max_slot_cannot_go_below_booked_count(): void
     {
         $schedule = $this->createSchedule();
