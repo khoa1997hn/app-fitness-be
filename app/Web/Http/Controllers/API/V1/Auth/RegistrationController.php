@@ -2,11 +2,13 @@
 
 namespace App\Web\Http\Controllers\API\V1\Auth;
 
+use App\Share\Enums\RegistrationSource;
 use App\Share\Models\User;
 use App\Share\Utils\ResponseAPI;
 use App\Web\Http\Controllers\API\V1\APIController as BaseAPIController;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use OpenApi\Attributes as OA;
 
 class RegistrationController extends BaseAPIController
@@ -23,6 +25,7 @@ class RegistrationController extends BaseAPIController
             content: new OA\JsonContent(
                 required: ['email', 'password', 'first_name', 'last_name'],
                 properties: [
+                    new OA\Property(property: 'registration_source', description: 'Nguồn tự đăng ký; app mặc định để tương thích native client cũ.', type: 'string', enum: ['app', 'web'], default: 'app'),
                     new OA\Property(property: 'email', description: 'Email đăng ký (phải unique)', type: 'string', format: 'email', maxLength: 255, example: 'user@example.com'),
                     new OA\Property(property: 'password', description: 'Mật khẩu (tối thiểu 8 ký tự, tối đa 50 ký tự)', type: 'string', format: 'password', maxLength: 50, minLength: 8, example: 'password123'),
                     new OA\Property(property: 'first_name', description: 'Tên', type: 'string', maxLength: 255, example: 'Nguyễn'),
@@ -82,6 +85,7 @@ class RegistrationController extends BaseAPIController
     public function register(Request $request): JsonResponse
     {
         $validated = $request->validate([
+            'registration_source' => ['sometimes', Rule::in([RegistrationSource::Web, RegistrationSource::App])],
             'email' => 'required|email|max:255|unique:users',
             'password' => 'required|string|min:8|max:50',
             'first_name' => 'required|string|max:255',
@@ -91,6 +95,7 @@ class RegistrationController extends BaseAPIController
         ]);
 
         $user = User::query()->create([
+            'registration_source' => $validated['registration_source'] ?? RegistrationSource::App,
             'email' => $validated['email'],
             'password' => $validated['password'],
             'first_name' => $validated['first_name'],

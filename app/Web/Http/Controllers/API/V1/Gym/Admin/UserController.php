@@ -28,6 +28,8 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
     schema: 'GymUser',
     required: ['id', 'email', 'first_name', 'last_name', 'full_name', 'role', 'status', 'created_at'],
     properties: [
+        new OA\Property(property: 'registration_source', type: 'string', enum: ['app', 'web', 'admin', 'receptionist', 'trainer'], nullable: true),
+        new OA\Property(property: 'created_by', type: 'object', properties: [new OA\Property(property: 'id', type: 'integer'), new OA\Property(property: 'full_name', type: 'string'), new OA\Property(property: 'role', type: 'string', enum: ['admin', 'receptionist', 'trainer'])], nullable: true),
         new OA\Property(property: 'id', type: 'integer', example: 4),
         new OA\Property(property: 'email', type: 'string', format: 'email'),
         new OA\Property(property: 'first_name', type: 'string', example: 'Phạm Thị'),
@@ -132,7 +134,7 @@ class UserController extends BaseAPIController
             'page' => 'nullable|integer|min:1',
         ]);
 
-        $users = User::query()
+        $users = User::query()->with('creator')
             ->when($validated['role'] ?? null, fn ($query, string $role) => $query->where('role', $role))
             ->when($validated['status'] ?? null, fn ($query, string $status) => $query->where('status', $status))
             ->when($validated['q'] ?? null, function ($query, string $q) {
@@ -201,7 +203,7 @@ class UserController extends BaseAPIController
             throw new AccessDeniedHttpException;
         }
 
-        $user = User::query()->create($validated);
+        $user = User::query()->create([...$validated, 'registration_source' => $actor->role->value, 'created_by' => $actor->id]);
 
         return ResponseAPI::success($this->mapUser($user->refresh()), code: 201);
     }
@@ -465,6 +467,7 @@ class UserController extends BaseAPIController
     private function mapUser(User $user): array
     {
         return [
+            ...$user->registrationProvenance(),
             'id' => $user->id,
             'email' => $user->email,
             'first_name' => $user->first_name,

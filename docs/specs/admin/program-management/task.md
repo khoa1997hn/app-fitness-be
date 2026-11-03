@@ -103,3 +103,24 @@
 - [x] `programs/index.blade.php` — cột Tên: link `admin.programs.edit`
 - [x] `programs/edit.blade.php` — cột Tên lesson: link `admin.programs.lessons.edit`
 - [ ] STOP — hỏi user commit/push
+
+
+## Update 2026-11-03
+
+- [x] spec-analyzer: đọc spec/code và ghi quyết định.
+- [x] question-asker: người dùng chốt phạm vi, admin-only, tắt Blade, nguồn + cutoff.
+- [x] solution-reviewer: tái dùng JWT/permission hiện có, không gộp nghiệp vụ gym với video.
+- [x] api-designer: contract translations/file/pagination như spec update.
+- [x] api-analyzer: app admin controllers/routes, User/migration, auth/member/user creation paths.
+- [x] planner / task-breaker: ghi kế hoạch và checklist.
+- [x] implementer
+- [x] openapi-writer
+- [x] reviewer-rules
+- [x] reviewer-smell
+- [x] reviewer-security
+- [x] reviewer-duplicate
+- [x] cleaner
+- [x] docs-syncer
+- [x] finalizer migration / Pint / tests
+
+Kết quả: 157 tests / 927 assertions passed; OpenAPI generate không warning. Review 4 vai trò và review độc lập không còn lỗi cần xử lý. Security kiểm tra guest/non-admin, scoped lesson, source chống giả mạo, CSV, dữ liệu nhạy cảm IAP, transaction rollback. Duplicate mapping dùng `MapsContent` và `User::registrationProvenance`; validation/upload/subscription dùng lại rules/services hiện có. Cleaner không thêm env/package, không còn route Blade và callback redirect cũ; source Blade giữ để tham chiếu lịch sử, không được đăng ký route. Docs tổng và spec liên quan đã đồng bộ. Chưa commit/push.

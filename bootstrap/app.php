@@ -7,7 +7,6 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -17,12 +16,6 @@ return Application::configure(basePath: dirname(__DIR__))
         web: __DIR__.'/../routes/web.php',
         api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
-        then: function () {
-            Route::middleware('web')
-                ->prefix('admin')
-                ->name('admin.')
-                ->group(base_path('routes/admin.php'));
-        },
     )
     ->withCommands([
         \App\Share\Console\Commands\PutBucketCorsCommand::class,
@@ -35,8 +28,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => \App\Share\Http\Middleware\RequirePermission::class,
         ]);
         $middleware->api(append: [\App\Share\Http\Middleware\RejectLockedUser::class]);
-        $middleware->redirectGuestsTo(fn () => route('admin.login'));
-        $middleware->redirectUsersTo(fn () => route('admin.dashboard'));
+        $middleware->redirectGuestsTo(fn () => null);
+
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (Throwable $e, Request $request) {

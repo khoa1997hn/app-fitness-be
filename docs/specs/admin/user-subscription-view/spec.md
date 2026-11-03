@@ -77,3 +77,8 @@ Admin cần xem thông tin chi tiết một user kèm subscription hiện tại 
 - `app/Share/Models/Subscription.php`, `GoogleSubscription.php`, `AppleSubscription.php`
 - `resources/views/admin/users/index.blade.php`
 - `routes/admin.php`
+
+
+## Update 2026-11-03 — React admin
+
+Quyết định người dùng thay thế surface Blade trước đây: chuyển đầy đủ chức năng sang mục Quản lý app trên `fitness-web` (`/admin/app/*`), API `/api/v1/admin/app/*`, JWT + `permission:app.manage` chỉ role admin. Route Blade `/admin` ngừng hoạt động. Nghiệp vụ/validation/đa ngôn ngữ hiện tại giữ nguyên. Chi tiết migration và contract: [`program-management/spec.md`](../program-management/spec.md). Nguồn tài khoản, người tạo và cutoff lịch sử được mô tả trong spec đó.

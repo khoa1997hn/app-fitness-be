@@ -92,3 +92,8 @@ Admin cần CRUD banner hiển thị trong app. Model `Banner` + `BannerTranslat
 - Model: `app/Share/Models/Banner.php`, `app/Share/Models/BannerTranslation.php`
 - Migration: `database/migrations/2026_01_30_102529_create_banners_table.php`
 - Tham khảo: `app/Admin/Http/Controllers/ProgramController.php`, `resources/views/admin/programs/`
+
+
+## Update 2026-11-03 — React admin
+
+Quyết định người dùng thay thế surface Blade trước đây: chuyển đầy đủ chức năng sang mục Quản lý app trên `fitness-web` (`/admin/app/*`), API `/api/v1/admin/app/*`, JWT + `permission:app.manage` chỉ role admin. Route Blade `/admin` ngừng hoạt động. Nghiệp vụ/validation/đa ngôn ngữ hiện tại giữ nguyên. Chi tiết migration và contract: [`program-management/spec.md`](../program-management/spec.md). Nguồn tài khoản, người tạo và cutoff lịch sử được mô tả trong spec đó.

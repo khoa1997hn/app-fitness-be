@@ -149,3 +149,17 @@ Thêm Admin CRUD cho Program (chỉ edit + delete) và Lesson (CRUD đầy đủ
 - [ ] Bấm tên program → mở `/admin/programs/{id}/edit`
 - [ ] Bấm tên lesson → mở trang edit lesson
 - [ ] Menu ba chấm Sửa/Xóa vẫn hoạt động
+
+
+## Update 2026-11-03
+
+1. API mapping và JWT admin-only; chuyển validation sang API dùng lại rules hiện có.
+2. Migration/backfill provenance và bảo vệ nguồn nhân viên server-side.
+3. React integration, scoped lessons, CSV, subscriptions transactional.
+4. OpenAPI, functional/security tests, review rules/smell/security/duplicate, cleanup, docs sync, migration/Pint.
+
+### Kiểm chứng dữ liệu 2026-11-03
+
+Migration được chạy lên database fitness hiện có qua Sail `env DB_HOST=host.docker.internal php artisan migrate --force`. Trước/sau đều 106 tài khoản: App 101, Web 5, chưa xác định 0. SHA-256 của danh sách có thứ tự (id, created_at, updated_at, deleted_at) giữ nguyên `d62a6e74cb06377936bc19fdb642c86cb0b0eb8dc942fcebcee8631f26d07f9f`. Không xóa/reseed tài khoản.
+
+Test dùng database testing riêng trong service mysql: `sail exec --user sail laravel.test env DB_HOST=mysql DB_USERNAME=sail DB_PASSWORD=password php artisan test`. Môi trường hiện có .env dành cho host (127.0.0.1), không sửa .env để tránh ảnh hưởng server hiện chạy.

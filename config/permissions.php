@@ -14,6 +14,9 @@ use App\Share\Enums\Role;
 */
 
 return [
+    'app' => [
+        'manage' => [Role::Admin],
+    ],
     'packages' => [
         'manage' => [Role::Admin],
     ],

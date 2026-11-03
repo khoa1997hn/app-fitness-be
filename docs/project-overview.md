@@ -6,13 +6,13 @@ File này MỌI LLM phải đọc TRƯỚC khi làm bất kỳ task nào trên d
 
 Backend này phục vụ **hai sản phẩm tách biệt**, chỉ dùng chung `users` và `/auth/*`:
 
-1. **App video** — native app tập tại nhà. Người dùng mua subscription IAP để xem video. Admin nội dung chạy trên Blade.
+1. **App video** — native app tập tại nhà. Người dùng mua subscription IAP để xem video. Admin nội dung chạy trong mục Quản lý app trên React, chỉ admin.
 2. **Hệ thống phòng tập offline** — web `fitness-web`. Hội viên mua gói buổi, đặt lịch, đăng ký sự kiện, thanh toán (tạm mock). Lễ tân, HLV, admin quản lý trên React. Spec: [`docs/specs/gym/`](specs/gym/README.md), lộ trình: [`fitness-web/plan/`](../../fitness-web/plan/README.md).
 
 **Không trộn hai bên:** entity phòng tập không tham chiếu Program/Lesson/Subscription và ngược lại. Phần "Nghiệp vụ cốt lõi" dưới đây là của **app video**.
 
 - **End-user (app)**: người dùng cuối, mở app, mua gói subscription để unlock video bài tập.
-- **Admin (web Blade)**: nhân viên vận hành — quản lý nội dung (program, bài học, banner), user, thanh toán.
+- **Admin app (React)**: role admin — quản lý nội dung (program, bài học, banner, combo), user, subscription và lịch sử IAP.
 
 ## Nghiệp vụ cốt lõi
 
@@ -67,11 +67,11 @@ Giá cụ thể từng plan → env `PLAN_<TIER>_PRICE` (xem `.env.example`).
 
 ### Authentication
 - **End-user (API)**: JWT qua `tymon/jwt-auth`. Token gửi qua header `Authorization: Bearer <token>`.
-- **Admin Blade**: session-based, guard `auth:admin` riêng (KHÔNG dùng guard `web` mặc định).
+- **Admin app**: JWT + `permission:app.manage` (chỉ admin); route Blade `/admin` đã ngừng.
 - **Nhân viên phòng tập**: JWT như end-user, phân quyền theo `users.role` (`admin`, `receptionist`, `trainer`, `member`) + `config/permissions.php`.
 
 ### Admin UI (hai sản phẩm)
-- **Blade (Laravel)**: admin **app video** trên `/admin`, guard `auth:admin`, Dashcode — KHÔNG Filament/Nova/Backpack. Template `resources/dashcode/`, asset `public/dashcode/`. Label tiếng Việt.
+- **App video (React)**: menu Quản lý app `/admin/app/*`, API `/api/v1/admin/app/*`, JWT + quyền `app.manage` chỉ admin. Program/Lesson/video, Banner, Combo, Users/subscription/IAP và CSV.
 - **React (`fitness-web`)**: admin **phòng tập**, JWT + `users.role`, API `/api/v1/admin/*` + middleware `permission:*`. Xem [`docs/guides/admin-dual-surface.md`](guides/admin-dual-surface.md).
 
 ### API
@@ -119,7 +119,7 @@ Giá cụ thể từng plan → env `PLAN_<TIER>_PRICE` (xem `.env.example`).
 
 ### Đã có
 - Auth (register / login / profile / logout / refresh / delete account) — JWT. `GET /api/v1/auth/profile` trả thông tin user + `favorited_programs` (program đã yêu thích, basic card, sort mới nhất trước). Register: `phone` và `dob` tùy chọn. User soft-delete (`DELETE /api/v1/auth/me`); đăng nhập lại sau khi xóa bị chặn. Google Play subscription được cancel phía provider trước khi xóa; Apple bỏ qua (không hỗ trợ outbound cancel).
-- Admin login, dashboard placeholder, Users list/delete/export CSV; chi tiết khách hàng + xem subscription/lịch sử IAP; sửa/tạo subscription thủ công (`SubscriptionService::adminUpsert`, provider `admin`).
+- React quản trị app: Users list/delete/export CSV; chi tiết khách hàng + subscription/lịch sử IAP; sửa/tạo subscription thủ công (`SubscriptionService::adminUpsert`, provider `admin`). Ngừng Blade login/dashboard/routes. Nguồn tài khoản app/web/nhân viên + creator; backfill trước 2026-11-02 app, từ ngày đó web (giữ dữ liệu và timestamps).
 - Subscription core: model + service + listener Apple/Google + IAP webhook.
 - Banner (list API + multi-language).
 - Program / Lesson / Video: model + migration + translatable (Lesson có enum `type`/`level`). API list program Home (`GET /api/v1/programs`) + chi tiết program + lessons grouped (`GET /api/v1/programs/{program}`, auth JWT).
@@ -130,9 +130,9 @@ Giá cụ thể từng plan → env `PLAN_<TIER>_PRICE` (xem `.env.example`).
 - Phát video: `POST /api/v1/videos/{video}/play` — kiểm tra subscription + program/lesson type, trả metadata video + presigned GET (`VideoPlayService`); FE gọi lại `play` khi URL hết hạn.
 - Tiến độ xem: `POST /api/v1/videos/{video}/watch-progress` (start/progress/completed); tổng hợp % video → lesson → program; các API program/lesson/favorites/play trả `progress: {watched_seconds, completed_percent}`.
 - Program đang học dở: `GET /api/v1/programs/left-off` — trả program có `last_watched_at` mới nhất kèm `last_lesson` + `video`.
-- Admin CRUD Program + Lesson + Video: `ProgramController` (index/edit/update/destroy — KHÔNG create, 7 program cố định) + `LessonController` nested (create/store/edit/update/destroy). Views Blade `admin/programs/{index,edit}`, `admin/lessons/{create,edit,_form}`; relation `favorites()` trên Program/Lesson; label tiếng Việt enum `LessonType`/`Level` qua `getDescription()`. Upload video presigned PUT (lưu key S3) + xem presigned GET; `duration_seconds` nhập tay. Route: `routes/admin.php` (2 resource); menu sidebar "Bộ môn".
-- Admin CRUD Banner: `BannerController` (index/create/store/edit/update/destroy). Views Blade `admin/banners/{index,create,edit}`; list phân trang 20/trang sort `id` DESC, hiển thị locale vi; form đa ngôn ngữ (vi/en) gồm `image` (presigned PUT, `FileType::BannerImage`), `link_url`, `order`, `is_active` per locale + `description` dùng chung; menu sidebar "Banner". Model `Banner`/`BannerTranslation` + migration đã có từ trước.
-- Combo (gói nhiều program): model `Combo` + `combo_translations` (name, cover), pivot `combo_program` (2–7 program, sort), `ComboInfo` + `combo_info_translations` (tối đa 3 info: icon PNG dùng chung + text đa ngôn ngữ max 100 ký tự). API `GET /api/v1/combos` (list card: id, name, cover, program_count, infos; sort combo có program favorite lên trước) + `GET /api/v1/combos/{combo}` (detail kèm programs full như program detail). Admin CRUD `ComboController` — views `admin/combos/{index,create,edit}`; menu sidebar "Combo".
+- React admin CRUD Program + Lesson + Video: `ProgramController` (index/edit/update/destroy — KHÔNG create, 7 program cố định) + `LessonController` nested (create/store/edit/update/destroy). Views Blade `admin/programs/{index,edit}`, `admin/lessons/{create,edit,_form}`; relation `favorites()` trên Program/Lesson; label tiếng Việt enum `LessonType`/`Level` qua `getDescription()`. Upload video presigned PUT (lưu key S3) + xem presigned GET; `duration_seconds` nhập tay. Route API: `/api/v1/admin/app/programs` + nested lessons; React mục Quản lý app → Bộ môn. Views Blade cũ đã ngừng.
+- React admin CRUD Banner: `BannerController` (index/create/store/edit/update/destroy). Views Blade `admin/banners/{index,create,edit}`; list phân trang 20/trang sort `id` DESC, hiển thị locale vi; form đa ngôn ngữ (vi/en) gồm `image` (presigned PUT, `FileType::BannerImage`), `link_url`, `order`, `is_active` per locale + `description` dùng chung; React mục Quản lý app → Banner; API `/api/v1/admin/app/banners`. Views Blade cũ đã ngừng. Model `Banner`/`BannerTranslation` + migration đã có từ trước.
+- Combo (gói nhiều program): model `Combo` + `combo_translations` (name, cover), pivot `combo_program` (2–7 program, sort), `ComboInfo` + `combo_info_translations` (tối đa 3 info: icon PNG dùng chung + text đa ngôn ngữ max 100 ký tự). API `GET /api/v1/combos` (list card: id, name, cover, program_count, infos; sort combo có program favorite lên trước) + `GET /api/v1/combos/{combo}` (detail kèm programs full như program detail). React CRUD `AppAdmin/ComboController`; API `/api/v1/admin/app/combos`, mục Quản lý app → Combo. Views Blade cũ đã ngừng.
 
 - Role + phân quyền phòng tập: `users.role`, middleware `permission:*`, `GET /auth/profile` trả `role`. Spec [`gym/roles`](specs/gym/roles/spec.md).
 - Gói tập phòng tập: `Package` + `package_translations`. API `GET /api/v1/packages[/{id}]` + CRUD `/api/v1/admin/packages`. Spec [`gym/packages`](specs/gym/packages/spec.md).

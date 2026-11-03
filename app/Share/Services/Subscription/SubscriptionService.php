@@ -69,7 +69,7 @@ class SubscriptionService
 
             $this->logger->info('[Admin] Subscription upsert', [
                 'user_id' => $user->id,
-                'admin_id' => auth('admin')->id(),
+                'admin_id' => auth()->id(),
                 'subscription_id' => $subscription->id,
                 'created' => $existing === null,
                 'plan' => $plan,

@@ -14,6 +14,8 @@ use OpenApi\Attributes as OA;
     schema: 'GymMember',
     required: ['id', 'email', 'first_name', 'last_name', 'full_name'],
     properties: [
+        new OA\Property(property: 'registration_source', type: 'string', enum: ['app', 'web', 'admin', 'receptionist', 'trainer'], nullable: true),
+        new OA\Property(property: 'created_by', type: 'object', properties: [new OA\Property(property: 'id', type: 'integer'), new OA\Property(property: 'full_name', type: 'string'), new OA\Property(property: 'role', type: 'string', enum: ['admin', 'receptionist', 'trainer'])], nullable: true),
         new OA\Property(property: 'id', type: 'integer', example: 4),
         new OA\Property(property: 'email', type: 'string', example: 'member@demo.kore.vn'),
         new OA\Property(property: 'first_name', type: 'string', example: 'Phạm Thị'),
@@ -52,7 +54,7 @@ class MemberController extends BaseAPIController
         $validated = $request->validate(['q' => 'required|string|max:255']);
         $like = '%'.$validated['q'].'%';
 
-        $members = User::query()
+        $members = User::query()->with('creator')
             ->where('role', Role::Member)
             ->where(fn ($query) => $query
                 ->where('email', 'like', $like)
@@ -131,7 +133,7 @@ class MemberController extends BaseAPIController
             'dob' => 'nullable|date:Y-m-d',
         ]);
 
-        $member = User::query()->create([...$validated, 'role' => Role::Member]);
+        $member = User::query()->create([...$validated, 'role' => Role::Member, 'registration_source' => auth()->user()->role->value, 'created_by' => auth()->id()]);
 
         return ResponseAPI::success($this->mapMember($member), code: 201);
     }
@@ -142,6 +144,7 @@ class MemberController extends BaseAPIController
     private function mapMember(User $member): array
     {
         return [
+            ...$member->registrationProvenance(),
             'id' => $member->id,
             'email' => $member->email,
             'first_name' => $member->first_name,

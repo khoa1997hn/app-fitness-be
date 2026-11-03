@@ -139,6 +139,17 @@ Route::as('api.')
                 ->prefix('admin')
                 ->middleware('auth:api')
                 ->group(function () {
+                    Route::prefix('app')->as('app.')->middleware('permission:app.manage')->group(function () {
+                        Route::post('files/presigned-upload', [\App\Web\Http\Controllers\API\V1\AppAdmin\FileController::class, 'presignedUpload']);
+                        Route::apiResource('programs', \App\Web\Http\Controllers\API\V1\AppAdmin\ProgramController::class)->only(['index', 'show', 'update', 'destroy']);
+                        Route::apiResource('programs.lessons', \App\Web\Http\Controllers\API\V1\AppAdmin\LessonController::class)->only(['show', 'store', 'update', 'destroy'])->scoped();
+                        Route::apiResource('banners', \App\Web\Http\Controllers\API\V1\AppAdmin\BannerController::class);
+                        Route::apiResource('combos', \App\Web\Http\Controllers\API\V1\AppAdmin\ComboController::class);
+                        Route::get('users/export', [\App\Web\Http\Controllers\API\V1\AppAdmin\UserController::class, 'export']);
+                        Route::put('users/{user}/subscription', [\App\Web\Http\Controllers\API\V1\AppAdmin\UserController::class, 'updateSubscription']);
+                        Route::apiResource('users', \App\Web\Http\Controllers\API\V1\AppAdmin\UserController::class)->only(['index', 'show', 'destroy']);
+                    });
+
                     Route::middleware('permission:packages.manage')->group(function () {
                         Route::patch('packages/{package}/status', [AdminPackageController::class, 'updateStatus'])->name('packages.status');
                         Route::apiResource('packages', AdminPackageController::class);

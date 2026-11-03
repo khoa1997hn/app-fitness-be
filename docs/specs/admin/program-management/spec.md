@@ -236,3 +236,14 @@ Rule cập nhật: `docs/rules/11-enum.md` (đổi sang lang file), `docs/rules/
 - Rules: `docs/rules/05-admin-blade.md`, `10-database-design.md`, `11-enum.md`, `12-file-upload.md`, `14-translatable.md`, `04-api-response.md`.
 - Pattern code có sẵn: `app/Admin/Http/Controllers/UserController.php`, `FileController.php`, `app/Share/Http/Controllers/Concerns/HandlesPresignedFileUpload.php`, `resources/views/admin/users/index.blade.php`.
 - Models: `app/Share/Models/{Program,Lesson,Video}.php` + `*Translation.php`, `ProgramFavorite`/pivot, `SubscriptionProgramSelection.php`.
+
+
+## Update 2026-11-03 — Quản trị app trên React
+
+Quyết định người dùng: chuyển toàn bộ Program/Lesson/video, Banner, Combo, Users/subscription/IAP/export sang React dưới nút Quản lý app, menu con riêng. Chỉ role admin truy cập API `/api/v1/admin/app/*` qua JWT + `permission:app.manage`. Ngừng route Blade `/admin` sau khi triển khai đủ API/UI. Giữ nguyên validation, đa ngôn ngữ và nghiệp vụ hiện tại, không mở tạo Program.
+
+Nguồn đăng ký: `registration_source` = app/web/receptionist/trainer/admin; `created_by` FK nullable về users. API tự đăng ký chỉ nhận app/web; thiếu source mặc định app để giữ tương thích native client. Nhân viên tạo qua cả users và members API: server lấy source từ role actor tại thời điểm tạo, creator ID từ JWT; không nhận từ client. Vai trò snapshot lưu ở source không thay đổi khi actor đổi role. Hiển thị nguồn và người tạo trên quản lý user.
+
+Backfill dữ liệu cũ theo yêu cầu: created_at trước `2026-11-02 00:00:00` là app; từ mốc đó là web. Áp dụng cả soft-deleted, giữ nguyên ID, timestamps, dữ liệu liên quan; không migrate:fresh hoặc xóa dữ liệu.
+
+Contract: content list Program không phân trang; Banner/Combo/User phân trang `{items,current_page,last_page,total,per_page}`. Detail dùng translations keyed vi/en, file object path/name/extension/size/url. Users detail có subscription và transactions; export CSV giữ các bộ lọc. Scoped binding lesson thuộc program. Cập nhật subscription và selections trong một transaction để rollback khi chọn bộ môn không hợp lệ. Xóa user dùng chung ràng buộc phòng tập và không tự xóa.
