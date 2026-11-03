@@ -175,7 +175,7 @@ class BookingController extends BaseAPIController
 
     #[OA\Post(
         path: '/bookings',
-        description: 'Đặt một buổi bằng gói thường. Chưa trừ buổi, buổi bị trừ sau giờ học kể cả khi vắng.',
+        description: 'Đặt một buổi bằng gói thường. Trừ buổi ngay khi đặt, hủy hợp lệ thì hoàn lại, không đến vẫn mất buổi.',
         summary: 'Đặt lịch',
         security: [['bearerAuth' => []]],
         requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(

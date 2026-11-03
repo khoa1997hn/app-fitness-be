@@ -72,7 +72,7 @@ class NotificationService
             ->whereBetween('requested_at', $this->reminderWindow())
             ->get()
             ->each(function (PrivateRequest $request) use (&$sent) {
-                $sent += $this->sendOnce($request->user_id, NotificationType::Schedule, "private-{$request->id}", __('messages.gym_notify_reminder', [
+                $sent += $this->sendOnce($request->user_id, NotificationType::Schedule, "private-{$request->id}-{$request->requested_at->format('YmdHi')}", __('messages.gym_notify_reminder', [
                     'name' => 'Private '.$request->discipline,
                     'time' => $request->requested_at->format('H:i d/m/Y'),
                 ]));

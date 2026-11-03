@@ -25,7 +25,7 @@ Nhân viên điểm danh lớp gói thường, xem lịch dạy thật, HLV xin 
 - Chỉ áp dụng lớp gói thường. **Buổi Private không điểm danh** vì là lịch đặt riêng, ít người, đã có bước xác nhận hoàn thành
 - Chỉ ghi hoặc sửa trong ngày diễn ra lớp, theo `Asia/Ho_Chi_Minh`
 - Mỗi booking một bản ghi, ghi lại thì cập nhật
-- Không trừ buổi: `gym:deduct-credits` trừ mọi booking đã qua giờ, kể cả khi vắng
+- Không ảnh hưởng số buổi: buổi đã bị trừ từ lúc đặt lịch, vắng vẫn mất buổi
 - `absent_recent`: số buổi vắng trong 5 lần điểm danh gần nhất, bỏ qua booking đã hủy
 
 ### Lịch dạy

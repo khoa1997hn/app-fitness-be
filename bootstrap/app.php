@@ -19,7 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withCommands([
         \App\Share\Console\Commands\PutBucketCorsCommand::class,
-        \App\Share\Console\Commands\DeductBookingCreditsCommand::class,
+        \App\Share\Console\Commands\CancelFinishedRedlightOrdersCommand::class,
         \App\Share\Console\Commands\SendGymRemindersCommand::class,
         \App\Share\Console\Commands\ReleaseEventHoldsCommand::class,
     ])

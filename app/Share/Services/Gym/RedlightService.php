@@ -67,6 +67,20 @@ class RedlightService
             ->update(['status' => OrderStatus::Cancelled]);
     }
 
+    /**
+     * Hủy đơn Redlight chờ thanh toán của các lớp đã qua giờ.
+     *
+     * @return int Số đơn đã hủy
+     */
+    public function cancelOrdersOfFinishedClasses(): int
+    {
+        return Order::query()
+            ->where('type', OrderType::Redlight)
+            ->where('status', OrderStatus::Pending)
+            ->whereHas('booking.classSchedule', fn ($query) => $query->where('end_time', '<=', now()))
+            ->update(['status' => OrderStatus::Cancelled]);
+    }
+
     private function assertBookingEligible(Booking $booking): void
     {
         if (! $booking->status->is(BookingStatus::Confirmed)

@@ -117,7 +117,7 @@ class BookingRequestController extends BaseAPIController
 
     #[OA\Patch(
         path: '/admin/private-requests/{privateRequest}',
-        description: 'Sửa form khi còn chờ duyệt. Quyền `bookings.private.edit_form`.',
+        description: 'Sửa form khi còn chờ duyệt, hoặc đã duyệt mà buổi chưa bắt đầu. Sửa lịch đã duyệt thì gửi thông báo cho học viên. Quyền `bookings.private.edit_form`.',
         summary: 'Admin: sửa yêu cầu Private',
         security: [['bearerAuth' => []]],
         requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(
@@ -142,7 +142,7 @@ class BookingRequestController extends BaseAPIController
             new OA\Response(response: 401, description: 'Chưa đăng nhập'),
             new OA\Response(response: 403, description: 'Không có quyền'),
             new OA\Response(response: 404, description: 'Không tìm thấy'),
-            new OA\Response(response: 422, description: 'Dữ liệu không hợp lệ hoặc yêu cầu không còn chờ duyệt'),
+            new OA\Response(response: 422, description: 'Dữ liệu không hợp lệ, trạng thái không cho sửa hoặc buổi đã bắt đầu'),
         ]
     )]
     public function privateUpdate(Request $request, PrivateRequest $privateRequest): JsonResponse

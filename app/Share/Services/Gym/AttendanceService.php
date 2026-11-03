@@ -14,7 +14,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Điểm danh lớp gói thường. Không trừ buổi: `gym:deduct-credits` trừ mọi booking đã qua giờ.
+ * Điểm danh lớp gói thường. Không ảnh hưởng số buổi: buổi đã bị trừ từ lúc đặt lịch.
  */
 class AttendanceService
 {

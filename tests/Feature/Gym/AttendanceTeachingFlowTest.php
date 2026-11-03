@@ -21,7 +21,6 @@ use App\Share\Models\PrivateRequest;
 use App\Share\Models\ScheduleCancelRequest;
 use App\Share\Models\User;
 use App\Share\Models\UserPackage;
-use App\Share\Services\Gym\BookingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
@@ -124,12 +123,14 @@ class AttendanceTeachingFlowTest extends TestCase
     private function createBooking(ClassSchedule $schedule, ?UserPackage $package = null): Booking
     {
         $package ??= $this->createUserPackage();
+        $package->decrement('remaining_credits');
 
         return Booking::query()->create([
             'user_id' => $package->user_id,
             'user_package_id' => $package->id,
             'class_schedule_id' => $schedule->id,
             'status' => BookingStatus::Confirmed,
+            'credit_deducted_at' => now(),
         ]);
     }
 
@@ -177,7 +178,7 @@ class AttendanceTeachingFlowTest extends TestCase
             ->assertOk()->assertJsonPath('data.members.0.attendance_status', 'present');
 
         $this->assertDatabaseCount('attendance_records', 1);
-        $this->assertSame(5, $package->refresh()->remaining_credits);
+        $this->assertSame(4, $package->refresh()->remaining_credits);
     }
 
     public function test_absent_member_still_loses_credit_after_class(): void
@@ -187,7 +188,6 @@ class AttendanceTeachingFlowTest extends TestCase
         $this->as($this->admin)->postJson('/api/v1/admin/attendance/records', ['booking_id' => $booking->id, 'status' => 'absent'])->assertOk();
 
         Carbon::setTestNow('2026-11-10 20:00:00');
-        app(BookingService::class)->deductFinishedBookings();
 
         $this->assertSame(4, $package->refresh()->remaining_credits);
     }
@@ -285,7 +285,7 @@ class AttendanceTeachingFlowTest extends TestCase
         $receptionist->postJson("/api/v1/instructor/schedules/class/{$own->id}/cancel-request", ['reason' => 'Bận'])->assertForbidden();
     }
 
-    public function test_admin_cancels_teaching_without_deducting(): void
+    public function test_admin_cancels_teaching_and_member_keeps_credit(): void
     {
         $package = $this->createUserPackage();
         $schedule = $this->createSchedule();
@@ -337,9 +337,6 @@ class AttendanceTeachingFlowTest extends TestCase
             ->assertJsonPath('data.schedule.status', 'cancelled');
 
         $this->assertTrue($booking->refresh()->status->is(BookingStatus::Cancelled));
-
-        Carbon::setTestNow('2026-11-10 20:00:00');
-        app(BookingService::class)->deductFinishedBookings();
         $this->assertSame(5, $package->refresh()->remaining_credits);
     }
 

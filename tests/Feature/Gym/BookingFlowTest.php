@@ -117,7 +117,7 @@ class BookingFlowTest extends TestCase
         ]);
     }
 
-    public function test_member_books_without_deducting_credit(): void
+    public function test_member_booking_deducts_credit_immediately(): void
     {
         $package = $this->createOwnedPackage();
 
@@ -128,21 +128,24 @@ class BookingFlowTest extends TestCase
             ->assertJsonPath('data.status', 'booked')
             ->assertJsonPath('data.can_cancel', true);
 
-        $this->assertSame(10, $package->refresh()->remaining_credits);
+        $this->assertSame(9, $package->refresh()->remaining_credits);
     }
 
-    public function test_cancel_at_least_8_hours_before_keeps_credit(): void
+    public function test_cancel_at_least_8_hours_before_refunds_credit_once(): void
     {
         $package = $this->createOwnedPackage();
         $id = $this->book($this->createSchedule('2026-11-10 18:00:00'), $package)->json('data.id');
 
         $this->asMember()->patchJson("/api/v1/bookings/{$id}/cancel")->assertOk();
+        $this->asMember()->patchJson("/api/v1/bookings/{$id}/cancel")->assertUnprocessable();
 
-        $this->assertSame(BookingStatus::Cancelled, Booking::query()->find($id)->status->value);
+        $booking = Booking::query()->find($id);
+        $this->assertSame(BookingStatus::Cancelled, $booking->status->value);
+        $this->assertNull($booking->credit_deducted_at);
         $this->assertSame(10, $package->refresh()->remaining_credits);
     }
 
-    public function test_cancel_within_8_hours_is_blocked_and_credit_is_lost_after_class(): void
+    public function test_cancel_within_8_hours_is_blocked_and_credit_stays_deducted(): void
     {
         $package = $this->createOwnedPackage();
         $id = $this->book($this->createSchedule('2026-11-10 17:59:00'), $package)
@@ -152,24 +155,16 @@ class BookingFlowTest extends TestCase
 
         $this->asMember()->patchJson("/api/v1/bookings/{$id}/cancel")->assertUnprocessable();
         $this->assertSame(BookingStatus::Confirmed, Booking::query()->find($id)->status->value);
-
-        Carbon::setTestNow('2026-11-10 19:00:00');
-        Artisan::call('gym:deduct-credits');
-
         $this->assertSame(9, $package->refresh()->remaining_credits);
     }
 
-    public function test_no_show_still_loses_credit_and_deduction_runs_once(): void
+    public function test_no_show_is_not_deducted_again_after_class(): void
     {
         $package = $this->createOwnedPackage();
         $this->book($this->createSchedule(), $package)->assertCreated();
 
-        Artisan::call('gym:deduct-credits');
-        $this->assertSame(10, $package->refresh()->remaining_credits);
-
         Carbon::setTestNow('2026-11-12 10:00:00');
-        Artisan::call('gym:deduct-credits');
-        Artisan::call('gym:deduct-credits');
+        Artisan::call('gym:cancel-finished-redlight-orders');
 
         $this->assertSame(9, $package->refresh()->remaining_credits);
     }
@@ -177,13 +172,14 @@ class BookingFlowTest extends TestCase
     public function test_unlimited_package_has_no_credit_change(): void
     {
         $package = $this->createOwnedPackage(overrides: ['package_type' => PackageType::Unlimited, 'total_credits' => null, 'remaining_credits' => null]);
-        $this->book($this->createSchedule(), $package)->assertCreated();
+        $id = $this->book($this->createSchedule(), $package)->assertCreated()->json('data.id');
+        $this->assertNull($package->refresh()->remaining_credits);
 
-        Carbon::setTestNow('2026-11-12 10:00:00');
-        Artisan::call('gym:deduct-credits');
+        $this->asMember()->patchJson("/api/v1/bookings/{$id}/cancel")->assertOk();
+        $this->book($this->createSchedule('2026-11-13 09:00:00'), $package)->assertCreated();
 
         $this->assertNull($package->refresh()->remaining_credits);
-        $this->assertNotNull(Booking::query()->first()->credit_deducted_at);
+        $this->assertNotNull(Booking::query()->latest('id')->first()->credit_deducted_at);
     }
 
     public function test_cannot_book_more_than_remaining_credits(): void
@@ -309,7 +305,7 @@ class BookingFlowTest extends TestCase
             ->assertJsonPath('data.0.can_cancel', false);
     }
 
-    public function test_admin_cancel_never_deducts_even_within_8_hours(): void
+    public function test_admin_cancel_refunds_credit_even_within_8_hours(): void
     {
         $package = $this->createOwnedPackage();
         $id = $this->book($this->createSchedule('2026-11-10 12:00:00'), $package)->json('data.id');
@@ -318,18 +314,14 @@ class BookingFlowTest extends TestCase
         $admin = User::factory()->create(['role' => Role::Admin]);
         $this->withToken(auth('api')->login($admin))->patchJson("/api/v1/admin/bookings/{$id}/cancel")->assertOk();
 
-        Carbon::setTestNow('2026-11-10 14:00:00');
-        Artisan::call('gym:deduct-credits');
-
         $this->assertSame(10, $package->refresh()->remaining_credits);
         $this->assertSame($admin->id, Booking::query()->find($id)->cancelled_by);
     }
 
-    public function test_cannot_cancel_after_deducted(): void
+    public function test_staff_cannot_cancel_after_class_finished(): void
     {
         $id = $this->book($this->createSchedule(), $this->createOwnedPackage())->json('data.id');
         Carbon::setTestNow('2026-11-12 11:00:00');
-        Artisan::call('gym:deduct-credits');
 
         auth('api')->forgetUser();
         $this->withToken(auth('api')->login(User::factory()->create(['role' => Role::Admin])))
@@ -337,7 +329,7 @@ class BookingFlowTest extends TestCase
             ->assertUnprocessable();
     }
 
-    public function test_cancelling_class_cancels_bookings_without_deduction(): void
+    public function test_cancelling_class_cancels_bookings_and_refunds_credit(): void
     {
         $package = $this->createOwnedPackage();
         $schedule = $this->createSchedule();
@@ -351,10 +343,36 @@ class BookingFlowTest extends TestCase
             ->assertJsonPath('data.booked_count', 0);
 
         $this->assertSame(BookingStatus::Cancelled, Booking::query()->find($id)->status->value);
-
-        Carbon::setTestNow('2026-11-12 11:00:00');
-        Artisan::call('gym:deduct-credits');
         $this->assertSame(10, $package->refresh()->remaining_credits);
+    }
+
+    public function test_cancelling_finished_class_keeps_bookings_and_credit(): void
+    {
+        $package = $this->createOwnedPackage();
+        $schedule = $this->createSchedule();
+        $id = $this->book($schedule, $package)->json('data.id');
+        Carbon::setTestNow('2026-11-12 11:00:00');
+
+        auth('api')->forgetUser();
+        $this->withToken(auth('api')->login(User::factory()->create(['role' => Role::Admin])))
+            ->patchJson("/api/v1/admin/timetable/{$schedule->id}/cancel")
+            ->assertOk();
+
+        $this->assertSame(BookingStatus::Confirmed, Booking::query()->find($id)->status->value);
+        $this->assertSame(9, $package->refresh()->remaining_credits);
+    }
+
+    public function test_migration_deducts_credit_of_held_bookings(): void
+    {
+        $package = $this->createOwnedPackage();
+        $held = $this->book($this->createSchedule(), $package)->json('data.id');
+        Booking::query()->whereKey($held)->update(['credit_deducted_at' => null]);
+        $package->refresh()->update(['remaining_credits' => 10]);
+
+        (require database_path('migrations/2026_11_03_120000_deduct_credits_of_held_bookings.php'))->up();
+
+        $this->assertSame(9, $package->refresh()->remaining_credits);
+        $this->assertNotNull(Booking::query()->find($held)->credit_deducted_at);
     }
 
     public function test_admin_manages_timetable(): void
@@ -502,7 +520,6 @@ class BookingFlowTest extends TestCase
         $this->createOwnedPackage(overrides: ['package_type' => PackageType::PrivatePack, 'name' => 'Private']);
         $this->book($this->createSchedule(), $package)->assertCreated();
         Carbon::setTestNow('2026-11-12 11:00:00');
-        Artisan::call('gym:deduct-credits');
 
         auth('api')->forgetUser();
         $client = $this->withToken(auth('api')->login(User::factory()->create(['role' => Role::Receptionist])));
@@ -515,6 +532,6 @@ class BookingFlowTest extends TestCase
 
         $client->getJson("/api/v1/admin/bookings/members/{$package->id}")
             ->assertJsonPath('data.bookings.0.class_name', 'Yoga Flow')
-            ->assertJsonPath('data.bookings.0.is_deducted', true);
+            ->assertJsonPath('data.bookings.0.is_finished', true);
     }
 }

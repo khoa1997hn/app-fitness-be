@@ -58,14 +58,24 @@ class PrivateRequestService
     }
 
     /**
+     * Sửa được khi còn chờ duyệt, hoặc đã duyệt mà buổi chưa bắt đầu. Sửa lịch đã duyệt thì báo cho học viên.
+     *
      * @param  array{discipline: string, requested_at: string, people_count: int, extra_people_count?: int, trainer_id?: int|null, note?: string|null}  $data
      */
     public function update(PrivateRequest $request, array $data): PrivateRequest
     {
-        $this->assertStatus($request, BookingRequestStatus::Pending);
-
         return DB::transaction(function () use ($request, $data) {
             User::query()->lockForUpdate()->findOrFail($request->user_id);
+            /** @var PrivateRequest $request */
+            $request = PrivateRequest::query()->lockForUpdate()->findOrFail($request->id);
+
+            if (! $request->status->in([BookingRequestStatus::Pending, BookingRequestStatus::Confirmed])) {
+                throw new GymException(__('messages.gym_request_invalid_status'));
+            }
+
+            if ($request->status->is(BookingRequestStatus::Confirmed) && $request->requested_at->isPast()) {
+                throw new GymException(__('messages.gym_request_already_started'));
+            }
 
             $extra = (int) ($data['extra_people_count'] ?? 0);
             $requestedAt = Carbon::parse($data['requested_at']);
@@ -80,6 +90,10 @@ class PrivateRequestService
                 'trainer_id' => $data['trainer_id'] ?? null,
                 'note' => $data['note'] ?? null,
             ]);
+
+            if ($request->status->is(BookingRequestStatus::Confirmed) && $request->wasChanged()) {
+                $this->notify($request, 'messages.gym_notify_request_updated');
+            }
 
             return $request;
         });

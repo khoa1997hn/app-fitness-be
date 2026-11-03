@@ -16,7 +16,7 @@ use App\Share\Models\Order;
 use App\Share\Models\Package;
 use App\Share\Models\User;
 use App\Share\Models\UserPackage;
-use App\Share\Services\Gym\BookingService;
+use App\Share\Services\Gym\RedlightService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
@@ -223,7 +223,7 @@ class RedlightFlowTest extends TestCase
         $code = $this->order($booking)->json('data.code');
 
         Carbon::setTestNow('2026-11-10 11:00:00');
-        app(BookingService::class)->deductFinishedBookings();
+        app(RedlightService::class)->cancelOrdersOfFinishedClasses();
 
         $this->assertTrue(Order::query()->where('code', $code)->first()->status->is(OrderStatus::Cancelled));
     }

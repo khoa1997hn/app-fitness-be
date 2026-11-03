@@ -10,7 +10,7 @@ Gói Private và trị liệu không đặt theo thời khóa biểu: học viê
 - Hội viên: `POST /private-requests`, `POST /therapy-requests`, `PATCH .../{id}/cancel`, `GET /users/me/private-requests`, `GET /users/me/therapy-requests`, `GET /users/me/extra-people`
 - Mua suất: `POST /orders` với `type=extra_people`, `quantity`
 - `bookings.manage`: danh sách, chi tiết yêu cầu; `GET /admin/bookings/members?group=private`, `GET /admin/bookings/therapy-members`
-- `bookings.private.edit_form`: sửa yêu cầu đang chờ
+- `bookings.private.edit_form`: sửa yêu cầu đang chờ và lịch đã duyệt chưa bắt đầu
 - `bookings.private.approve`: duyệt, từ chối; hoàn thành buổi Private
 - `bookings.cancel_class`: hủy lịch đã duyệt
 
@@ -34,6 +34,7 @@ Gói Private và trị liệu không đặt theo thời khóa biểu: học viê
 ### Private
 - Gửi yêu cầu: giờ ở tương lai, trong hạn gói, `people_count ≤ base_people_max`, số yêu cầu đang mở chưa vượt số buổi còn lại. Chưa trừ gì
 - Admin duyệt → `confirmed`
+- Admin sửa được form khi `pending`, hoặc `confirmed` mà buổi chưa bắt đầu; điều kiện giống lúc gửi. Sửa lịch `confirmed` thì gửi thông báo cho học viên
 - Admin xác nhận hoàn thành, chỉ sau giờ bắt đầu → `completed`, trừ 1 buổi và suất người thêm, kể cả khi vắng
 - Học viên hủy: `pending` lúc nào cũng được; `confirmed` từ 8 tiếng trở lên trước giờ tập. Trong vòng 8 tiếng bị chặn
 - Admin hủy lịch đã duyệt: không trừ buổi
@@ -47,6 +48,7 @@ Gói Private và trị liệu không đặt theo thời khóa biểu: học viê
 
 - [x] Số dư dùng chung giữa các gói `private_pack`, giữ chỗ khi gửi yêu cầu, trả lại khi bị từ chối
 - [x] `private_group` thêm người bị từ chối
+- [x] Admin sửa được lịch đã duyệt trước giờ tập, học viên nhận thông báo; buổi đã bắt đầu hoặc đã kết thúc thì không sửa được
 - [x] Private chỉ trừ khi hoàn thành, không hoàn thành được trước giờ tập, không trừ hai lần
 - [x] Trị liệu trừ khi duyệt, hoàn khi hủy hợp lệ
 - [x] Phân quyền: lễ tân chỉ xem, HLV không vào, học viên khác không thao tác được

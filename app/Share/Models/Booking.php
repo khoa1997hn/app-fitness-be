@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property int $user_package_id
  * @property int $class_schedule_id
  * @property BookingStatus $status
- * @property \Carbon\Carbon|null $credit_deducted_at Đã xử lý trừ buổi sau giờ học
+ * @property \Carbon\Carbon|null $credit_deducted_at Lúc trừ buổi khi đặt; về null khi hủy và hoàn buổi
  * @property \Carbon\Carbon|null $redlight_paid_at Đã trả tiền dùng Redlight cho buổi này
  * @property \Carbon\Carbon|null $cancelled_at
  * @property int|null $cancelled_by

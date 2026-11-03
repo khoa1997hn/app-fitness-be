@@ -28,7 +28,7 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'start_time', type: 'string', example: '2026-11-05T07:00'),
         new OA\Property(property: 'end_time', description: 'Sau start_time', type: 'string', example: '2026-11-05T08:00'),
         new OA\Property(property: 'max_slot', type: 'integer', example: 15),
-        new OA\Property(property: 'status', description: 'Đổi sang cancelled sẽ hủy các booking, không trừ buổi', type: 'string', enum: ['active', 'cancelled'], example: 'active'),
+        new OA\Property(property: 'status', description: 'Đổi sang cancelled sẽ hủy các booking và hoàn buổi', type: 'string', enum: ['active', 'cancelled'], example: 'active'),
         new OA\Property(property: 'notes', type: 'string', nullable: true),
     ]
 )]
@@ -188,7 +188,7 @@ class TimetableController extends BaseAPIController
 
     #[OA\Patch(
         path: '/admin/timetable/{schedule}',
-        description: 'Sửa lịch. Đổi giờ bắt đầu thì giờ mới phải ở tương lai. `max_slot` không được nhỏ hơn số đã đặt. Đổi sang `cancelled` sẽ hủy các booking, không trừ buổi. Quyền `schedules.timetable.manage`.',
+        description: 'Sửa lịch. Đổi giờ bắt đầu thì giờ mới phải ở tương lai. `max_slot` không được nhỏ hơn số đã đặt. Đổi sang `cancelled` sẽ hủy các booking và hoàn buổi. Quyền `schedules.timetable.manage`.',
         summary: 'Admin: sửa lịch',
         security: [['bearerAuth' => []]],
         requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(ref: '#/components/schemas/GymTimetableInput')),
@@ -227,7 +227,7 @@ class TimetableController extends BaseAPIController
 
     #[OA\Patch(
         path: '/admin/timetable/{schedule}/cancel',
-        description: 'Hủy lớp và các booking, không trừ buổi của học viên. Quyền `schedules.timetable.manage`.',
+        description: 'Hủy lớp và các booking, hoàn buổi cho học viên. Quyền `schedules.timetable.manage`.',
         summary: 'Admin: hủy lớp',
         security: [['bearerAuth' => []]],
         tags: ['Gym Admin Timetable'],

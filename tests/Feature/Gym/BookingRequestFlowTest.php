@@ -17,6 +17,7 @@ use App\Share\Models\UserPackage;
 use App\Share\Models\UserTherapy;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class BookingRequestFlowTest extends TestCase
@@ -299,6 +300,32 @@ class BookingRequestFlowTest extends TestCase
 
         $this->asAdmin()->patchJson("/api/v1/admin/private-requests/{$id}", [...$body, 'extra_people_count' => 2])->assertUnprocessable();
         $this->asAdmin()->patchJson("/api/v1/admin/private-requests/{$id}", [...$body, 'trainer_id' => $this->member->id])->assertUnprocessable();
+    }
+
+    public function test_admin_edits_confirmed_private_and_member_is_notified(): void
+    {
+        $trainer = User::factory()->create(['role' => Role::Trainer, 'first_name' => 'Thu', 'last_name' => 'Hà']);
+        $id = $this->submitPrivate($this->createPrivatePackage())->json('data.id');
+        $this->asAdmin()->patchJson("/api/v1/admin/private-requests/{$id}/approve")->assertOk();
+        $body = ['discipline' => 'Barre', 'requested_at' => '2026-11-18T09:00', 'people_count' => 1, 'trainer_id' => $trainer->id];
+        $notifications = fn () => DB::table('notifications')->where('user_id', $this->member->id)->where('message', 'like', '%cập nhật%')->count();
+
+        $this->asAdmin()->patchJson("/api/v1/admin/private-requests/{$id}", $body)
+            ->assertOk()
+            ->assertJsonPath('data.status', 'confirmed')
+            ->assertJsonPath('data.discipline', 'Barre')
+            ->assertJsonPath('data.trainer_name', 'Thu Hà')
+            ->assertJsonPath('data.requested_at', '2026-11-18T09:00:00');
+        $this->assertSame(1, $notifications());
+
+        $this->asAdmin()->patchJson("/api/v1/admin/private-requests/{$id}", $body)->assertOk();
+        $this->assertSame(1, $notifications());
+
+        Carbon::setTestNow('2026-11-18 09:00:01');
+        $this->asAdmin()->patchJson("/api/v1/admin/private-requests/{$id}", [...$body, 'requested_at' => '2026-11-20T09:00'])->assertUnprocessable();
+
+        $this->asAdmin()->patchJson("/api/v1/admin/private-requests/{$id}/complete")->assertOk();
+        $this->asAdmin()->patchJson("/api/v1/admin/private-requests/{$id}", [...$body, 'requested_at' => '2026-11-20T09:00'])->assertUnprocessable();
     }
 
     public function test_therapy_deducts_on_approve_and_refunds_on_valid_cancel(): void

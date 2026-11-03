@@ -111,7 +111,7 @@ class BookingController extends BaseAPIController
                             new OA\Property(property: 'status', type: 'string', enum: ['confirmed', 'cancelled'], example: 'confirmed'),
                             new OA\Property(property: 'has_redlight', type: 'boolean', example: false),
                             new OA\Property(property: 'needs_redlight_refund', description: 'Đã trả Redlight nhưng lịch bị hủy, hoàn tiền thủ công', type: 'boolean', example: false),
-                            new OA\Property(property: 'is_deducted', description: 'Đã trừ buổi', type: 'boolean', example: false),
+                            new OA\Property(property: 'is_finished', description: 'Lớp đã qua giờ', type: 'boolean', example: false),
                         ], type: 'object')),
                         new OA\Property(property: 'private_requests', type: 'array', items: new OA\Items(properties: [
                             new OA\Property(property: 'id', type: 'integer', example: 5),
@@ -143,7 +143,7 @@ class BookingController extends BaseAPIController
                     'trainer_name' => trim($booking->classSchedule->trainer->first_name.' '.$booking->classSchedule->trainer->last_name),
                     'start_time' => $booking->classSchedule->start_time->format('Y-m-d\TH:i:s'),
                     'status' => $booking->status,
-                    'is_deducted' => $booking->credit_deducted_at !== null,
+                    'is_finished' => $booking->classSchedule->end_time->lte(now()),
                     'has_redlight' => $booking->redlight_paid_at !== null,
                     'needs_redlight_refund' => $booking->redlight_paid_at !== null && $booking->status->is(BookingStatus::Cancelled),
                 ])
@@ -163,7 +163,7 @@ class BookingController extends BaseAPIController
 
     #[OA\Patch(
         path: '/admin/bookings/{booking}/cancel',
-        description: 'Hủy lịch thay học viên, không trừ buổi. Buổi đã trừ thì không hủy được. Quyền `bookings.cancel_class`.',
+        description: 'Hủy lịch thay học viên và hoàn buổi. Lớp đã qua giờ thì không hủy được. Quyền `bookings.cancel_class`.',
         summary: 'Admin: hủy lịch học viên',
         security: [['bearerAuth' => []]],
         tags: ['Gym Admin Bookings'],
@@ -179,7 +179,7 @@ class BookingController extends BaseAPIController
             new OA\Response(response: 401, description: 'Chưa đăng nhập'),
             new OA\Response(response: 403, description: 'Không có quyền'),
             new OA\Response(response: 404, description: 'Không tìm thấy'),
-            new OA\Response(response: 422, description: 'Đã hủy hoặc đã trừ buổi'),
+            new OA\Response(response: 422, description: 'Đã hủy hoặc lớp đã qua giờ'),
         ]
     )]
     public function cancel(Booking $booking): JsonResponse
@@ -199,7 +199,7 @@ class BookingController extends BaseAPIController
         return [
             'bookings as completed_bookings_count' => fn ($query) => $query
                 ->where('status', BookingStatus::Confirmed)
-                ->whereNotNull('credit_deducted_at'),
+                ->whereHas('classSchedule', fn ($schedule) => $schedule->where('end_time', '<=', now())),
             'privateRequests as completed_private_count' => fn ($query) => $query
                 ->where('status', BookingRequestStatus::Completed),
         ];

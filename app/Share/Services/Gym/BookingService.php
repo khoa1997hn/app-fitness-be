@@ -14,7 +14,7 @@ use App\Share\Models\UserPackage;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Đặt lịch gói thường. Đặt lịch chỉ giữ buổi; buổi bị trừ sau giờ học, kể cả khi học viên vắng.
+ * Đặt lịch gói thường. Đặt lịch trừ buổi ngay; hủy hợp lệ thì hoàn lại, không đến vẫn mất buổi.
  */
 class BookingService
 {
@@ -36,115 +36,81 @@ class BookingService
 
             $this->assertBookable($member, $package, $lockedSchedule);
 
+            if ($package->remaining_credits !== null) {
+                $package->update(['remaining_credits' => $package->remaining_credits - 1]);
+            }
+
             return Booking::query()->create([
                 'user_id' => $member->id,
                 'user_package_id' => $package->id,
                 'class_schedule_id' => $lockedSchedule->id,
                 'status' => BookingStatus::Confirmed,
+                'credit_deducted_at' => now(),
             ]);
         });
     }
 
     public function cancelByMember(Booking $booking, User $member): Booking
     {
-        if (! $booking->status->is(BookingStatus::Confirmed)) {
-            throw new GymException(__('messages.gym_booking_already_cancelled'));
-        }
+        return DB::transaction(function () use ($booking, $member) {
+            /** @var Booking $locked */
+            $locked = Booking::query()->lockForUpdate()->findOrFail($booking->id);
 
-        if (! $this->canMemberCancel($booking->classSchedule)) {
-            throw new GymException(__('messages.gym_booking_cancel_locked', ['hours' => config('gym.cancel_lock_hours')]));
-        }
+            if (! $locked->status->is(BookingStatus::Confirmed)) {
+                throw new GymException(__('messages.gym_booking_already_cancelled'));
+            }
 
-        return $this->markCancelled($booking, $member);
+            if (! $this->canMemberCancel($locked->classSchedule)) {
+                throw new GymException(__('messages.gym_booking_cancel_locked', ['hours' => config('gym.cancel_lock_hours')]));
+            }
+
+            return $this->markCancelled($locked, $member);
+        });
     }
 
     /**
-     * Nhân viên hủy không trừ buổi trong mọi trường hợp, trừ khi buổi đã được trừ.
+     * Nhân viên hủy thì hoàn buổi trong mọi trường hợp, trừ khi lớp đã qua giờ.
      */
     public function cancelByStaff(Booking $booking, User $staff): Booking
     {
-        if (! $booking->status->is(BookingStatus::Confirmed)) {
-            throw new GymException(__('messages.gym_booking_already_cancelled'));
-        }
+        return DB::transaction(function () use ($booking, $staff) {
+            /** @var Booking $locked */
+            $locked = Booking::query()->lockForUpdate()->findOrFail($booking->id);
 
-        if ($booking->credit_deducted_at !== null) {
-            throw new GymException(__('messages.gym_booking_already_deducted'));
-        }
+            if (! $locked->status->is(BookingStatus::Confirmed)) {
+                throw new GymException(__('messages.gym_booking_already_cancelled'));
+            }
 
-        $this->markCancelled($booking, $staff);
-        $this->notifyCancelled($booking->user_id, $booking->classSchedule);
+            if ($locked->classSchedule->end_time->lte(now())) {
+                throw new GymException(__('messages.gym_booking_class_finished'));
+            }
 
-        return $booking;
+            $this->markCancelled($locked, $staff);
+            $this->notifyCancelled($locked->user_id, $locked->classSchedule);
+
+            return $locked;
+        });
     }
 
     /**
-     * Hủy cả lớp: mọi booking chưa trừ buổi bị hủy, không mất buổi.
+     * Hủy cả lớp: mọi booking bị hủy và được hoàn buổi. Lớp đã qua giờ thì giữ nguyên booking.
      */
     public function cancelSchedule(ClassSchedule $schedule, User $staff): ClassSchedule
     {
         return DB::transaction(function () use ($schedule, $staff) {
             $schedule->update(['status' => ClassScheduleStatus::Cancelled]);
 
-            $bookings = $schedule->confirmedBookings()->whereNull('credit_deducted_at');
-            $memberIds = (clone $bookings)->pluck('user_id');
-            $this->redlightService->cancelPendingOrders((clone $bookings)->pluck('id'));
+            if ($schedule->end_time->lte(now())) {
+                return $schedule;
+            }
 
-            $bookings->update([
-                'status' => BookingStatus::Cancelled,
-                'cancelled_at' => now(),
-                'cancelled_by' => $staff->id,
-            ]);
-
-            $memberIds->each(fn (int $memberId) => $this->notifyCancelled($memberId, $schedule));
+            $schedule->confirmedBookings()->lockForUpdate()->get()->each(function (Booking $booking) use ($schedule, $staff) {
+                $this->markCancelled($booking, $staff);
+                $this->notifyCancelled($booking->user_id, $schedule);
+            });
 
             return $schedule;
         });
-    }
-
-    /**
-     * Xử lý booking đã qua giờ học. Chạy lại an toàn nhờ `credit_deducted_at`.
-     *
-     * @return int Số booking đã xử lý
-     */
-    public function deductFinishedBookings(): int
-    {
-        $bookingIds = Booking::query()
-            ->where('status', BookingStatus::Confirmed)
-            ->whereNull('credit_deducted_at')
-            ->whereHas('classSchedule', fn ($query) => $query
-                ->where('status', ClassScheduleStatus::Active)
-                ->where('end_time', '<=', now()))
-            ->pluck('id');
-
-        $processed = 0;
-
-        foreach ($bookingIds as $bookingId) {
-            DB::transaction(function () use ($bookingId, &$processed) {
-                /** @var Booking|null $booking */
-                $booking = Booking::query()
-                    ->whereNull('credit_deducted_at')
-                    ->where('status', BookingStatus::Confirmed)
-                    ->lockForUpdate()
-                    ->find($bookingId);
-
-                if (! $booking) {
-                    return;
-                }
-
-                /** @var UserPackage $package */
-                $package = UserPackage::query()->lockForUpdate()->findOrFail($booking->user_package_id);
-
-                if ($package->remaining_credits !== null && $package->remaining_credits > 0) {
-                    $package->update(['remaining_credits' => $package->remaining_credits - 1]);
-                }
-
-                $booking->update(['credit_deducted_at' => now()]);
-                $this->redlightService->cancelPendingOrders(collect([$booking->id]));
-                $processed++;
-            });
-        }
-
-        return $processed;
     }
 
     public function canMemberCancel(ClassSchedule $schedule): bool
@@ -172,10 +138,18 @@ class BookingService
     {
         $this->redlightService->cancelPendingOrders(collect([$booking->id]));
 
+        /** @var UserPackage $package */
+        $package = UserPackage::query()->lockForUpdate()->findOrFail($booking->user_package_id);
+
+        if ($package->remaining_credits !== null) {
+            $package->update(['remaining_credits' => $package->remaining_credits + 1]);
+        }
+
         $booking->update([
             'status' => BookingStatus::Cancelled,
             'cancelled_at' => now(),
             'cancelled_by' => $by->id,
+            'credit_deducted_at' => null,
         ]);
 
         return $booking;
@@ -209,22 +183,8 @@ class BookingService
             throw new GymException(__('messages.gym_booking_full'));
         }
 
-        if ($package->remaining_credits !== null && $this->availableCredits($package) <= 0) {
+        if ($package->remaining_credits !== null && $package->remaining_credits <= 0) {
             throw new GymException(__('messages.gym_booking_no_credits'));
         }
-    }
-
-    /**
-     * Số buổi còn đặt được: buổi còn lại trừ các buổi đã đặt nhưng chưa bị trừ.
-     */
-    private function availableCredits(UserPackage $package): int
-    {
-        $held = Booking::query()
-            ->where('user_package_id', $package->id)
-            ->where('status', BookingStatus::Confirmed)
-            ->whereNull('credit_deducted_at')
-            ->count();
-
-        return $package->remaining_credits - $held;
     }
 }
