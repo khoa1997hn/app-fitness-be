@@ -61,3 +61,16 @@
 - [x] `mapLesson` thêm `video_id`
 - [x] OpenAPI lesson item cập nhật `video_id`
 - [x] `l5-swagger:generate` + pint
+
+## Update 2026-11-03 — Quyền truy cập từng lesson
+
+- [x] spec-analyzer / question-asker: xác định spec hiện có; user chốt giữ JWT và thêm `can_access`.
+- [x] solution-reviewer / api-designer / api-analyzer: dùng lại gate hiện có, thêm boolean ở 5 nhóm, không migration/route mới.
+- [x] planner / task-breaker: append kế hoạch và checklist update.
+- [x] implementer: chia sẻ lesson gate; bổ sung quyền vào program detail.
+- [x] openapi-writer: thêm field vào annotation của cả 5 nhóm.
+- [x] reviewer-rules / smell / security / duplicate và cleaner: JWT giữ nguyên, không lộ file video, dùng chung gate và không thêm query theo từng lesson.
+- [x] docs-syncer: cập nhật project overview; không đổi rules/guides/workflow.
+- [x] finalizer: 13 tests / 307 assertions PASS (SQLite in-memory qua Sail); Swagger generate + kiểm tra boolean ở 5 nhóm; Pint và diff check PASS.
+
+Lệnh test: `./vendor/bin/sail exec -e DB_CONNECTION=sqlite -e DB_DATABASE=:memory: --user sail laravel.test php artisan test --compact --filter=ProgramLessonAccessTest`. MySQL testing mặc định chưa kết nối được trong môi trường local. Không có migration mới.

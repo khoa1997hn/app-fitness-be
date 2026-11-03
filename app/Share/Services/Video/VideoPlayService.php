@@ -6,6 +6,7 @@ namespace App\Share\Services\Video;
 
 use App\Share\Attributes\File;
 use App\Share\Enums\Plan;
+use App\Share\Models\Lesson;
 use App\Share\Models\User;
 use App\Share\Models\Video;
 use App\Share\Services\Subscription\SubscriptionService;
@@ -23,6 +24,26 @@ readonly class VideoPlayService
     {
         $video->loadMissing(['lesson.program']);
 
+        $denial = $this->lessonGate($user, $video->lesson);
+        if ($denial !== null) {
+            return $denial;
+        }
+
+        if ($this->resolveVideoFile($video) === null) {
+            return [
+                'status' => 404,
+                'message' => __('messages.video_file_not_available'),
+            ];
+        }
+
+        return null;
+    }
+
+    /**
+     * @return array{status: int, message: string}|null
+     */
+    public function lessonGate(User $user, Lesson $lesson): ?array
+    {
         $subscription = $user->validSubscription;
         if ($subscription === null) {
             return [
@@ -31,7 +52,6 @@ readonly class VideoPlayService
             ];
         }
 
-        $lesson = $video->lesson;
         $limits = $this->subscriptionService->getPlanLimits($subscription->plan);
 
         if (! in_array($lesson->type->value, $limits['allowed_lesson_types'], true)) {
@@ -58,13 +78,6 @@ readonly class VideoPlayService
                     'message' => __('messages.video_access_denied'),
                 ];
             }
-        }
-
-        if ($this->resolveVideoFile($video) === null) {
-            return [
-                'status' => 404,
-                'message' => __('messages.video_file_not_available'),
-            ];
         }
 
         return null;

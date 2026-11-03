@@ -60,3 +60,9 @@ Bổ sung theo 3 ảnh figma: thêm lesson `thumbnail` (File jsonb + FileType::L
 Thêm `video_id` vào `mapLesson` (lấy video đầu tiên theo `id` asc). Cập nhật OpenAPI lesson item trong `show`.
 
 **Files**: `ProgramController.php`.
+
+## Update 2026-11-03 — Quyền truy cập từng lesson
+
+- Tách gate quyền lesson từ `VideoPlayService::streamGate` thành `lessonGate`, dùng lại cho phát video và program detail; giữ riêng kiểm tra file khi phát.
+- Inject `VideoPlayService` vào ProgramController; mapper nhận service tùy chọn để thêm `can_access` riêng program detail. Không thay đổi routes/DB hoặc response API khác.
+- Bổ sung OpenAPI cho cả 5 nhóm, regenerate schema, test ma trận subscription và hồi quy stream gate, chạy Pint qua Sail.

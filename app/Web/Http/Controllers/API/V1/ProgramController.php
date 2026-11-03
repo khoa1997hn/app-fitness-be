@@ -2,9 +2,9 @@
 
 namespace App\Web\Http\Controllers\API\V1;
 
-use App\Share\Models\Lesson;
 use App\Share\Models\Program;
 use App\Share\Models\User;
+use App\Share\Services\Video\VideoPlayService;
 use App\Share\Services\Video\VideoWatchProgressService;
 use App\Share\Utils\ResponseAPI;
 use App\Web\Http\Controllers\API\V1\APIController as BaseAPIController;
@@ -18,6 +18,7 @@ class ProgramController extends BaseAPIController
 
     public function __construct(
         private readonly VideoWatchProgressService $videoWatchProgressService,
+        private readonly VideoPlayService $videoPlayService,
     ) {}
 
     /**
@@ -132,7 +133,7 @@ class ProgramController extends BaseAPIController
      */
     #[OA\Get(
         path: '/programs/{program}',
-        description: 'Lấy chi tiết một program kèm danh sách bài học nhóm theo level (beginner/intermediate/advanced), special và signature. Mỗi bài học trả id, name, description, teacher_name, duration_seconds — không trả file/url video. Program không tồn tại → 404 (route model binding).',
+        description: 'Lấy chi tiết một program kèm danh sách bài học nhóm theo level (beginner/intermediate/advanced), special và signature. Mỗi bài học trả id, name, description, teacher_name, duration_seconds và can_access (quyền truy cập theo subscription, program đã chọn và loại lesson) — không trả file/url video. Program không tồn tại → 404 (route model binding).',
         summary: 'Chi tiết program',
         security: [['bearerAuth' => []]],
         tags: ['Programs'],
@@ -221,6 +222,7 @@ class ProgramController extends BaseAPIController
                                                             ),
                                                             new OA\Property(property: 'duration_seconds', type: 'integer', example: 600),
                                                             new OA\Property(property: 'is_favorited', description: 'User hiện tại đã yêu thích bài học chưa', type: 'boolean', example: false),
+                                                            new OA\Property(property: 'can_access', description: 'Có quyền truy cập bài học theo subscription, program đã chọn và loại lesson', type: 'boolean', example: true),
                                                             new OA\Property(
                                                                 property: 'progress',
                                                                 properties: [
@@ -259,6 +261,7 @@ class ProgramController extends BaseAPIController
                                                             ),
                                                             new OA\Property(property: 'duration_seconds', type: 'integer', example: 900),
                                                             new OA\Property(property: 'is_favorited', description: 'User hiện tại đã yêu thích bài học chưa', type: 'boolean', example: false),
+                                                            new OA\Property(property: 'can_access', description: 'Có quyền truy cập bài học theo subscription, program đã chọn và loại lesson', type: 'boolean', example: true),
                                                             new OA\Property(
                                                                 property: 'progress',
                                                                 properties: [
@@ -297,6 +300,7 @@ class ProgramController extends BaseAPIController
                                                             ),
                                                             new OA\Property(property: 'duration_seconds', type: 'integer', example: 1200),
                                                             new OA\Property(property: 'is_favorited', description: 'User hiện tại đã yêu thích bài học chưa', type: 'boolean', example: false),
+                                                            new OA\Property(property: 'can_access', description: 'Có quyền truy cập bài học theo subscription, program đã chọn và loại lesson', type: 'boolean', example: true),
                                                             new OA\Property(
                                                                 property: 'progress',
                                                                 properties: [
@@ -338,6 +342,7 @@ class ProgramController extends BaseAPIController
                                                     ),
                                                     new OA\Property(property: 'duration_seconds', type: 'integer', example: 600),
                                                     new OA\Property(property: 'is_favorited', description: 'User hiện tại đã yêu thích bài học chưa', type: 'boolean', example: false),
+                                                    new OA\Property(property: 'can_access', description: 'Có quyền truy cập bài học theo subscription, program đã chọn và loại lesson', type: 'boolean', example: true),
                                                     new OA\Property(
                                                         property: 'progress',
                                                         properties: [
@@ -376,6 +381,7 @@ class ProgramController extends BaseAPIController
                                                     ),
                                                     new OA\Property(property: 'duration_seconds', type: 'integer', example: 600),
                                                     new OA\Property(property: 'is_favorited', description: 'User hiện tại đã yêu thích bài học chưa', type: 'boolean', example: false),
+                                                    new OA\Property(property: 'can_access', description: 'Có quyền truy cập bài học theo subscription, program đã chọn và loại lesson', type: 'boolean', example: true),
                                                     new OA\Property(
                                                         property: 'progress',
                                                         properties: [
@@ -408,7 +414,7 @@ class ProgramController extends BaseAPIController
         $user = auth()->user();
 
         return ResponseAPI::success(
-            $this->mapProgramDetail($program, $user, $this->videoWatchProgressService)
+            $this->mapProgramDetail($program, $user, $this->videoWatchProgressService, $this->videoPlayService)
         );
     }
 }

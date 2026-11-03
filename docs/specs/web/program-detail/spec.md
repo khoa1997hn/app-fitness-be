@@ -142,3 +142,13 @@ Mỗi lesson item trong `GET /api/v1/programs/{program}` thêm field `video_id` 
 - [`program-list/spec.md`](../program-list/spec.md)
 - `app/Web/Http/Controllers/API/V1/ProgramController.php`
 - `docs/rules/04-api-response.md`, `docs/rules/14-translatable.md`
+
+## Update 2026-11-03 — Quyền truy cập từng lesson
+
+- User chốt giữ bắt buộc đăng nhập JWT; mỗi lesson ở mọi nhóm thêm `can_access: boolean`.
+- Dùng chung gate quyền lesson với API phát video: subscription hợp lệ theo `validSubscription` (trial/active/grace_period), loại lesson được plan cho phép, program nằm trong lựa chọn của subscription (All Access không cần chọn).
+- Không có subscription hợp lệ, chưa chọn program hoặc program không được chọn → `can_access: false`. Basic không truy cập Signature; Plus/All Access truy cập Signature theo quyền program.
+- Trả toàn bộ metadata lesson dù không có quyền; không trả file/URL video. `can_access` chỉ phản ánh quyền subscription, độc lập với việc lesson đã có video/file hay chưa.
+- Thay thế mục out-of-scope về gate subscription ở trên bằng việc trả trạng thái quyền; API detail vẫn trả 200 cho program tồn tại dù các lesson bị khóa.
+- Phạm vi field mới: `GET /api/v1/programs/{program}`; các API dùng chung mapper giữ response hiện tại.
+- Acceptance: không token → 401; mọi nhóm lesson có boolean; kiểm tra Basic/Plus/All, trial/grace period, không subscription, expired/cancelled/refunded, thiếu lựa chọn và program khác lựa chọn; stream gate giữ nguyên lỗi 403/404.
