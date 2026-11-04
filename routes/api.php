@@ -27,6 +27,7 @@ use App\Web\Http\Controllers\API\V1\Gym\NotificationController;
 use App\Web\Http\Controllers\API\V1\Gym\OrderController;
 use App\Web\Http\Controllers\API\V1\Gym\OwnedItemController;
 use App\Web\Http\Controllers\API\V1\Gym\PackageController;
+use App\Web\Http\Controllers\API\V1\Gym\TermsDocumentController;
 use App\Web\Http\Controllers\API\V1\Gym\TherapyServiceController;
 use App\Web\Http\Controllers\API\V1\LessonController;
 use App\Web\Http\Controllers\API\V1\LessonFavoriteController;
@@ -101,6 +102,9 @@ Route::as('api.')
             Route::get('packages/{package}', [PackageController::class, 'show'])->name('packages.show');
             Route::get('therapy-services', [TherapyServiceController::class, 'index'])->name('therapy-services.index');
             Route::get('therapy-services/{therapyService:slug}', [TherapyServiceController::class, 'show'])->name('therapy-services.show');
+
+            Route::get('terms-document', [TermsDocumentController::class, 'show'])->name('terms-document.show');
+            Route::get('terms-document/file', [TermsDocumentController::class, 'file'])->name('terms-document.file');
 
             Route::get('events', [EventController::class, 'index'])->name('events.index');
             Route::get('events/{event}', [EventController::class, 'show'])->name('events.show');

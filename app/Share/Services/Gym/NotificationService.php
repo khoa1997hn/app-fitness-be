@@ -98,10 +98,17 @@ class NotificationService
             $buyerNotice .= ' '.__('messages.gym_mail_order_paid_ticket', ['code' => $ticketCode]);
         }
 
+        $hasSignedTerms = $order->terms_signature !== null;
+
+        if ($hasSignedTerms) {
+            $buyerNotice .= ' '.__('messages.gym_mail_order_paid_terms');
+        }
+
         Mail::to($order->buyer_email ?: $member->email)->queue(new GymNoticeMail(
             __('messages.gym_mail_order_paid_subject'),
             $order->buyer_name ?: $member->first_name,
             $buyerNotice,
+            $hasSignedTerms ? $order->id : null,
         ));
 
         $adminNotice = __('messages.gym_mail_order_paid_admin', [

@@ -28,7 +28,7 @@ class OrderFlowTest extends TestCase
 
     private const TERMS = [
         'terms_accepted' => true,
-        'signature_data' => 'data:image/png;base64,iVBORw0KGgo=',
+        'signature_data' => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
         'buyer_name' => 'Phạm Thị Member',
         'buyer_phone' => '0900000004',
         'buyer_email' => 'member@example.com',
@@ -103,9 +103,11 @@ class OrderFlowTest extends TestCase
             && $mail->firstName === 'Phạm Thị Member'
             && str_contains($mail->notice, $code)
             && str_contains($mail->notice, '2.100.000đ')
-            && str_contains($mail->notice, 'MoMo'));
+            && str_contains($mail->notice, 'MoMo')
+            && $mail->signedTermsOrderId !== null);
         Mail::assertQueued(GymNoticeMail::class, fn (GymNoticeMail $mail) => $mail->hasTo('admin@example.com')
             && str_contains($mail->title, $code)
+            && $mail->signedTermsOrderId === null
             && str_contains($mail->notice, $member->first_name));
         Mail::assertNotQueued(GymNoticeMail::class, fn (GymNoticeMail $mail) => $mail->hasTo('account@example.com')
             || $mail->hasTo('locked@example.com'));
@@ -121,7 +123,8 @@ class OrderFlowTest extends TestCase
         $client->postJson('/api/v1/payments', ['order_code' => $code, 'payment_method' => PaymentMethod::Cash])->assertOk();
 
         Mail::assertQueued(GymNoticeMail::class, fn (GymNoticeMail $mail) => $mail->hasTo('account@example.com')
-            && str_contains($mail->notice, 'Tiền mặt'));
+            && str_contains($mail->notice, 'Tiền mặt')
+            && $mail->signedTermsOrderId === null);
     }
 
     public function test_member_buys_package_through_full_flow(): void

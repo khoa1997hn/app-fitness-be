@@ -22,7 +22,7 @@ class EventFlowTest extends TestCase
 {
     use RefreshDatabase;
 
-    private const SIGNATURE = 'data:image/png;base64,iVBORw0KGgo=';
+    private const SIGNATURE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
 
     private User $admin;
 

@@ -16,7 +16,7 @@ Screen doc: `fitness-web/docs/screens/student/payment.md`, `admin/payment-manage
 
 ### Out-of-scope
 - Đơn sự kiện, tiện ích, khóa HLV: phase 8, 9, deferred
-- Cổng thanh toán thật, webhook, hết hạn đơn, đối soát thủ công, hoàn tiền, email bản sao điều khoản
+- Cổng thanh toán thật, webhook, hết hạn đơn, đối soát thủ công, hoàn tiền
 - Trừ buổi: phase 4, 5
 - Gia hạn gói: phase 7
 
@@ -31,6 +31,10 @@ Trạng thái đơn: `pending_terms` → (ký) → `pending` → (thanh toán) �
 - Mock tắt mặc định khi `APP_ENV=production`, vì mock cấp gói miễn phí
 - Chưa có bảng `payments`: thanh toán mock chỉ có một kết quả nên lưu ngay trên `orders`. Thêm bảng khi có cổng thật
 - Chữ ký lưu data URL trên `orders.terms_signature`, tối đa 700 KB. Cân nhắc chuyển S3 trước production
+- Học viên ký vào ô chữ ký trên file PDF điều khoản. Server chỉ lưu ảnh chữ ký, bản PDF có chữ ký được tạo lúc gửi email thanh toán thành công và không lưu lại
+- Bản sao in thêm họ tên người ký (`buyer_name`) và ngày ký (`terms_accepted_at`) trên trang chữ ký
+- Thay file điều khoản: thay `resources/terms/dieu-khoan-dich-vu.pdf`, chỉnh vị trí ô chữ ký qua `GYM_TERMS_SIGNATURE_PAGE|X|Y|WIDTH|HEIGHT` và vị trí họ tên, ngày ký qua `GYM_TERMS_SIGNER_X|Y|WIDTH` (tỉ lệ trang từ 0 đến 1, gốc trên trái), rồi chạy `TermsDocumentTest`
+- File phải là PDF 1.4 vì thư viện FPDI bản miễn phí không đọc PDF nén kiểu mới. Chuyển đổi bằng `gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -o moi.pdf goc.pdf`
 
 ### Tại quầy
 

@@ -6,10 +6,12 @@ use App\Share\Enums\PaymentMethod;
 use App\Share\Models\Order;
 use App\Share\Models\User;
 use App\Share\Services\Gym\OrderService;
+use App\Share\Services\Gym\TermsDocumentService;
 use App\Share\Utils\ResponseAPI;
 use App\Web\Http\Controllers\API\V1\APIController as BaseAPIController;
 use App\Web\Http\Controllers\API\V1\Gym\Concerns\MapsOrder;
 use App\Web\Http\Requests\Gym\OrderProductRequest;
+use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -22,7 +24,10 @@ class OrderController extends BaseAPIController
     /** Ảnh chữ ký dạng data URL, giới hạn để không làm phình bảng orders */
     private const SIGNATURE_MAX_LENGTH = 700000;
 
-    public function __construct(private readonly OrderService $orderService) {}
+    public function __construct(
+        private readonly OrderService $orderService,
+        private readonly TermsDocumentService $termsDocumentService,
+    ) {}
 
     #[OA\Get(
         path: '/users/me/orders',
@@ -151,7 +156,16 @@ class OrderController extends BaseAPIController
 
         $terms = $request->validate([
             'terms_accepted' => 'required|accepted',
-            'signature_data' => ['required', 'string', 'starts_with:data:image/png;base64,', 'max:'.self::SIGNATURE_MAX_LENGTH],
+            'signature_data' => [
+                'required',
+                'string',
+                'max:'.self::SIGNATURE_MAX_LENGTH,
+                function (string $attribute, mixed $value, Closure $fail) {
+                    if (is_string($value) && ! $this->termsDocumentService->isValidSignature($value)) {
+                        $fail(__('messages.gym_signature_invalid'));
+                    }
+                },
+            ],
             'buyer_name' => 'required|string|max:255',
             'buyer_phone' => 'required|string|max:20',
             'buyer_email' => 'required|email|max:255',
