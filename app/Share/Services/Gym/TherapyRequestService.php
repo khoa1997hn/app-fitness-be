@@ -113,14 +113,18 @@ class TherapyRequestService
     }
 
     /**
-     * Admin hủy lịch đã duyệt: hoàn buổi.
+     * Admin hủy lịch đã duyệt khi buổi chưa bắt đầu: hoàn buổi.
      */
     public function cancelByStaff(TherapyRequest $request, User $staff): TherapyRequest
     {
         $this->assertStatus($request, BookingRequestStatus::Confirmed);
 
+        if ($request->preferred_at->isPast()) {
+            throw new GymException(__('messages.gym_request_started_cannot_cancel'));
+        }
+
         $cancelled = $this->cancel($request, $staff);
-        $this->notify($cancelled, 'messages.gym_notify_booking_cancelled');
+        $this->notify($cancelled, 'messages.gym_notify_therapy_cancelled');
 
         return $cancelled;
     }

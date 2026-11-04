@@ -210,6 +210,7 @@ class BookingRequestController extends BaseAPIController
         parameters: [
             new OA\Parameter(name: 'status', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['pending', 'confirmed', 'rejected', 'cancelled'])),
             new OA\Parameter(name: 'q', description: 'Tìm theo tên học viên, dịch vụ', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'date', description: 'Ngày của lịch trị liệu', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date')),
         ],
         responses: [
             new OA\Response(response: 200, description: 'Thành công', content: new OA\JsonContent(properties: [
@@ -225,10 +226,12 @@ class BookingRequestController extends BaseAPIController
     public function therapyIndex(Request $request): JsonResponse
     {
         $validated = $this->validateFilters($request);
+        $date = $request->validate(['date' => 'nullable|date_format:Y-m-d'])['date'] ?? null;
 
         $requests = TherapyRequest::query()
             ->with(['user', 'userTherapy'])
             ->when($validated['status'] ?? null, fn ($query, string $status) => $query->where('status', $status))
+            ->when($date, fn ($query, string $date) => $query->whereDate('preferred_at', $date))
             ->when($validated['q'] ?? null, function ($query, string $q) {
                 $like = "%{$q}%";
                 $query->where(fn ($inner) => $inner
@@ -302,7 +305,7 @@ class BookingRequestController extends BaseAPIController
 
     #[OA\Patch(
         path: '/admin/therapy-requests/{therapyRequest}/{action}',
-        description: '`approve` duyệt và trừ 1 buổi, `reject` từ chối (quyền `bookings.private.approve`). `cancel` admin hủy lịch đã duyệt, hoàn buổi (quyền `bookings.cancel_class`).',
+        description: '`approve` duyệt và trừ 1 buổi, `reject` từ chối (quyền `bookings.private.approve`). `cancel` admin hủy lịch đã duyệt khi buổi chưa bắt đầu, hoàn buổi (quyền `bookings.cancel_class`).',
         summary: 'Admin: xử lý yêu cầu trị liệu',
         security: [['bearerAuth' => []]],
         tags: ['Gym Admin Requests'],

@@ -361,6 +361,47 @@ class BookingRequestFlowTest extends TestCase
         $this->assertSame(5, $therapy->refresh()->sessions_remaining);
     }
 
+    public function test_admin_cannot_cancel_therapy_after_it_started(): void
+    {
+        $therapy = $this->createTherapy();
+        $id = $this->asMember()->postJson('/api/v1/therapy-requests', ['user_therapy_id' => $therapy->id, 'preferred_at' => self::NEXT_WEEK])->json('data.id');
+        $this->asAdmin()->patchJson("/api/v1/admin/therapy-requests/{$id}/approve")->assertOk();
+
+        Carbon::setTestNow('2026-11-17 15:00:01');
+
+        $this->asAdmin()->patchJson("/api/v1/admin/therapy-requests/{$id}/cancel")->assertUnprocessable();
+        $this->assertSame(4, $therapy->refresh()->sessions_remaining);
+    }
+
+    public function test_admin_cancel_therapy_notifies_refund(): void
+    {
+        $therapy = $this->createTherapy();
+        $id = $this->asMember()->postJson('/api/v1/therapy-requests', ['user_therapy_id' => $therapy->id, 'preferred_at' => self::NEXT_WEEK])->json('data.id');
+        $this->asAdmin()->patchJson("/api/v1/admin/therapy-requests/{$id}/approve")->assertOk();
+        $this->asAdmin()->patchJson("/api/v1/admin/therapy-requests/{$id}/cancel")->assertOk();
+
+        $this->assertSame(5, $therapy->refresh()->sessions_remaining);
+        $this->assertDatabaseHas('notifications', [
+            'user_id' => $therapy->user_id,
+            'message' => __('messages.gym_notify_therapy_cancelled', ['name' => $therapy->name, 'time' => '15:00 17/11/2026']),
+        ]);
+    }
+
+    public function test_admin_therapy_list_filters_by_status_and_date(): void
+    {
+        $therapy = $this->createTherapy();
+        $confirmed = $this->asMember()->postJson('/api/v1/therapy-requests', ['user_therapy_id' => $therapy->id, 'preferred_at' => self::NEXT_WEEK])->json('data.id');
+        $this->asMember()->postJson('/api/v1/therapy-requests', ['user_therapy_id' => $therapy->id, 'preferred_at' => '2026-11-18T15:00'])->assertCreated();
+        $this->asAdmin()->patchJson("/api/v1/admin/therapy-requests/{$confirmed}/approve")->assertOk();
+
+        $admin = $this->asAdmin();
+        $admin->getJson('/api/v1/admin/therapy-requests')->assertOk()->assertJsonCount(2, 'data');
+        $admin->getJson('/api/v1/admin/therapy-requests?status=confirmed')->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $confirmed);
+        $admin->getJson('/api/v1/admin/therapy-requests?date=2026-11-17')->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $confirmed);
+        $admin->getJson('/api/v1/admin/therapy-requests?date=2026-11-19')->assertJsonCount(0, 'data');
+        $admin->getJson('/api/v1/admin/therapy-requests?date=17-11-2026')->assertUnprocessable();
+    }
+
     public function test_therapy_pending_cannot_exceed_remaining(): void
     {
         $therapy = $this->createTherapy(['sessions_total' => 1, 'sessions_remaining' => 1]);

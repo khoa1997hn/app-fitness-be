@@ -43,6 +43,8 @@ Gói Private và trị liệu không đặt theo thời khóa biểu: học viê
 - Gửi yêu cầu: số yêu cầu chờ duyệt chưa vượt số buổi còn lại
 - Admin duyệt → trừ 1 buổi ngay
 - Hủy hợp lệ sau khi duyệt → hoàn 1 buổi. Trong vòng 8 tiếng học viên không hủy được, admin vẫn hủy được và hoàn buổi
+- Admin không hủy được buổi đã bắt đầu. Hủy xong học viên nhận thông báo đã hoàn 1 buổi
+- Danh sách admin lọc được theo `status`, `date` và `q`
 
 ## Acceptance criteria
 
@@ -50,7 +52,7 @@ Gói Private và trị liệu không đặt theo thời khóa biểu: học viê
 - [x] `private_group` thêm người bị từ chối
 - [x] Admin sửa được lịch đã duyệt trước giờ tập, học viên nhận thông báo; buổi đã bắt đầu hoặc đã kết thúc thì không sửa được
 - [x] Private chỉ trừ khi hoàn thành, không hoàn thành được trước giờ tập, không trừ hai lần
-- [x] Trị liệu trừ khi duyệt, hoàn khi hủy hợp lệ
+- [x] Trị liệu trừ khi duyệt, hoàn khi hủy hợp lệ; admin không hủy được buổi đã bắt đầu
 - [x] Phân quyền: lễ tân chỉ xem, HLV không vào, học viên khác không thao tác được
 
 Test: `tests/Feature/Gym/BookingRequestFlowTest.php`.
