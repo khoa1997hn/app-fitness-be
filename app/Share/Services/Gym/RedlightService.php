@@ -4,6 +4,7 @@ namespace App\Share\Services\Gym;
 
 use App\Share\Enums\BookingStatus;
 use App\Share\Enums\ClassScheduleStatus;
+use App\Share\Enums\NotificationType;
 use App\Share\Enums\OrderStatus;
 use App\Share\Enums\OrderType;
 use App\Share\Exceptions\Gym\GymException;
@@ -12,12 +13,15 @@ use App\Share\Models\ClassSchedule;
 use App\Share\Models\Order;
 use App\Share\Models\User;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 /**
- * Redlight tính theo từng buổi, chỉ cho lớp Barre, Pilates. Lịch đã trả tiền mà bị hủy thì hoàn tiền thủ công.
+ * Redlight tính theo từng buổi, chỉ cho lớp Barre, Pilates. Lịch đã trả tiền mà bị hủy thì hoàn tiền thủ công, admin xác nhận sau khi hoàn.
  */
 class RedlightService
 {
+    public function __construct(private readonly NotificationService $notificationService) {}
+
     public function isAvailable(ClassSchedule $schedule): bool
     {
         return $schedule->status->is(ClassScheduleStatus::Active)
@@ -53,6 +57,27 @@ class RedlightService
     public function markPaid(Order $order): void
     {
         $order->booking->update(['redlight_paid_at' => now()]);
+    }
+
+    public function markRefunded(Booking $booking, User $staff): Booking
+    {
+        return DB::transaction(function () use ($booking, $staff) {
+            /** @var Booking $locked */
+            $locked = Booking::query()->lockForUpdate()->findOrFail($booking->id);
+
+            if ($locked->redlightRefundStatus() !== 'pending') {
+                throw new GymException(__('messages.gym_redlight_refund_invalid'));
+            }
+
+            $locked->update(['redlight_refunded_at' => now(), 'redlight_refunded_by' => $staff->id]);
+
+            $this->notificationService->send($locked->user_id, NotificationType::Schedule, __('messages.gym_notify_redlight_refunded', [
+                'name' => $locked->classSchedule->fitnessClass->name,
+                'time' => $locked->classSchedule->start_time->format('H:i d/m/Y'),
+            ]));
+
+            return $locked;
+        });
     }
 
     /**

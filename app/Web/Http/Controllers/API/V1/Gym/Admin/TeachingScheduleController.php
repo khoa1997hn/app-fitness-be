@@ -24,12 +24,14 @@ use OpenApi\Attributes as OA;
         new OA\Schema(properties: [
             new OA\Property(property: 'notes', type: 'string', nullable: true),
             new OA\Property(property: 'students', type: 'array', items: new OA\Items(properties: [
+                new OA\Property(property: 'booking_id', description: 'Null với buổi Private', type: 'integer', nullable: true, example: 21),
                 new OA\Property(property: 'user_id', type: 'integer', example: 7),
                 new OA\Property(property: 'name', type: 'string', example: 'Phạm Thị Member'),
                 new OA\Property(property: 'package_name', type: 'string', example: '10 classes'),
                 new OA\Property(property: 'remaining_credits', type: 'integer', nullable: true, example: 4),
                 new OA\Property(property: 'status', type: 'string', example: 'confirmed'),
-                new OA\Property(property: 'has_redlight', description: 'Cần chuẩn bị thảm Redlight', type: 'boolean', example: false),
+                new OA\Property(property: 'has_redlight', description: 'Đã trả tiền Redlight', type: 'boolean', example: false),
+                new OA\Property(property: 'redlight_refund_status', description: '`pending` cần hoàn tiền thủ công, `refunded` đã hoàn', type: 'string', enum: ['pending', 'refunded'], nullable: true),
             ], type: 'object')),
         ]),
     ]
@@ -196,12 +198,14 @@ class TeachingScheduleController extends BaseAPIController
                     ->sortBy(fn (Booking $booking) => $booking->status->is(BookingStatus::Confirmed) ? 0 : 1)
                     ->values()
                     ->map(fn (Booking $booking) => [
+                        'booking_id' => $booking->id,
                         'user_id' => $booking->user_id,
                         'name' => trim($booking->user->first_name.' '.$booking->user->last_name),
                         'package_name' => $booking->userPackage->name,
                         'remaining_credits' => $booking->userPackage->remaining_credits,
                         'status' => $booking->status,
                         'has_redlight' => $booking->redlight_paid_at !== null,
+                        'redlight_refund_status' => $booking->redlightRefundStatus(),
                     ])->all(),
             ];
         }
@@ -212,12 +216,14 @@ class TeachingScheduleController extends BaseAPIController
             ...$this->mapTeachingPrivate($target, $this->teachingScheduleService),
             'notes' => $target->note,
             'students' => [[
+                'booking_id' => null,
                 'user_id' => $target->user_id,
                 'name' => trim($target->user->first_name.' '.$target->user->last_name),
                 'package_name' => $target->userPackage->name,
                 'remaining_credits' => $target->userPackage->remaining_credits,
                 'status' => $target->status,
                 'has_redlight' => false,
+                'redlight_refund_status' => null,
             ]],
         ];
     }

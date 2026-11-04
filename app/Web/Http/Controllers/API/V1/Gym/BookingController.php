@@ -5,8 +5,10 @@ namespace App\Web\Http\Controllers\API\V1\Gym;
 use App\Share\Enums\BookingStatus;
 use App\Share\Enums\ClassScheduleStatus;
 use App\Share\Enums\FitnessClassCategory;
+use App\Share\Enums\OrderStatus;
 use App\Share\Models\Booking;
 use App\Share\Models\ClassSchedule;
+use App\Share\Models\Order;
 use App\Share\Models\User;
 use App\Share\Models\UserPackage;
 use App\Share\Services\Gym\BookingService;
@@ -44,12 +46,16 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'start_time', type: 'string', example: '2026-11-05T07:00:00'),
         new OA\Property(property: 'end_time', type: 'string', example: '2026-11-05T08:00:00'),
         new OA\Property(property: 'package_name', type: 'string', example: '10 classes'),
-        new OA\Property(property: 'status', description: '`booked` còn hủy được, `locked` trong vòng 8 tiếng, `completed` đã qua giờ', type: 'string', enum: ['booked', 'locked', 'completed'], example: 'booked'),
+        new OA\Property(property: 'status', description: '`booked` còn hủy được, `locked` trong vòng 8 tiếng, `completed` đã qua giờ, `cancelled` đã hủy', type: 'string', enum: ['booked', 'locked', 'completed'], example: 'booked'),
         new OA\Property(property: 'can_cancel', type: 'boolean', example: true),
         new OA\Property(property: 'has_redlight', description: 'Đã trả tiền Redlight cho buổi này', type: 'boolean', example: false),
         new OA\Property(property: 'redlight_available', description: 'Còn mua thêm Redlight được', type: 'boolean', example: true),
         new OA\Property(property: 'redlight_price', type: 'integer', example: 30000),
         new OA\Property(property: 'redlight_order_code', description: 'Đơn Redlight đang chờ thanh toán', type: 'string', nullable: true),
+        new OA\Property(property: 'cancelled_by_staff', description: 'Lịch đã hủy do phòng tập hủy', type: 'boolean', example: false),
+        new OA\Property(property: 'redlight_order_cancelled', description: 'Lịch đã hủy có đơn Redlight chưa thanh toán bị hủy theo', type: 'boolean', example: false),
+        new OA\Property(property: 'redlight_refund_status', description: '`pending` chờ hoàn tiền, `refunded` đã hoàn', type: 'string', enum: ['pending', 'refunded'], nullable: true),
+        new OA\Property(property: 'redlight_amount', description: 'Số tiền Redlight đã trả', type: 'integer', nullable: true, example: 30000),
     ]
 )]
 class BookingController extends BaseAPIController
@@ -164,9 +170,8 @@ class BookingController extends BaseAPIController
     public function index(): JsonResponse
     {
         $bookings = Booking::query()
-            ->with(['classSchedule.fitnessClass', 'classSchedule.trainer', 'userPackage', 'pendingRedlightOrder'])
+            ->with(['classSchedule.fitnessClass', 'classSchedule.trainer', 'userPackage', 'pendingRedlightOrder', 'redlightOrders'])
             ->where('user_id', auth()->id())
-            ->where('status', BookingStatus::Confirmed)
             ->orderByDesc('id')
             ->get();
 
@@ -279,7 +284,9 @@ class BookingController extends BaseAPIController
     private function mapBooking(Booking $booking): array
     {
         $schedule = $booking->classSchedule;
-        $canCancel = $this->bookingService->canMemberCancel($schedule);
+        $isCancelled = $booking->status->is(BookingStatus::Cancelled);
+        $canCancel = ! $isCancelled && $this->bookingService->canMemberCancel($schedule);
+        $paidOrder = $booking->redlightOrders->first(fn (Order $order) => $order->status->is(OrderStatus::Success));
 
         return [
             'id' => $booking->id,
@@ -291,12 +298,16 @@ class BookingController extends BaseAPIController
             'start_time' => $schedule->start_time->format('Y-m-d\TH:i:s'),
             'end_time' => $schedule->end_time->format('Y-m-d\TH:i:s'),
             'package_name' => $booking->userPackage->name,
-            'status' => $schedule->end_time->isPast() ? 'completed' : ($canCancel ? 'booked' : 'locked'),
+            'status' => $isCancelled ? 'cancelled' : ($schedule->end_time->isPast() ? 'completed' : ($canCancel ? 'booked' : 'locked')),
             'can_cancel' => $canCancel,
             'has_redlight' => $booking->redlight_paid_at !== null,
-            'redlight_available' => $booking->redlight_paid_at === null && $this->redlightService->isAvailable($schedule),
+            'redlight_available' => ! $isCancelled && $booking->redlight_paid_at === null && $this->redlightService->isAvailable($schedule),
             'redlight_price' => (int) config('gym.redlight_price'),
             'redlight_order_code' => $booking->pendingRedlightOrder?->code,
+            'cancelled_by_staff' => $isCancelled && $booking->cancelled_by !== null && $booking->cancelled_by !== $booking->user_id,
+            'redlight_order_cancelled' => $isCancelled && $booking->redlightOrders->contains(fn (Order $order) => $order->status->is(OrderStatus::Cancelled)),
+            'redlight_refund_status' => $booking->redlightRefundStatus(),
+            'redlight_amount' => $paidOrder?->amount,
         ];
     }
 }

@@ -64,7 +64,13 @@ class BookingService
                 throw new GymException(__('messages.gym_booking_cancel_locked', ['hours' => config('gym.cancel_lock_hours')]));
             }
 
-            return $this->markCancelled($locked, $member);
+            $this->markCancelled($locked, $member);
+
+            if ($locked->redlight_paid_at !== null) {
+                $this->notifyCancelled($locked, 'messages.gym_notify_member_cancelled_redlight');
+            }
+
+            return $locked;
         });
     }
 
@@ -86,7 +92,7 @@ class BookingService
             }
 
             $this->markCancelled($locked, $staff);
-            $this->notifyCancelled($locked->user_id, $locked->classSchedule);
+            $this->notifyCancelledByStaff($locked);
 
             return $locked;
         });
@@ -104,9 +110,9 @@ class BookingService
                 return $schedule;
             }
 
-            $schedule->confirmedBookings()->lockForUpdate()->get()->each(function (Booking $booking) use ($schedule, $staff) {
+            $schedule->confirmedBookings()->lockForUpdate()->get()->each(function (Booking $booking) use ($staff) {
                 $this->markCancelled($booking, $staff);
-                $this->notifyCancelled($booking->user_id, $schedule);
+                $this->notifyCancelledByStaff($booking);
             });
 
             return $schedule;
@@ -126,9 +132,18 @@ class BookingService
             || $startTime >= config('gym.off_peak_evening_start');
     }
 
-    private function notifyCancelled(int $memberId, ClassSchedule $schedule): void
+    private function notifyCancelledByStaff(Booking $booking): void
     {
-        $this->notificationService->send($memberId, NotificationType::Schedule, __('messages.gym_notify_booking_cancelled', [
+        $this->notifyCancelled($booking, $booking->redlight_paid_at !== null
+            ? 'messages.gym_notify_booking_cancelled_redlight'
+            : 'messages.gym_notify_booking_cancelled');
+    }
+
+    private function notifyCancelled(Booking $booking, string $messageKey): void
+    {
+        $schedule = $booking->classSchedule;
+
+        $this->notificationService->send($booking->user_id, NotificationType::Schedule, __($messageKey, [
             'name' => $schedule->fitnessClass->name,
             'time' => $schedule->start_time->format('H:i d/m/Y'),
         ]));

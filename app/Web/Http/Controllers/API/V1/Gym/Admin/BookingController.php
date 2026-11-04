@@ -10,6 +10,7 @@ use App\Share\Models\PrivateRequest;
 use App\Share\Models\User;
 use App\Share\Models\UserPackage;
 use App\Share\Services\Gym\BookingService;
+use App\Share\Services\Gym\RedlightService;
 use App\Share\Utils\ResponseAPI;
 use App\Web\Http\Controllers\API\V1\APIController as BaseAPIController;
 use Illuminate\Http\JsonResponse;
@@ -36,7 +37,10 @@ use OpenApi\Attributes as OA;
 )]
 class BookingController extends BaseAPIController
 {
-    public function __construct(private readonly BookingService $bookingService) {}
+    public function __construct(
+        private readonly BookingService $bookingService,
+        private readonly RedlightService $redlightService,
+    ) {}
 
     #[OA\Get(
         path: '/admin/bookings/members',
@@ -110,7 +114,7 @@ class BookingController extends BaseAPIController
                             new OA\Property(property: 'start_time', type: 'string', example: '2026-11-05T07:00:00'),
                             new OA\Property(property: 'status', type: 'string', enum: ['confirmed', 'cancelled'], example: 'confirmed'),
                             new OA\Property(property: 'has_redlight', type: 'boolean', example: false),
-                            new OA\Property(property: 'needs_redlight_refund', description: 'Đã trả Redlight nhưng lịch bị hủy, hoàn tiền thủ công', type: 'boolean', example: false),
+                            new OA\Property(property: 'redlight_refund_status', description: '`pending` cần hoàn tiền thủ công, `refunded` đã hoàn', type: 'string', enum: ['pending', 'refunded'], nullable: true),
                             new OA\Property(property: 'is_finished', description: 'Lớp đã qua giờ', type: 'boolean', example: false),
                         ], type: 'object')),
                         new OA\Property(property: 'private_requests', type: 'array', items: new OA\Items(properties: [
@@ -145,7 +149,7 @@ class BookingController extends BaseAPIController
                     'status' => $booking->status,
                     'is_finished' => $booking->classSchedule->end_time->lte(now()),
                     'has_redlight' => $booking->redlight_paid_at !== null,
-                    'needs_redlight_refund' => $booking->redlight_paid_at !== null && $booking->status->is(BookingStatus::Cancelled),
+                    'redlight_refund_status' => $booking->redlightRefundStatus(),
                 ])
                 ->all(),
             'private_requests' => $userPackage->privateRequests
@@ -187,6 +191,36 @@ class BookingController extends BaseAPIController
         /** @var User $staff */
         $staff = auth()->user();
         $this->bookingService->cancelByStaff($booking, $staff);
+
+        return ResponseAPI::success();
+    }
+
+    #[OA\Patch(
+        path: '/admin/bookings/{booking}/redlight-refund',
+        description: 'Xác nhận đã hoàn tiền Redlight thủ công cho lịch đã hủy, học viên nhận thông báo. Quyền `bookings.redlight_refund`.',
+        summary: 'Admin: xác nhận đã hoàn tiền Redlight',
+        security: [['bearerAuth' => []]],
+        tags: ['Gym Admin Bookings'],
+        parameters: [
+            new OA\Parameter(name: 'booking', in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 21)),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Đã xác nhận', content: new OA\JsonContent(properties: [
+                new OA\Property(property: 'success', type: 'boolean', example: true),
+                new OA\Property(property: 'message', type: 'string', example: 'Success'),
+                new OA\Property(property: 'data', type: 'string', example: null, nullable: true),
+            ])),
+            new OA\Response(response: 401, description: 'Chưa đăng nhập'),
+            new OA\Response(response: 403, description: 'Không có quyền'),
+            new OA\Response(response: 404, description: 'Không tìm thấy'),
+            new OA\Response(response: 422, description: 'Lịch không ở trạng thái cần hoàn tiền'),
+        ]
+    )]
+    public function redlightRefund(Booking $booking): JsonResponse
+    {
+        /** @var User $staff */
+        $staff = auth()->user();
+        $this->redlightService->markRefunded($booking, $staff);
 
         return ResponseAPI::success();
     }

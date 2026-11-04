@@ -10,6 +10,7 @@ Hội viên trả thêm để dùng thảm Redlight trong một buổi tập. Kh
 - `student.portal`: `POST /orders` với `type=redlight`, `booking_id`
 - `GET /schedules`, `GET /users/me/bookings` trả thêm trường Redlight
 - Nhân viên thấy ai dùng Redlight ở điểm danh, chi tiết lịch dạy, chi tiết booking
+- `bookings.redlight_refund`: `PATCH /admin/bookings/{id}/redlight-refund`, admin xác nhận đã hoàn tiền
 
 ### Out-of-scope
 - Tồn kho thảm, giới hạn số thảm mỗi lớp
@@ -26,7 +27,9 @@ Hội viên trả thêm để dùng thảm Redlight trong một buổi tập. Kh
 
 ### Khi lịch thay đổi
 - Đơn đang chờ bị hủy khi học viên hủy lịch, nhân viên hủy lịch, hủy lớp, hoặc khi lớp kết thúc
-- Đã thanh toán mà lịch bị hủy: `needs_redlight_refund=true`, **hoàn tiền thủ công**
+- Đã thanh toán mà lịch bị hủy: `redlight_refund_status=pending`, **hoàn tiền thủ công**. Admin hoàn xong bấm xác nhận → `refunded`, lưu người và thời điểm, học viên nhận thông báo
+- Lễ tân, HLV chỉ xem trạng thái, màn hình ghi rõ chỉ admin được xác nhận
+- Học viên vẫn thấy lịch đã hủy ở Lịch sử tập, kèm chú thích về đơn hoặc tiền Redlight. Thông báo hủy nói rõ sẽ được hoàn nếu đã trả
 - Đã thanh toán mà học viên không đến: không hoàn
 
 ## Acceptance criteria
@@ -39,6 +42,8 @@ Hội viên trả thêm để dùng thảm Redlight trong một buổi tập. Kh
 - [x] Hủy lịch, lớp kết thúc thì hủy đơn đang chờ
 - [x] Hủy lớp sau khi đã trả: đánh dấu cần hoàn tiền, đơn giữ nguyên
 - [x] HLV thấy học viên nào dùng Redlight
+- [x] Chỉ admin xác nhận được đã hoàn tiền, không xác nhận hai lần
+- [x] Học viên thấy lịch đã hủy với trạng thái đơn hoặc tiền Redlight
 
 Test: `tests/Feature/Gym/RedlightFlowTest.php`.
 
@@ -46,6 +51,7 @@ Test: `tests/Feature/Gym/RedlightFlowTest.php`.
 
 - 2026-11-02 — Tính theo buổi, học viên chọn khi đặt từng buổi
 - 2026-11-02 — Chỉ lớp Barre, Pilates, không áp dụng Private và trị liệu
+- 2026-11-04 — Hoàn tiền vẫn thủ công, chỉ admin xác nhận; các role khác được chú thích rõ
 
 ## Liên quan
 

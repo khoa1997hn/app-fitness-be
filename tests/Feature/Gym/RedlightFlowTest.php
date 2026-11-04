@@ -238,9 +238,84 @@ class RedlightFlowTest extends TestCase
         $admin->patchJson("/api/v1/admin/timetable/{$booking->class_schedule_id}/cancel")->assertOk();
         $admin->getJson("/api/v1/admin/bookings/members/{$this->package->id}")
             ->assertOk()
-            ->assertJsonPath('data.bookings.0.needs_redlight_refund', true);
+            ->assertJsonPath('data.bookings.0.redlight_refund_status', 'pending');
 
         $this->assertTrue(Order::query()->where('code', $code)->first()->status->is(OrderStatus::Success));
+    }
+
+    public function test_admin_confirms_refund_and_member_sees_each_step(): void
+    {
+        $booking = $this->createBooking();
+        $this->pay($this->order($booking)->json('data.code'))->assertOk();
+        $path = "/api/v1/admin/bookings/{$booking->id}/redlight-refund";
+
+        $this->as($this->admin)->patchJson($path)->assertUnprocessable();
+
+        $this->as($this->admin)->patchJson("/api/v1/admin/timetable/{$booking->class_schedule_id}/cancel")->assertOk();
+        $this->assertDatabaseHas('notifications', [
+            'user_id' => $this->member->id,
+            'message' => __('messages.gym_notify_booking_cancelled_redlight', ['name' => $booking->classSchedule->fitnessClass->name, 'time' => '18:00 12/11/2026']),
+        ]);
+        $this->as($this->member)->getJson('/api/v1/users/me/bookings')
+            ->assertJsonPath('data.0.status', 'cancelled')
+            ->assertJsonPath('data.0.cancelled_by_staff', true)
+            ->assertJsonPath('data.0.redlight_available', false)
+            ->assertJsonPath('data.0.redlight_refund_status', 'pending')
+            ->assertJsonPath('data.0.redlight_amount', 30000);
+
+        $this->as($this->admin)->patchJson($path)->assertOk();
+        $this->as($this->admin)->patchJson($path)->assertUnprocessable();
+
+        $this->assertSame($this->admin->id, $booking->refresh()->redlight_refunded_by);
+        $this->assertNotNull($booking->redlight_refunded_at);
+        $this->as($this->admin)->getJson("/api/v1/admin/schedules/class/{$booking->class_schedule_id}")
+            ->assertJsonPath('data.students.0.booking_id', $booking->id)
+            ->assertJsonPath('data.students.0.has_redlight', true)
+            ->assertJsonPath('data.students.0.redlight_refund_status', 'refunded');
+        $this->as($this->member)->getJson('/api/v1/users/me/bookings')
+            ->assertJsonPath('data.0.redlight_refund_status', 'refunded');
+    }
+
+    public function test_only_admin_can_confirm_refund(): void
+    {
+        $booking = $this->createBooking();
+        $this->pay($this->order($booking)->json('data.code'))->assertOk();
+        $this->as($this->admin)->patchJson("/api/v1/admin/timetable/{$booking->class_schedule_id}/cancel")->assertOk();
+
+        foreach ([Role::Receptionist, Role::Trainer, Role::Member] as $role) {
+            $this->as(User::factory()->create(['role' => $role]))
+                ->patchJson("/api/v1/admin/bookings/{$booking->id}/redlight-refund")
+                ->assertForbidden();
+        }
+
+        $this->assertNull($booking->refresh()->redlight_refunded_at);
+    }
+
+    public function test_member_cancel_with_pending_order_shows_no_refund(): void
+    {
+        $booking = $this->createBooking();
+        $this->order($booking)->assertCreated();
+
+        $this->as($this->member)->patchJson("/api/v1/bookings/{$booking->id}/cancel")->assertOk();
+        $this->as($this->member)->getJson('/api/v1/users/me/bookings')
+            ->assertJsonPath('data.0.redlight_order_cancelled', true)
+            ->assertJsonPath('data.0.redlight_refund_status', null)
+            ->assertJsonPath('data.0.redlight_amount', null);
+    }
+
+    public function test_member_cancel_after_paying_is_told_about_refund(): void
+    {
+        $booking = $this->createBooking();
+        $this->pay($this->order($booking)->json('data.code'))->assertOk();
+
+        $this->as($this->member)->patchJson("/api/v1/bookings/{$booking->id}/cancel")->assertOk();
+
+        $this->assertDatabaseHas('notifications', [
+            'user_id' => $this->member->id,
+            'message' => __('messages.gym_notify_member_cancelled_redlight', ['name' => $booking->classSchedule->fitnessClass->name, 'time' => '18:00 12/11/2026']),
+        ]);
+        $this->as($this->member)->getJson('/api/v1/users/me/bookings')
+            ->assertJsonPath('data.0.redlight_refund_status', 'pending');
     }
 
     public function test_staff_see_who_uses_redlight(): void

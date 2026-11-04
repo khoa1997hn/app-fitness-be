@@ -270,6 +270,9 @@ Route::as('api.')
                         Route::patch('private-requests/{privateRequest}/cancel', [AdminBookingRequestController::class, 'privateCancel'])->name('private-requests.cancel');
                         Route::patch('therapy-requests/{therapyRequest}/cancel', [AdminBookingRequestController::class, 'therapyCancel'])->name('therapy-requests.cancel');
                     });
+                    Route::patch('bookings/{booking}/redlight-refund', [AdminBookingController::class, 'redlightRefund'])
+                        ->middleware('permission:bookings.redlight_refund')
+                        ->name('bookings.redlight-refund');
                     Route::patch('bookings/{booking}/cancel', [AdminBookingController::class, 'cancel'])
                         ->middleware('permission:bookings.cancel_class')
                         ->name('bookings.cancel');

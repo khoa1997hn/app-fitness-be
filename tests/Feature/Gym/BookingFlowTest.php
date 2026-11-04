@@ -300,9 +300,12 @@ class BookingFlowTest extends TestCase
 
         Carbon::setTestNow('2026-11-13 11:00:00');
         $this->asMember()->getJson('/api/v1/users/me/bookings')
-            ->assertJsonCount(1, 'data')
+            ->assertJsonCount(2, 'data')
             ->assertJsonPath('data.0.status', 'completed')
-            ->assertJsonPath('data.0.can_cancel', false);
+            ->assertJsonPath('data.0.can_cancel', false)
+            ->assertJsonPath('data.1.status', 'cancelled')
+            ->assertJsonPath('data.1.can_cancel', false)
+            ->assertJsonPath('data.1.cancelled_by_staff', false);
     }
 
     public function test_admin_cancel_refunds_credit_even_within_8_hours(): void
