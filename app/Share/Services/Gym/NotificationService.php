@@ -8,6 +8,7 @@ use App\Share\Enums\ClassScheduleStatus;
 use App\Share\Enums\EventRegistrationStatus;
 use App\Share\Enums\EventStatus;
 use App\Share\Enums\NotificationType;
+use App\Share\Enums\OrderType;
 use App\Share\Enums\PaymentMethod;
 use App\Share\Enums\Role;
 use App\Share\Enums\UserStatus;
@@ -40,13 +41,13 @@ class NotificationService
      * Phòng tập hủy lịch: báo trong tài khoản và gửi email cho học viên.
      * Email vào hàng đợi sau khi giao dịch hủy thành công, lỗi gửi mail không ảnh hưởng việc hủy.
      */
-    public function sendScheduleCancelled(int $userId, string $message): UserNotification
+    public function sendScheduleCancelled(int $userId, string $message, string $messageEn, string $messageVi): UserNotification
     {
         $notification = $this->send($userId, NotificationType::Schedule, $message);
         $user = User::query()->find($userId);
 
         if ($user !== null) {
-            Mail::to($user->email)->queue(new ScheduleCancelledMail($user->first_name, $message));
+            Mail::to($user->email)->queue(new ScheduleCancelledMail($user->first_name, $messageVi, $messageEn));
         }
 
         return $notification;
@@ -58,21 +59,24 @@ class NotificationService
     public function emailAdminsPrivatePending(PrivateRequest $request): void
     {
         $member = $request->user;
-        $notice = __('messages.gym_mail_private_pending', [
+        $details = [
             'member' => trim($member->first_name.' '.$member->last_name),
             'name' => 'Private '.$request->discipline,
             'time' => $request->requested_at->format('H:i d/m/Y'),
             'people' => $request->people_count + $request->extra_people_count,
-        ]);
+        ];
 
         User::query()
             ->where('role', Role::Admin)
             ->where('status', UserStatus::Active)
             ->get()
             ->each(fn (User $admin) => Mail::to($admin->email)->queue(new GymNoticeMail(
-                __('messages.gym_mail_private_pending_subject'),
+                __('messages.gym_mail_private_pending_subject', [], 'vi'),
                 $admin->first_name,
-                $notice,
+                __('messages.gym_mail_private_pending', $details, 'vi'),
+                titleEn: __('messages.gym_mail_private_pending_subject', [], 'en'),
+                noticeEn: __('messages.gym_mail_private_pending', $details, 'en'),
+                actionPath: '/admin/bookings/requests/'.$request->id,
             )));
     }
 
@@ -87,43 +91,55 @@ class NotificationService
             'code' => $order->code,
             'name' => $order->name,
             'amount' => number_format($order->amount, 0, ',', '.').'đ',
-            'method' => PaymentMethod::getDescription($order->payment_method->value),
             'time' => $order->paid_at->format('H:i d/m/Y'),
+            'member' => trim($member->first_name.' '.$member->last_name),
         ];
-
-        $buyerNotice = __('messages.gym_mail_order_paid', $details);
         $ticketCode = EventRegistration::query()->where('order_id', $order->id)->value('ticket_code');
-
-        if ($ticketCode !== null) {
-            $buyerNotice .= ' '.__('messages.gym_mail_order_paid_ticket', ['code' => $ticketCode]);
-        }
-
         $hasSignedTerms = $order->terms_signature !== null;
+        $buyerNotices = [];
+        $adminNotices = [];
 
-        if ($hasSignedTerms) {
-            $buyerNotice .= ' '.__('messages.gym_mail_order_paid_terms');
+        foreach (['vi', 'en'] as $locale) {
+            $localizedDetails = [...$details, 'method' => __('enums.'.PaymentMethod::class.'.'.$order->payment_method->value, [], $locale)];
+            $buyerNotices[$locale] = __('messages.gym_mail_order_paid', $localizedDetails, $locale);
+            $adminNotices[$locale] = __('messages.gym_mail_order_paid_admin', $localizedDetails, $locale);
+
+            if ($ticketCode !== null) {
+                $buyerNotices[$locale] .= ' '.__('messages.gym_mail_order_paid_ticket', ['code' => $ticketCode], $locale);
+            }
+
+            if ($hasSignedTerms) {
+                $buyerNotices[$locale] .= ' '.__('messages.gym_mail_order_paid_terms', [], $locale);
+            }
         }
 
         Mail::to($order->buyer_email ?: $member->email)->queue(new GymNoticeMail(
-            __('messages.gym_mail_order_paid_subject'),
+            __('messages.gym_mail_order_paid_subject', [], 'vi'),
             $order->buyer_name ?: $member->first_name,
-            $buyerNotice,
+            $buyerNotices['vi'],
             $hasSignedTerms ? $order->id : null,
+            titleEn: __('messages.gym_mail_order_paid_subject', [], 'en'),
+            noticeEn: $buyerNotices['en'],
+            actionPath: match ($order->type->value) {
+                OrderType::Event => '/bloom/tai-khoan',
+                OrderType::Therapy => '/hoc-vien/khoa-hoc-cua-toi?tab=therapy',
+                OrderType::ExtraPeople => '/hoc-vien/khoa-hoc-cua-toi?tab=addons',
+                OrderType::Redlight => '/hoc-vien/khoa-hoc-cua-toi?tab=history',
+                default => '/hoc-vien/khoa-hoc-cua-toi',
+            },
         ));
-
-        $adminNotice = __('messages.gym_mail_order_paid_admin', [
-            ...$details,
-            'member' => trim($member->first_name.' '.$member->last_name),
-        ]);
 
         User::query()
             ->where('role', Role::Admin)
             ->where('status', UserStatus::Active)
             ->get()
             ->each(fn (User $admin) => Mail::to($admin->email)->queue(new GymNoticeMail(
-                __('messages.gym_mail_order_paid_admin_subject', ['code' => $order->code]),
+                __('messages.gym_mail_order_paid_admin_subject', ['code' => $order->code], 'vi'),
                 $admin->first_name,
-                $adminNotice,
+                $adminNotices['vi'],
+                titleEn: __('messages.gym_mail_order_paid_admin_subject', ['code' => $order->code], 'en'),
+                noticeEn: $adminNotices['en'],
+                actionPath: '/admin/payments/'.$order->id,
             )));
     }
 
@@ -138,13 +154,25 @@ class NotificationService
             return;
         }
 
-        $notice = __('messages.gym_mail_trainer_assigned', ['name' => $name, 'time' => $time->format('H:i d/m/Y')]);
+        $details = ['name' => $name, 'time' => $time->format('H:i d/m/Y')];
+        $notices = [];
 
-        if ($room !== null) {
-            $notice .= ' '.__('messages.gym_mail_trainer_assigned_room', ['room' => $room]);
+        foreach (['vi', 'en'] as $locale) {
+            $notices[$locale] = __('messages.gym_mail_trainer_assigned', $details, $locale);
+
+            if ($room !== null) {
+                $notices[$locale] .= ' '.__('messages.gym_mail_trainer_assigned_room', ['room' => $room], $locale);
+            }
         }
 
-        Mail::to($trainer->email)->queue(new GymNoticeMail(__('messages.gym_mail_trainer_assigned_subject'), $trainer->first_name, $notice));
+        Mail::to($trainer->email)->queue(new GymNoticeMail(
+            __('messages.gym_mail_trainer_assigned_subject', [], 'vi'),
+            $trainer->first_name,
+            $notices['vi'],
+            titleEn: __('messages.gym_mail_trainer_assigned_subject', [], 'en'),
+            noticeEn: $notices['en'],
+            actionPath: '/admin/schedules?tab=teaching',
+        ));
     }
 
     /**

@@ -124,7 +124,12 @@ class TherapyRequestService
         }
 
         $cancelled = $this->cancel($request, $staff);
-        $this->notificationService->sendScheduleCancelled($cancelled->user_id, $this->message($cancelled, 'messages.gym_notify_therapy_cancelled'));
+        $this->notificationService->sendScheduleCancelled(
+            $cancelled->user_id,
+            $this->message($cancelled, 'messages.gym_notify_therapy_cancelled'),
+            messageEn: $this->message($cancelled, 'messages.gym_notify_therapy_cancelled', 'en'),
+            messageVi: $this->message($cancelled, 'messages.gym_notify_therapy_cancelled', 'vi'),
+        );
 
         return $cancelled;
     }
@@ -134,12 +139,12 @@ class TherapyRequestService
         $this->notificationService->send($request->user_id, NotificationType::Schedule, $this->message($request, $messageKey));
     }
 
-    private function message(TherapyRequest $request, string $messageKey): string
+    private function message(TherapyRequest $request, string $messageKey, ?string $locale = null): string
     {
         return __($messageKey, [
             'name' => $request->userTherapy->name,
             'time' => $request->preferred_at->format('H:i d/m/Y'),
-        ]);
+        ], $locale);
     }
 
     public function canMemberCancel(TherapyRequest $request): bool

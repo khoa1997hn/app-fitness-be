@@ -23,7 +23,7 @@ class ForgotPasswordMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Your new password',
+            subject: 'Mật khẩu mới của bạn / Your new password',
         );
     }
 

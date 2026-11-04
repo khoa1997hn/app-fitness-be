@@ -16,7 +16,7 @@ h1 { font-size: 24px !important; }
 <table class="brand" align="center" width="570" cellpadding="0" cellspacing="0" role="presentation" bgcolor="#4a1c21">
 <tr>
 <td class="brand-cell">
-<a href="https://kore.doratekjsc.com/" aria-label="KORE Online Studio">
+<a href="{{ rtrim(config('app.frontend_url'), '/') }}" aria-label="KORE Online Studio">
 <img src="https://kore.doratekjsc.com/assets/Kore%20Logo-06.png" class="logo" width="150" alt="KORE" />
 </a>
 <p class="brand-tagline">MOVE WELL · LIVE BETTER</p>
@@ -29,6 +29,9 @@ h1 { font-size: 24px !important; }
 
 {!! $slot !!}
 
+Trân trọng / Kind regards,<br>
+**Đội ngũ KORE / The KORE team**
+
 @isset($subcopy)
 <x-slot:subcopy>
 <x-mail::subcopy>
@@ -39,9 +42,10 @@ h1 { font-size: 24px !important; }
 
 <x-slot:footer>
 <x-mail::footer>
-[**KORE Online Studio**](https://kore.doratekjsc.com/)<br>
+[**KORE Online Studio**]({{ rtrim(config('app.frontend_url'), '/') }})<br>
 MOVE WELL · LIVE BETTER<br>
-© {{ date('Y') }} KORE. {{ __('All rights reserved.') }}
+[Đăng nhập / Sign in]({{ rtrim(config('app.frontend_url'), '/') }}/login)<br>
+© {{ date('Y') }} KORE. Bảo lưu mọi quyền. / All rights reserved.
 </x-mail::footer>
 </x-slot:footer>
 </x-mail::layout>

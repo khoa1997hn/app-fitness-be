@@ -26,13 +26,16 @@ class GymNoticeMail extends Mailable implements ShouldQueue
         public string $firstName,
         public string $notice,
         public ?int $signedTermsOrderId = null,
+        public string $titleEn = '',
+        public string $noticeEn = '',
+        public string $actionPath = '/',
     ) {
         $this->afterCommit();
     }
 
     public function envelope(): Envelope
     {
-        return new Envelope(subject: $this->title);
+        return new Envelope(subject: $this->title.($this->titleEn !== '' ? ' / '.$this->titleEn : ''));
     }
 
     public function content(): Content

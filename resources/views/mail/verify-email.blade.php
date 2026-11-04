@@ -1,27 +1,18 @@
 <x-mail::message>
-<p class="eyebrow">TÀI KHOẢN KORE</p>
+@include('mail.partials.heading', ['headingVi' => 'Xác thực email của bạn', 'headingEn' => 'Verify your email address', 'recipientName' => $firstName])
 
-# Xác thực email của bạn
+Bạn vừa đăng ký tài khoản KORE. Vui lòng xác thực email để đăng nhập.
 
-<p class="greeting">Chào {{ $firstName }},</p>
-
-Bạn vừa đăng ký tài khoản. Vui lòng xác thực email để đăng nhập.
-
-<x-mail::button :url="$url">
-Xác thực email
-</x-mail::button>
+You have registered for a KORE account. Please verify your email address to sign in.
 
 <x-mail::panel>
-Link xác thực có hiệu lực trong **{{ $hours }} giờ**.
+Link xác thực có hiệu lực trong **{{ $hours }} giờ**.<br>
+This verification link is valid for **{{ $hours }} hours**.
 </x-mail::panel>
 
 Nếu bạn không đăng ký tài khoản, hãy bỏ qua email này.
 
-Trân trọng,<br>
-Đội ngũ KORE
+If you did not create an account, you can ignore this email.
 
-<x-slot:subcopy>
-Nếu nút phía trên không hoạt động, hãy sao chép và mở đường dẫn sau trong trình duyệt:<br>
-<a href="{{ $url }}">{{ $url }}</a>
-</x-slot:subcopy>
+@include('mail.partials.action', ['actionUrl' => $url, 'actionVi' => 'Xác thực email', 'actionEn' => 'Verify email'])
 </x-mail::message>

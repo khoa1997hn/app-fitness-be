@@ -21,6 +21,7 @@ class ScheduleCancelledMail extends Mailable implements ShouldQueue
     public function __construct(
         public string $firstName,
         public string $notice,
+        public string $noticeEn = '',
     ) {
         $this->afterCommit();
     }
@@ -28,7 +29,7 @@ class ScheduleCancelledMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: __('messages.gym_mail_schedule_cancelled_subject'),
+            subject: __('messages.gym_mail_schedule_cancelled_subject', [], 'vi').' / '.__('messages.gym_mail_schedule_cancelled_subject', [], 'en'),
         );
     }
 

@@ -134,9 +134,15 @@ class BookingService
 
     private function notifyCancelledByStaff(Booking $booking): void
     {
-        $this->notificationService->sendScheduleCancelled($booking->user_id, $this->cancelledMessage($booking, $booking->redlight_paid_at !== null
+        $messageKey = $booking->redlight_paid_at !== null
             ? 'messages.gym_notify_booking_cancelled_redlight'
-            : 'messages.gym_notify_booking_cancelled'));
+            : 'messages.gym_notify_booking_cancelled';
+        $this->notificationService->sendScheduleCancelled(
+            $booking->user_id,
+            $this->cancelledMessage($booking, $messageKey),
+            messageEn: $this->cancelledMessage($booking, $messageKey, 'en'),
+            messageVi: $this->cancelledMessage($booking, $messageKey, 'vi'),
+        );
     }
 
     private function notifyCancelled(Booking $booking, string $messageKey): void
@@ -144,14 +150,14 @@ class BookingService
         $this->notificationService->send($booking->user_id, NotificationType::Schedule, $this->cancelledMessage($booking, $messageKey));
     }
 
-    private function cancelledMessage(Booking $booking, string $messageKey): string
+    private function cancelledMessage(Booking $booking, string $messageKey, ?string $locale = null): string
     {
         $schedule = $booking->classSchedule;
 
         return __($messageKey, [
             'name' => $schedule->fitnessClass->name,
             'time' => $schedule->start_time->format('H:i d/m/Y'),
-        ]);
+        ], $locale);
     }
 
     private function markCancelled(Booking $booking, User $by): Booking

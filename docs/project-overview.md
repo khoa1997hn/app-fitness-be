@@ -74,6 +74,12 @@ Giá cụ thể từng plan → env `PLAN_<TIER>_PRICE` (xem `.env.example`).
 - **App video (React)**: menu Quản lý app `/admin/app/*`, API `/api/v1/admin/app/*`, JWT + quyền `app.manage` chỉ admin. Program/Lesson/video, Banner, Combo, Users/subscription/IAP và CSV.
 - **React (`fitness-web`)**: admin **phòng tập**, JWT + `users.role`, API `/api/v1/admin/*` + middleware `permission:*`. Xem [`docs/guides/admin-dual-surface.md`](guides/admin-dual-surface.md).
 
+### Email thông báo
+- Bốn mẫu email (xác thực tài khoản, mật khẩu mới, hủy lịch, thông báo phòng tập) hiển thị **cả tiếng Việt và tiếng Anh trong cùng email**, kể cả subject và nội dung động (quyết định 2026-11-04).
+- Dùng chung header/logo, lời chào, nội dung, nút truy cập, chữ ký, đường dẫn dự phòng và footer KORE; hỗ trợ HTML và plain text.
+- Link ứng dụng lấy từ `config('app.frontend_url')` / `FRONTEND_URL`: xác thực → link token; mật khẩu mới → đăng nhập; hủy lịch → lịch sử tập; chờ duyệt Private → chi tiết booking; phân lịch HLV → lịch dạy; thanh toán → gói/tiện ích/trị liệu/lịch sử tập hoặc tài khoản sự kiện của hội viên, chi tiết giao dịch của admin.
+- Các thông báo trong ứng dụng giữ luồng hiện tại; bản PDF điều khoản đã ký vẫn được đính kèm khi gửi email thanh toán.
+
 ### API
 - Web API V1 nằm trong `app/Web/Http/Controllers/API/V1/`.
 - Response format chuẩn `ResponseAPI::success() / ::error()` — `{ success, message, data, errors? }`.

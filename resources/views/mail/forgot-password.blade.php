@@ -1,9 +1,7 @@
 <x-mail::message>
-<p class="eyebrow">KORE ACCOUNT</p>
+@include('mail.partials.heading', ['headingVi' => 'Mật khẩu mới của bạn', 'headingEn' => 'Your new password', 'recipientName' => $user->first_name])
 
-# Your new password
-
-<p class="greeting">Hello {{ $user->first_name }},</p>
+Bạn đã yêu cầu đặt lại mật khẩu. Mật khẩu mới của bạn là:
 
 You requested a password reset. Your new password is:
 
@@ -11,10 +9,13 @@ You requested a password reset. Your new password is:
 <span class="password">{{ $password }}</span>
 </x-mail::panel>
 
-Please sign in and change your password if you wish.
+Vui lòng đăng nhập bằng mật khẩu mới. Bạn có thể đổi mật khẩu sau khi đăng nhập.
 
-If you did not request this, please contact support.
+Please sign in with your new password. You can change it after signing in.
 
-Thanks,<br>
-The KORE team
+Nếu bạn không yêu cầu thay đổi này, vui lòng liên hệ đội ngũ hỗ trợ.
+
+If you did not request this change, please contact support.
+
+@include('mail.partials.action', ['actionUrl' => rtrim(config('app.frontend_url'), '/').'/login', 'actionVi' => 'Đăng nhập', 'actionEn' => 'Sign in'])
 </x-mail::message>

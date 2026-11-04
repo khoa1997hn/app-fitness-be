@@ -195,7 +195,12 @@ class PrivateRequestService
 
             $locked->update(['status' => BookingRequestStatus::Cancelled, 'reviewed_by' => $staff->id]);
             $this->refundCredit($locked);
-            $this->notificationService->sendScheduleCancelled($locked->user_id, $this->message($locked, 'messages.gym_notify_booking_cancelled'));
+            $this->notificationService->sendScheduleCancelled(
+                $locked->user_id,
+                $this->message($locked, 'messages.gym_notify_booking_cancelled'),
+                messageEn: $this->message($locked, 'messages.gym_notify_booking_cancelled', 'en'),
+                messageVi: $this->message($locked, 'messages.gym_notify_booking_cancelled', 'vi'),
+            );
 
             return $locked;
         });
@@ -223,12 +228,12 @@ class PrivateRequestService
         $this->notificationService->send($request->user_id, NotificationType::Schedule, $this->message($request, $messageKey));
     }
 
-    private function message(PrivateRequest $request, string $messageKey): string
+    private function message(PrivateRequest $request, string $messageKey, ?string $locale = null): string
     {
         return __($messageKey, [
             'name' => 'Private '.$request->discipline,
             'time' => $request->requested_at->format('H:i d/m/Y'),
-        ]);
+        ], $locale);
     }
 
     public function canMemberCancel(PrivateRequest $request): bool

@@ -104,9 +104,14 @@ class OrderFlowTest extends TestCase
             && str_contains($mail->notice, $code)
             && str_contains($mail->notice, '2.100.000đ')
             && str_contains($mail->notice, 'MoMo')
+            && str_contains($mail->noticeEn, $code)
+            && str_contains($mail->noticeEn, 'Payment for order')
+            && $mail->actionPath === '/hoc-vien/khoa-hoc-cua-toi'
             && $mail->signedTermsOrderId !== null);
         Mail::assertQueued(GymNoticeMail::class, fn (GymNoticeMail $mail) => $mail->hasTo('admin@example.com')
             && str_contains($mail->title, $code)
+            && str_contains($mail->titleEn, $code)
+            && str_starts_with($mail->actionPath, '/admin/payments/')
             && $mail->signedTermsOrderId === null
             && str_contains($mail->notice, $member->first_name));
         Mail::assertNotQueued(GymNoticeMail::class, fn (GymNoticeMail $mail) => $mail->hasTo('account@example.com')
@@ -124,6 +129,8 @@ class OrderFlowTest extends TestCase
 
         Mail::assertQueued(GymNoticeMail::class, fn (GymNoticeMail $mail) => $mail->hasTo('account@example.com')
             && str_contains($mail->notice, 'Tiền mặt')
+            && str_contains($mail->noticeEn, 'Cash')
+            && $mail->actionPath === '/hoc-vien/khoa-hoc-cua-toi?tab=addons'
             && $mail->signedTermsOrderId === null);
     }
 

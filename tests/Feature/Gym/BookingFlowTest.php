@@ -336,7 +336,8 @@ class BookingFlowTest extends TestCase
         $this->withToken(auth('api')->login($admin))->patchJson("/api/v1/admin/bookings/{$id}/cancel")->assertOk();
 
         Mail::assertQueued(ScheduleCancelledMail::class, fn (ScheduleCancelledMail $mail) => $mail->hasTo($member->email)
-            && str_contains($mail->notice, 'Bạn không bị trừ buổi'));
+            && str_contains($mail->notice, 'Bạn không bị trừ buổi')
+            && str_contains($mail->noticeEn, 'No session credit will be deducted'));
         $this->assertDatabaseHas('notifications', ['user_id' => $member->id, 'type' => 'schedule']);
         $this->assertSame(10, $package->refresh()->remaining_credits);
 

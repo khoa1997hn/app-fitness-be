@@ -315,3 +315,5 @@ p { line-height: 1.75; }
 .footer .content-cell { padding: 28px 24px 36px; }
 .footer p { line-height: 1.8; }
 .footer a { color: #4a1c21; }
+
+.heading-translation { color: #805e62; font-size: 18px; line-height: 1.5; margin-top: -12px; margin-bottom: 24px; }

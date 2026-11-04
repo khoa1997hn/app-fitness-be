@@ -418,7 +418,9 @@ class BookingRequestFlowTest extends TestCase
         ])->assertCreated();
 
         Mail::assertQueued(GymNoticeMail::class, 1);
-        Mail::assertQueued(GymNoticeMail::class, fn (GymNoticeMail $mail) => $mail->hasTo($this->admin->email));
+        Mail::assertQueued(GymNoticeMail::class, fn (GymNoticeMail $mail) => $mail->hasTo($this->admin->email)
+            && str_contains($mail->noticeEn, 'Open booking management')
+            && str_starts_with($mail->actionPath, '/admin/bookings/requests/'));
         Mail::assertNotQueued(GymNoticeMail::class, fn (GymNoticeMail $mail) => $mail->hasTo($locked->email));
     }
 
@@ -435,7 +437,9 @@ class BookingRequestFlowTest extends TestCase
         Mail::assertNotQueued(GymNoticeMail::class, fn (GymNoticeMail $mail) => $mail->hasTo($first->email));
 
         $this->asAdmin()->patchJson("/api/v1/admin/private-requests/{$id}/approve")->assertOk();
-        Mail::assertQueued(GymNoticeMail::class, fn (GymNoticeMail $mail) => $mail->hasTo($first->email));
+        Mail::assertQueued(GymNoticeMail::class, fn (GymNoticeMail $mail) => $mail->hasTo($first->email)
+            && str_contains($mail->noticeEn, 'assigned to teach')
+            && $mail->actionPath === '/admin/schedules?tab=teaching');
 
         $this->asAdmin()->patchJson("/api/v1/admin/private-requests/{$id}", [...$body, 'trainer_id' => $second->id])->assertOk();
         Mail::assertQueued(GymNoticeMail::class, fn (GymNoticeMail $mail) => $mail->hasTo($second->email));
