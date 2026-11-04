@@ -76,6 +76,7 @@ return [
     'gym_notify_therapy_cancelled' => 'Lịch :name lúc :time đã bị phòng tập hủy. Bạn được hoàn 1 buổi.',
     'gym_notify_request_approved' => 'Yêu cầu :name lúc :time đã được duyệt.',
     'gym_notify_request_rejected' => 'Yêu cầu :name lúc :time đã bị từ chối.',
+    'gym_notify_private_rejected' => 'Yêu cầu :name lúc :time đã bị từ chối. Buổi đã tạm trừ được hoàn lại.',
     'gym_notify_request_updated' => 'Lịch :name đã được cập nhật, giờ tập lúc :time.',
     'gym_request_already_started' => 'Buổi tập đã bắt đầu, không thể sửa.',
     'gym_notify_reminder' => 'Nhắc lịch: :name lúc :time.',

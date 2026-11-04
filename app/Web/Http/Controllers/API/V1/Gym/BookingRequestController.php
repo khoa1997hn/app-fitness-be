@@ -97,7 +97,7 @@ class BookingRequestController extends BaseAPIController
 
     #[OA\Post(
         path: '/private-requests',
-        description: 'Gửi yêu cầu lịch Private. Chưa trừ buổi. `extra_people_count` chỉ áp dụng với `private_pack`, `private_group` phải bằng 0.',
+        description: 'Gửi yêu cầu lịch Private. Trừ tạm 1 buổi ngay, bị từ chối hoặc hủy hợp lệ thì hoàn lại. `extra_people_count` chỉ áp dụng với `private_pack`, `private_group` phải bằng 0.',
         summary: 'Gửi yêu cầu Private',
         security: [['bearerAuth' => []]],
         requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(

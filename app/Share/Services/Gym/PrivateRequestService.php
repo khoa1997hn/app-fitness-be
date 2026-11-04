@@ -13,7 +13,8 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Yêu cầu lịch gói Private. Buổi và suất người thêm chỉ bị trừ khi admin xác nhận hoàn thành.
+ * Yêu cầu lịch gói Private. Buổi bị trừ ngay khi gửi đơn, từ chối hoặc hủy hợp lệ thì hoàn lại.
+ * Suất người thêm được giữ chỗ khi gửi đơn và chỉ tính là đã dùng khi admin xác nhận hoàn thành.
  */
 class PrivateRequestService
 {
@@ -40,8 +41,12 @@ class PrivateRequestService
 
             $this->assertValid($member, $package, $requestedAt, (int) $data['people_count'], $extra);
 
-            if ($package->remaining_credits - $this->openRequestCount($package) <= 0) {
-                throw new GymException(__('messages.gym_booking_no_credits'));
+            if ($package->remaining_credits !== null) {
+                if ($package->remaining_credits <= 0) {
+                    throw new GymException(__('messages.gym_booking_no_credits'));
+                }
+
+                $package->update(['remaining_credits' => $package->remaining_credits - 1]);
             }
 
             $request = PrivateRequest::query()->create([
@@ -124,16 +129,21 @@ class PrivateRequestService
 
     public function reject(PrivateRequest $request, User $staff): PrivateRequest
     {
-        $this->assertStatus($request, BookingRequestStatus::Pending);
+        return DB::transaction(function () use ($request, $staff) {
+            /** @var PrivateRequest $locked */
+            $locked = PrivateRequest::query()->lockForUpdate()->findOrFail($request->id);
+            $this->assertStatus($locked, BookingRequestStatus::Pending);
 
-        $request->update(['status' => BookingRequestStatus::Rejected, 'reviewed_by' => $staff->id]);
-        $this->notify($request, 'messages.gym_notify_request_rejected');
+            $locked->update(['status' => BookingRequestStatus::Rejected, 'reviewed_by' => $staff->id]);
+            $this->refundCredit($locked);
+            $this->notify($locked, 'messages.gym_notify_private_rejected');
 
-        return $request;
+            return $locked;
+        });
     }
 
     /**
-     * Xác nhận buổi đã diễn ra, kể cả khi học viên không đến: trừ 1 buổi và suất người thêm.
+     * Xác nhận buổi đã diễn ra, kể cả khi học viên không đến. Buổi đã trừ lúc gửi đơn nên không trừ thêm, suất người thêm tính là đã dùng.
      */
     public function complete(PrivateRequest $request, User $staff): PrivateRequest
     {
@@ -144,13 +154,6 @@ class PrivateRequestService
 
             if ($locked->requested_at->isFuture()) {
                 throw new GymException(__('messages.gym_request_not_started'));
-            }
-
-            /** @var UserPackage $package */
-            $package = UserPackage::query()->lockForUpdate()->findOrFail($locked->user_package_id);
-
-            if ($package->remaining_credits !== null && $package->remaining_credits > 0) {
-                $package->update(['remaining_credits' => $package->remaining_credits - 1]);
             }
 
             $locked->update([
@@ -165,26 +168,47 @@ class PrivateRequestService
 
     public function cancelByMember(PrivateRequest $request): PrivateRequest
     {
-        if (! $this->canMemberCancel($request)) {
-            throw new GymException(__('messages.gym_request_cannot_cancel', ['hours' => config('gym.cancel_lock_hours')]));
-        }
+        return DB::transaction(function () use ($request) {
+            /** @var PrivateRequest $locked */
+            $locked = PrivateRequest::query()->lockForUpdate()->findOrFail($request->id);
 
-        $request->update(['status' => BookingRequestStatus::Cancelled]);
+            if (! $this->canMemberCancel($locked)) {
+                throw new GymException(__('messages.gym_request_cannot_cancel', ['hours' => config('gym.cancel_lock_hours')]));
+            }
 
-        return $request;
+            $locked->update(['status' => BookingRequestStatus::Cancelled]);
+            $this->refundCredit($locked);
+
+            return $locked;
+        });
     }
 
     /**
-     * Admin hủy không trừ buổi.
+     * Admin hủy thì hoàn lại buổi đã trừ lúc gửi đơn.
      */
     public function cancelByStaff(PrivateRequest $request, User $staff): PrivateRequest
     {
-        $this->assertStatus($request, BookingRequestStatus::Confirmed);
+        return DB::transaction(function () use ($request, $staff) {
+            /** @var PrivateRequest $locked */
+            $locked = PrivateRequest::query()->lockForUpdate()->findOrFail($request->id);
+            $this->assertStatus($locked, BookingRequestStatus::Confirmed);
 
-        $request->update(['status' => BookingRequestStatus::Cancelled, 'reviewed_by' => $staff->id]);
-        $this->notificationService->sendScheduleCancelled($request->user_id, $this->message($request, 'messages.gym_notify_booking_cancelled'));
+            $locked->update(['status' => BookingRequestStatus::Cancelled, 'reviewed_by' => $staff->id]);
+            $this->refundCredit($locked);
+            $this->notificationService->sendScheduleCancelled($locked->user_id, $this->message($locked, 'messages.gym_notify_booking_cancelled'));
 
-        return $request;
+            return $locked;
+        });
+    }
+
+    private function refundCredit(PrivateRequest $request): void
+    {
+        /** @var UserPackage $package */
+        $package = UserPackage::query()->lockForUpdate()->findOrFail($request->user_package_id);
+
+        if ($package->remaining_credits !== null) {
+            $package->update(['remaining_credits' => $package->remaining_credits + 1]);
+        }
     }
 
     private function emailTrainer(PrivateRequest $request): void
@@ -247,14 +271,6 @@ class PrivateRequestService
         if ($extra > $this->extraPeopleService->summary($member, $exceptRequestId)['available']) {
             throw new GymException(__('messages.gym_request_extra_insufficient'));
         }
-    }
-
-    private function openRequestCount(UserPackage $package): int
-    {
-        return PrivateRequest::query()
-            ->where('user_package_id', $package->id)
-            ->whereIn('status', [BookingRequestStatus::Pending, BookingRequestStatus::Confirmed])
-            ->count();
     }
 
     private function assertStatus(PrivateRequest $request, string $status): void

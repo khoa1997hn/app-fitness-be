@@ -14,6 +14,7 @@ use App\Share\Mail\GymNoticeMail;
 use App\Share\Mail\ScheduleCancelledMail;
 use App\Share\Models\Order;
 use App\Share\Models\Package;
+use App\Share\Models\PrivateRequest;
 use App\Share\Models\TherapyService;
 use App\Share\Models\User;
 use App\Share\Models\UserPackage;
@@ -232,7 +233,7 @@ class BookingRequestFlowTest extends TestCase
         $this->submitPrivate($this->createPrivatePackage(user: User::factory()->create()))->assertNotFound();
     }
 
-    public function test_full_private_flow_deducts_only_on_complete_even_for_no_show(): void
+    public function test_full_private_flow_deducts_on_submit_and_complete_keeps_it_even_for_no_show(): void
     {
         $this->buyExtraPeople(2);
         $package = $this->createPrivatePackage();
@@ -240,12 +241,14 @@ class BookingRequestFlowTest extends TestCase
             ->assertJsonPath('data.status', BookingRequestStatus::Pending)
             ->json('data.id');
 
+        $this->assertSame(9, $package->refresh()->remaining_credits);
+
         $admin = $this->asAdmin();
         $admin->patchJson("/api/v1/admin/private-requests/{$id}/complete")->assertUnprocessable();
         $admin->patchJson("/api/v1/admin/private-requests/{$id}/approve")->assertOk()->assertJsonPath('data.status', BookingRequestStatus::Confirmed);
         $admin->patchJson("/api/v1/admin/private-requests/{$id}/complete")->assertUnprocessable();
 
-        $this->assertSame(10, $package->refresh()->remaining_credits);
+        $this->assertSame(9, $package->refresh()->remaining_credits);
 
         Carbon::setTestNow('2026-11-17 16:00:00');
         $admin = $this->asAdmin();
@@ -262,19 +265,43 @@ class BookingRequestFlowTest extends TestCase
     public function test_reject_returns_reserved_people(): void
     {
         $this->buyExtraPeople(2);
-        $id = $this->submitPrivate($this->createPrivatePackage(), ['extra_people_count' => 2])->json('data.id');
+        $package = $this->createPrivatePackage();
+        $id = $this->submitPrivate($package, ['extra_people_count' => 2])->json('data.id');
+        $this->assertSame(9, $package->refresh()->remaining_credits);
 
         $this->asAdmin()->patchJson("/api/v1/admin/private-requests/{$id}/reject")->assertOk();
+        $this->asAdmin()->patchJson("/api/v1/admin/private-requests/{$id}/reject")->assertUnprocessable();
 
+        $this->assertSame(10, $package->refresh()->remaining_credits);
         $this->asMember()->getJson('/api/v1/users/me/extra-people')->assertJsonPath('data.available', 2);
         $this->asMember()->getJson('/api/v1/users/me/private-requests')->assertJsonPath('data.0.status', BookingRequestStatus::Rejected);
+    }
+
+    public function test_migration_deducts_only_open_requests_created_before_the_change(): void
+    {
+        $package = $this->createPrivatePackage();
+        foreach ([BookingRequestStatus::Pending, BookingRequestStatus::Confirmed, BookingRequestStatus::Completed, BookingRequestStatus::Rejected] as $status) {
+            PrivateRequest::query()->create([
+                'user_id' => $package->user_id, 'user_package_id' => $package->id, 'discipline' => 'Barre',
+                'requested_at' => self::NEXT_WEEK, 'people_count' => 1, 'extra_people_count' => 0, 'status' => $status,
+            ]);
+        }
+        $migration = require database_path('migrations/2026_11_04_164800_deduct_credits_for_open_private_requests.php');
+
+        $migration->up();
+        $this->assertSame(8, $package->refresh()->remaining_credits);
+
+        $migration->down();
+        $this->assertSame(10, $package->refresh()->remaining_credits);
     }
 
     public function test_private_cancel_rules(): void
     {
         $package = $this->createPrivatePackage();
         $pending = $this->submitPrivate($package)->json('data.id');
+        $this->assertSame(9, $package->refresh()->remaining_credits);
         $this->asMember()->patchJson("/api/v1/private-requests/{$pending}/cancel")->assertOk();
+        $this->assertSame(10, $package->refresh()->remaining_credits);
         $this->asMember()->getJson('/api/v1/users/me/private-requests')->assertJsonCount(0, 'data');
 
         $locked = $this->submitPrivate($package, ['requested_at' => '2026-11-10T17:59'])->json('data.id');
@@ -283,9 +310,12 @@ class BookingRequestFlowTest extends TestCase
         $this->asAdmin()->patchJson("/api/v1/admin/private-requests/{$open}/approve")->assertOk();
 
         $this->asMember()->patchJson("/api/v1/private-requests/{$locked}/cancel")->assertUnprocessable();
+        $this->assertSame(8, $package->refresh()->remaining_credits);
         $this->asMember()->patchJson("/api/v1/private-requests/{$open}/cancel")->assertOk();
+        $this->assertSame(9, $package->refresh()->remaining_credits);
 
         $this->asAdmin()->patchJson("/api/v1/admin/private-requests/{$locked}/cancel")->assertOk();
+        $this->asAdmin()->patchJson("/api/v1/admin/private-requests/{$locked}/cancel")->assertUnprocessable();
         $this->assertSame(10, $package->refresh()->remaining_credits);
     }
 

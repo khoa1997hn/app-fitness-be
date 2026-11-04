@@ -161,7 +161,7 @@ class BookingRequestController extends BaseAPIController
 
     #[OA\Patch(
         path: '/admin/private-requests/{privateRequest}/{action}',
-        description: '`approve` duyệt, `reject` từ chối (quyền `bookings.private.approve`). `complete` xác nhận buổi đã diễn ra, trừ 1 buổi và suất người thêm, kể cả khi học viên vắng (quyền `bookings.private.approve`). `cancel` admin hủy lịch đã duyệt, không trừ buổi, gửi email cho học viên (quyền `bookings.cancel_class`).',
+        description: '`approve` duyệt, `reject` từ chối và hoàn buổi đã tạm trừ (quyền `bookings.private.approve`). `complete` xác nhận buổi đã diễn ra, không trừ thêm buổi vì đã trừ lúc gửi đơn, tính suất người thêm là đã dùng, kể cả khi học viên vắng (quyền `bookings.private.approve`). `cancel` admin hủy lịch đã duyệt, hoàn buổi đã tạm trừ, gửi email cho học viên (quyền `bookings.cancel_class`).',
         summary: 'Admin: xử lý yêu cầu Private',
         security: [['bearerAuth' => []]],
         tags: ['Gym Admin Requests'],

@@ -140,6 +140,10 @@ class AttendanceTeachingFlowTest extends TestCase
     {
         $package = $this->createUserPackage(PackageType::PrivatePack);
 
+        if (in_array($status, [BookingRequestStatus::Pending, BookingRequestStatus::Confirmed], true)) {
+            $package->decrement('remaining_credits');
+        }
+
         return PrivateRequest::query()->create([
             'user_id' => $package->user_id,
             'user_package_id' => $package->id,
