@@ -26,7 +26,7 @@ class GymDemoUsersSeeder extends Seeder
         ];
 
         foreach ($users as [$email, $firstName, $lastName, $role]) {
-            User::query()->updateOrCreate(
+            $user = User::query()->updateOrCreate(
                 ['email' => $email],
                 [
                     'first_name' => $firstName,
@@ -35,6 +35,8 @@ class GymDemoUsersSeeder extends Seeder
                     'role' => $role,
                 ]
             );
+
+            $user->forceFill(['email_verified_at' => $user->email_verified_at ?? now()])->save();
         }
     }
 }
