@@ -44,7 +44,7 @@ class PrivateRequestService
                 throw new GymException(__('messages.gym_booking_no_credits'));
             }
 
-            return PrivateRequest::query()->create([
+            $request = PrivateRequest::query()->create([
                 'user_id' => $member->id,
                 'user_package_id' => $package->id,
                 'discipline' => $data['discipline'],
@@ -54,6 +54,10 @@ class PrivateRequestService
                 'note' => $data['note'] ?? null,
                 'status' => BookingRequestStatus::Pending,
             ]);
+
+            $this->notificationService->emailAdminsPrivatePending($request);
+
+            return $request;
         });
     }
 
@@ -93,6 +97,10 @@ class PrivateRequestService
 
             if ($request->status->is(BookingRequestStatus::Confirmed) && $request->wasChanged()) {
                 $this->notify($request, 'messages.gym_notify_request_updated');
+
+                if ($request->wasChanged('trainer_id')) {
+                    $this->emailTrainer($request);
+                }
             }
 
             return $request;
@@ -109,6 +117,7 @@ class PrivateRequestService
 
         $request->update(['status' => BookingRequestStatus::Confirmed, 'reviewed_by' => $staff->id]);
         $this->notify($request, 'messages.gym_notify_request_approved');
+        $this->emailTrainer($request);
 
         return $request;
     }
@@ -173,17 +182,29 @@ class PrivateRequestService
         $this->assertStatus($request, BookingRequestStatus::Confirmed);
 
         $request->update(['status' => BookingRequestStatus::Cancelled, 'reviewed_by' => $staff->id]);
-        $this->notify($request, 'messages.gym_notify_booking_cancelled');
+        $this->notificationService->sendScheduleCancelled($request->user_id, $this->message($request, 'messages.gym_notify_booking_cancelled'));
 
         return $request;
     }
 
+    private function emailTrainer(PrivateRequest $request): void
+    {
+        if ($request->trainer_id !== null) {
+            $this->notificationService->emailTrainerAssigned($request->trainer_id, 'Private '.$request->discipline, $request->requested_at);
+        }
+    }
+
     private function notify(PrivateRequest $request, string $messageKey): void
     {
-        $this->notificationService->send($request->user_id, NotificationType::Schedule, __($messageKey, [
+        $this->notificationService->send($request->user_id, NotificationType::Schedule, $this->message($request, $messageKey));
+    }
+
+    private function message(PrivateRequest $request, string $messageKey): string
+    {
+        return __($messageKey, [
             'name' => 'Private '.$request->discipline,
             'time' => $request->requested_at->format('H:i d/m/Y'),
-        ]));
+        ]);
     }
 
     public function canMemberCancel(PrivateRequest $request): bool

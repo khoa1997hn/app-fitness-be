@@ -8,13 +8,20 @@ use App\Share\Enums\ClassScheduleStatus;
 use App\Share\Enums\EventRegistrationStatus;
 use App\Share\Enums\EventStatus;
 use App\Share\Enums\NotificationType;
+use App\Share\Enums\Role;
+use App\Share\Enums\UserStatus;
+use App\Share\Mail\GymNoticeMail;
+use App\Share\Mail\ScheduleCancelledMail;
 use App\Share\Models\Booking;
 use App\Share\Models\EventRegistration;
 use App\Share\Models\PrivateRequest;
 use App\Share\Models\TherapyRequest;
+use App\Share\Models\User;
 use App\Share\Models\UserNotification;
 use App\Share\Models\UserPackage;
 use App\Share\Models\UserTherapy;
+use Carbon\CarbonInterface;
+use Illuminate\Support\Facades\Mail;
 
 class NotificationService
 {
@@ -25,6 +32,66 @@ class NotificationService
             'type' => $type,
             'message' => $message,
         ]);
+    }
+
+    /**
+     * Phòng tập hủy lịch: báo trong tài khoản và gửi email cho học viên.
+     * Email vào hàng đợi sau khi giao dịch hủy thành công, lỗi gửi mail không ảnh hưởng việc hủy.
+     */
+    public function sendScheduleCancelled(int $userId, string $message): UserNotification
+    {
+        $notification = $this->send($userId, NotificationType::Schedule, $message);
+        $user = User::query()->find($userId);
+
+        if ($user !== null) {
+            Mail::to($user->email)->queue(new ScheduleCancelledMail($user->first_name, $message));
+        }
+
+        return $notification;
+    }
+
+    /**
+     * Có đơn Private mới cần duyệt: gửi email cho các admin đang hoạt động.
+     */
+    public function emailAdminsPrivatePending(PrivateRequest $request): void
+    {
+        $member = $request->user;
+        $notice = __('messages.gym_mail_private_pending', [
+            'member' => trim($member->first_name.' '.$member->last_name),
+            'name' => 'Private '.$request->discipline,
+            'time' => $request->requested_at->format('H:i d/m/Y'),
+            'people' => $request->people_count + $request->extra_people_count,
+        ]);
+
+        User::query()
+            ->where('role', Role::Admin)
+            ->where('status', UserStatus::Active)
+            ->get()
+            ->each(fn (User $admin) => Mail::to($admin->email)->queue(new GymNoticeMail(
+                __('messages.gym_mail_private_pending_subject'),
+                $admin->first_name,
+                $notice,
+            )));
+    }
+
+    /**
+     * HLV được phân vào lớp hoặc buổi Private: gửi email cho HLV.
+     */
+    public function emailTrainerAssigned(int $trainerId, string $name, CarbonInterface $time, ?string $room = null): void
+    {
+        $trainer = User::query()->find($trainerId);
+
+        if ($trainer === null) {
+            return;
+        }
+
+        $notice = __('messages.gym_mail_trainer_assigned', ['name' => $name, 'time' => $time->format('H:i d/m/Y')]);
+
+        if ($room !== null) {
+            $notice .= ' '.__('messages.gym_mail_trainer_assigned_room', ['room' => $room]);
+        }
+
+        Mail::to($trainer->email)->queue(new GymNoticeMail(__('messages.gym_mail_trainer_assigned_subject'), $trainer->first_name, $notice));
     }
 
     /**

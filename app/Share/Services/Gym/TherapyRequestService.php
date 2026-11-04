@@ -124,17 +124,22 @@ class TherapyRequestService
         }
 
         $cancelled = $this->cancel($request, $staff);
-        $this->notify($cancelled, 'messages.gym_notify_therapy_cancelled');
+        $this->notificationService->sendScheduleCancelled($cancelled->user_id, $this->message($cancelled, 'messages.gym_notify_therapy_cancelled'));
 
         return $cancelled;
     }
 
     private function notify(TherapyRequest $request, string $messageKey): void
     {
-        $this->notificationService->send($request->user_id, NotificationType::Schedule, __($messageKey, [
+        $this->notificationService->send($request->user_id, NotificationType::Schedule, $this->message($request, $messageKey));
+    }
+
+    private function message(TherapyRequest $request, string $messageKey): string
+    {
+        return __($messageKey, [
             'name' => $request->userTherapy->name,
             'time' => $request->preferred_at->format('H:i d/m/Y'),
-        ]));
+        ]);
     }
 
     public function canMemberCancel(TherapyRequest $request): bool

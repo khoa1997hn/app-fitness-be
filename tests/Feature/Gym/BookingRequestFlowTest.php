@@ -9,6 +9,9 @@ use App\Share\Enums\PackageType;
 use App\Share\Enums\PaymentMethod;
 use App\Share\Enums\Role;
 use App\Share\Enums\TherapyVariant;
+use App\Share\Enums\UserStatus;
+use App\Share\Mail\GymNoticeMail;
+use App\Share\Mail\ScheduleCancelledMail;
 use App\Share\Models\Order;
 use App\Share\Models\Package;
 use App\Share\Models\TherapyService;
@@ -18,6 +21,7 @@ use App\Share\Models\UserTherapy;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 class BookingRequestFlowTest extends TestCase
@@ -373,8 +377,43 @@ class BookingRequestFlowTest extends TestCase
         $this->assertSame(4, $therapy->refresh()->sessions_remaining);
     }
 
+    public function test_new_private_request_emails_active_admins_only(): void
+    {
+        Mail::fake();
+        $locked = User::factory()->create(['role' => Role::Admin, 'status' => UserStatus::Locked]);
+        $package = $this->createPrivatePackage();
+
+        $this->asMember()->postJson('/api/v1/private-requests', [
+            'user_package_id' => $package->id, 'discipline' => 'Barre', 'requested_at' => '2026-11-18T09:00', 'people_count' => 1,
+        ])->assertCreated();
+
+        Mail::assertQueued(GymNoticeMail::class, 1);
+        Mail::assertQueued(GymNoticeMail::class, fn (GymNoticeMail $mail) => $mail->hasTo($this->admin->email));
+        Mail::assertNotQueued(GymNoticeMail::class, fn (GymNoticeMail $mail) => $mail->hasTo($locked->email));
+    }
+
+    public function test_trainer_is_emailed_on_private_approve_and_when_changed(): void
+    {
+        Mail::fake();
+        $first = User::factory()->create(['role' => Role::Trainer]);
+        $second = User::factory()->create(['role' => Role::Trainer]);
+        $package = $this->createPrivatePackage();
+        $body = ['discipline' => 'Barre', 'requested_at' => '2026-11-18T09:00', 'people_count' => 1];
+        $id = $this->asMember()->postJson('/api/v1/private-requests', ['user_package_id' => $package->id, ...$body])->json('data.id');
+
+        $this->asAdmin()->patchJson("/api/v1/admin/private-requests/{$id}", [...$body, 'trainer_id' => $first->id])->assertOk();
+        Mail::assertNotQueued(GymNoticeMail::class, fn (GymNoticeMail $mail) => $mail->hasTo($first->email));
+
+        $this->asAdmin()->patchJson("/api/v1/admin/private-requests/{$id}/approve")->assertOk();
+        Mail::assertQueued(GymNoticeMail::class, fn (GymNoticeMail $mail) => $mail->hasTo($first->email));
+
+        $this->asAdmin()->patchJson("/api/v1/admin/private-requests/{$id}", [...$body, 'trainer_id' => $second->id])->assertOk();
+        Mail::assertQueued(GymNoticeMail::class, fn (GymNoticeMail $mail) => $mail->hasTo($second->email));
+    }
+
     public function test_admin_cancel_therapy_notifies_refund(): void
     {
+        Mail::fake();
         $therapy = $this->createTherapy();
         $id = $this->asMember()->postJson('/api/v1/therapy-requests', ['user_therapy_id' => $therapy->id, 'preferred_at' => self::NEXT_WEEK])->json('data.id');
         $this->asAdmin()->patchJson("/api/v1/admin/therapy-requests/{$id}/approve")->assertOk();
@@ -385,6 +424,7 @@ class BookingRequestFlowTest extends TestCase
             'user_id' => $therapy->user_id,
             'message' => __('messages.gym_notify_therapy_cancelled', ['name' => $therapy->name, 'time' => '15:00 17/11/2026']),
         ]);
+        Mail::assertQueued(ScheduleCancelledMail::class, fn (ScheduleCancelledMail $mail) => $mail->hasTo($therapy->user->email));
     }
 
     public function test_admin_therapy_list_filters_by_status_and_date(): void

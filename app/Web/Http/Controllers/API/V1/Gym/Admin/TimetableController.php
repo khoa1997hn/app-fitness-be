@@ -8,6 +8,7 @@ use App\Share\Models\ClassSchedule;
 use App\Share\Models\FitnessClass;
 use App\Share\Models\User;
 use App\Share\Services\Gym\BookingService;
+use App\Share\Services\Gym\NotificationService;
 use App\Share\Utils\ResponseAPI;
 use App\Web\Http\Controllers\API\V1\APIController as BaseAPIController;
 use App\Web\Http\Controllers\API\V1\Gym\Concerns\MapsSchedule;
@@ -43,7 +44,10 @@ class TimetableController extends BaseAPIController
 {
     use MapsSchedule;
 
-    public function __construct(private readonly BookingService $bookingService) {}
+    public function __construct(
+        private readonly BookingService $bookingService,
+        private readonly NotificationService $notificationService,
+    ) {}
 
     #[OA\Get(
         path: '/admin/timetable',
@@ -163,7 +167,7 @@ class TimetableController extends BaseAPIController
 
     #[OA\Post(
         path: '/admin/timetable',
-        description: 'Thêm lịch. Giờ bắt đầu phải ở tương lai, trạng thái phải là `active`. Quyền `schedules.timetable.manage`.',
+        description: 'Thêm lịch và gửi email cho HLV được phân lớp. Giờ bắt đầu phải ở tương lai, trạng thái phải là `active`. Quyền `schedules.timetable.manage`.',
         summary: 'Admin: thêm lịch',
         security: [['bearerAuth' => []]],
         requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(ref: '#/components/schemas/GymTimetableInput')),
@@ -182,13 +186,14 @@ class TimetableController extends BaseAPIController
     public function store(Request $request): JsonResponse
     {
         $schedule = ClassSchedule::query()->create($this->validateSchedule($request));
+        $this->emailTrainer($schedule);
 
         return ResponseAPI::success($this->mapAdminSchedule($this->loadSchedule($schedule)), code: 201);
     }
 
     #[OA\Patch(
         path: '/admin/timetable/{schedule}',
-        description: 'Sửa lịch. Đổi giờ bắt đầu thì giờ mới phải ở tương lai. `max_slot` không được nhỏ hơn số đã đặt. Đổi sang `cancelled` sẽ hủy các booking và hoàn buổi. Quyền `schedules.timetable.manage`.',
+        description: 'Sửa lịch. Đổi HLV của lớp sắp tới thì gửi email cho HLV mới. Đổi giờ bắt đầu thì giờ mới phải ở tương lai. `max_slot` không được nhỏ hơn số đã đặt. Đổi sang `cancelled` sẽ hủy các booking, hoàn buổi và gửi email cho học viên. Quyền `schedules.timetable.manage`.',
         summary: 'Admin: sửa lịch',
         security: [['bearerAuth' => []]],
         requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(ref: '#/components/schemas/GymTimetableInput')),
@@ -220,6 +225,8 @@ class TimetableController extends BaseAPIController
             /** @var User $staff */
             $staff = auth()->user();
             $this->bookingService->cancelSchedule($schedule, $staff);
+        } elseif ($schedule->wasChanged('trainer_id') && $schedule->status->is(ClassScheduleStatus::Active) && $schedule->start_time->isFuture()) {
+            $this->emailTrainer($schedule);
         }
 
         return ResponseAPI::success($this->mapAdminSchedule($this->loadSchedule($schedule->refresh())));
@@ -227,7 +234,7 @@ class TimetableController extends BaseAPIController
 
     #[OA\Patch(
         path: '/admin/timetable/{schedule}/cancel',
-        description: 'Hủy lớp và các booking, hoàn buổi cho học viên. Quyền `schedules.timetable.manage`.',
+        description: 'Hủy lớp và các booking, hoàn buổi, báo trong tài khoản và gửi email cho học viên. Quyền `schedules.timetable.manage`.',
         summary: 'Admin: hủy lớp',
         security: [['bearerAuth' => []]],
         tags: ['Gym Admin Timetable'],
@@ -257,6 +264,11 @@ class TimetableController extends BaseAPIController
     /**
      * @return array<string, mixed>
      */
+    private function emailTrainer(ClassSchedule $schedule): void
+    {
+        $this->notificationService->emailTrainerAssigned($schedule->trainer_id, $schedule->fitnessClass->name, $schedule->start_time, $schedule->room);
+    }
+
     private function validateSchedule(Request $request, ?ClassSchedule $schedule = null): array
     {
         $minSlot = max(1, $schedule?->confirmedBookings()->count() ?? 0);

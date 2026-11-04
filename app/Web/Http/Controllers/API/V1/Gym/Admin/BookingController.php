@@ -167,7 +167,7 @@ class BookingController extends BaseAPIController
 
     #[OA\Patch(
         path: '/admin/bookings/{booking}/cancel',
-        description: 'Hủy lịch thay học viên và hoàn buổi. Lớp đã qua giờ thì không hủy được. Quyền `bookings.cancel_class`.',
+        description: 'Hủy lịch thay học viên, hoàn buổi, báo trong tài khoản và gửi email cho học viên. Lớp đã qua giờ thì không hủy được. Quyền `bookings.cancel_class`.',
         summary: 'Admin: hủy lịch học viên',
         security: [['bearerAuth' => []]],
         tags: ['Gym Admin Bookings'],

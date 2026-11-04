@@ -1,6 +1,7 @@
 <?php
 
 use App\Web\Http\Controllers\API\V1\Auth\AuthController;
+use App\Web\Http\Controllers\API\V1\Auth\EmailVerificationController;
 use App\Web\Http\Controllers\API\V1\Auth\PasswordResetController;
 use App\Web\Http\Controllers\API\V1\Auth\ProfileController;
 use App\Web\Http\Controllers\API\V1\Auth\RegistrationController;
@@ -68,6 +69,8 @@ Route::as('api.')
                     Route::post('register', [RegistrationController::class, 'register'])->name('register');
                     Route::post('login', [AuthController::class, 'login'])->name('login');
                     Route::post('password/reset', [PasswordResetController::class, 'reset'])->name('password.reset');
+                    Route::post('email/verify', [EmailVerificationController::class, 'verify'])->name('email.verify');
+                    Route::post('email/resend', [EmailVerificationController::class, 'resend'])->middleware('throttle:5,1')->name('email.resend');
 
                     Route::middleware('auth:api')->group(function () {
                         Route::post('logout', [AuthController::class, 'logout'])->name('logout');

@@ -109,6 +109,12 @@ class AuthController extends BaseAPIController
             return ResponseAPI::error(__('messages.gym_account_locked'), 403);
         }
 
+        if ($user->needsEmailVerification()) {
+            auth('api')->logout();
+
+            return ResponseAPI::error(__('messages.email_not_verified'), 403, ['email_unverified' => [__('messages.email_not_verified')]]);
+        }
+
         return $this->respondWithToken($token);
     }
 

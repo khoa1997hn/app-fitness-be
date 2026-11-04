@@ -4,6 +4,7 @@ namespace App\Web\Http\Controllers\API\V1\Auth;
 
 use App\Share\Enums\RegistrationSource;
 use App\Share\Models\User;
+use App\Share\Services\Auth\EmailVerificationService;
 use App\Share\Utils\ResponseAPI;
 use App\Web\Http\Controllers\API\V1\APIController as BaseAPIController;
 use Illuminate\Http\JsonResponse;
@@ -13,12 +14,14 @@ use OpenApi\Attributes as OA;
 
 class RegistrationController extends BaseAPIController
 {
+    public function __construct(private readonly EmailVerificationService $emailVerificationService) {}
+
     /**
      * Đăng ký user mới
      */
     #[OA\Post(
         path: '/auth/register',
-        description: 'Tạo tài khoản user mới với thông tin đăng ký. Sau khi đăng ký thành công, user cần đăng nhập để lấy JWT token.',
+        description: 'Tạo tài khoản user mới với thông tin đăng ký. Sau khi đăng ký, hệ thống gửi link xác thực về email. User phải xác thực rồi mới đăng nhập được.',
         summary: 'Đăng ký tài khoản mới',
         requestBody: new OA\RequestBody(
             required: true,
@@ -103,6 +106,8 @@ class RegistrationController extends BaseAPIController
             'phone' => $validated['phone'] ?? null,
             'dob' => $validated['dob'] ?? null,
         ]);
+
+        $this->emailVerificationService->send($user);
 
         return ResponseAPI::success([
             'id' => $user->id,

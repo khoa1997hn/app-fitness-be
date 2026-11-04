@@ -161,7 +161,7 @@ class BookingRequestController extends BaseAPIController
 
     #[OA\Patch(
         path: '/admin/private-requests/{privateRequest}/{action}',
-        description: '`approve` duyệt, `reject` từ chối (quyền `bookings.private.approve`). `complete` xác nhận buổi đã diễn ra, trừ 1 buổi và suất người thêm, kể cả khi học viên vắng (quyền `bookings.private.approve`). `cancel` admin hủy lịch đã duyệt, không trừ buổi (quyền `bookings.cancel_class`).',
+        description: '`approve` duyệt, `reject` từ chối (quyền `bookings.private.approve`). `complete` xác nhận buổi đã diễn ra, trừ 1 buổi và suất người thêm, kể cả khi học viên vắng (quyền `bookings.private.approve`). `cancel` admin hủy lịch đã duyệt, không trừ buổi, gửi email cho học viên (quyền `bookings.cancel_class`).',
         summary: 'Admin: xử lý yêu cầu Private',
         security: [['bearerAuth' => []]],
         tags: ['Gym Admin Requests'],
@@ -305,7 +305,7 @@ class BookingRequestController extends BaseAPIController
 
     #[OA\Patch(
         path: '/admin/therapy-requests/{therapyRequest}/{action}',
-        description: '`approve` duyệt và trừ 1 buổi, `reject` từ chối (quyền `bookings.private.approve`). `cancel` admin hủy lịch đã duyệt khi buổi chưa bắt đầu, hoàn buổi (quyền `bookings.cancel_class`).',
+        description: '`approve` duyệt và trừ 1 buổi, `reject` từ chối (quyền `bookings.private.approve`). `cancel` admin hủy lịch đã duyệt khi buổi chưa bắt đầu, hoàn buổi, gửi email cho học viên (quyền `bookings.cancel_class`).',
         summary: 'Admin: xử lý yêu cầu trị liệu',
         security: [['bearerAuth' => []]],
         tags: ['Gym Admin Requests'],

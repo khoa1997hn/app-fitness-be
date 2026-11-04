@@ -24,6 +24,7 @@ use Tymon\JWTAuth\Contracts\JWTSubject;
  * @property-read User|null $creator
  * @property int $id
  * @property string $email
+ * @property \Illuminate\Support\Carbon|null $email_verified_at
  * @property string $first_name
  * @property string $last_name
  * @property string $password
@@ -93,6 +94,7 @@ class User extends Authenticatable implements JWTSubject
     {
         return [
             'password' => 'hashed',
+            'email_verified_at' => 'datetime',
             'dob' => 'date',
             'subscription_status' => SubscriptionStatus::class,
             'plan' => Plan::class,
@@ -101,6 +103,15 @@ class User extends Authenticatable implements JWTSubject
             'status' => UserStatus::class,
             'gender' => Gender::class,
         ];
+    }
+
+    /**
+     * Chỉ tài khoản tự đăng ký phải xác thực email, tài khoản do nhân viên tạo thì không.
+     */
+    public function needsEmailVerification(): bool
+    {
+        return $this->email_verified_at === null
+            && in_array($this->registration_source?->value, [RegistrationSource::App, RegistrationSource::Web], true);
     }
 
     public function creator(): BelongsTo

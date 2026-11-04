@@ -9,6 +9,8 @@ use App\Share\Enums\OrderStatus;
 use App\Share\Enums\OrderType;
 use App\Share\Enums\PackageType;
 use App\Share\Enums\Role;
+use App\Share\Mail\GymNoticeMail;
+use App\Share\Mail\ScheduleCancelledMail;
 use App\Share\Models\Booking;
 use App\Share\Models\ClassSchedule;
 use App\Share\Models\FitnessClass;
@@ -19,6 +21,7 @@ use App\Share\Models\UserPackage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Mail;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
@@ -321,6 +324,58 @@ class BookingFlowTest extends TestCase
         $this->assertSame($admin->id, Booking::query()->find($id)->cancelled_by);
     }
 
+    public function test_admin_cancel_emails_member_and_keeps_booking_in_history(): void
+    {
+        Mail::fake();
+        $package = $this->createOwnedPackage();
+        $id = $this->book($this->createSchedule('2026-11-10 12:00:00'), $package)->json('data.id');
+        $member = $package->user;
+
+        auth('api')->forgetUser();
+        $admin = User::factory()->create(['role' => Role::Admin]);
+        $this->withToken(auth('api')->login($admin))->patchJson("/api/v1/admin/bookings/{$id}/cancel")->assertOk();
+
+        Mail::assertQueued(ScheduleCancelledMail::class, fn (ScheduleCancelledMail $mail) => $mail->hasTo($member->email)
+            && str_contains($mail->notice, 'Bạn không bị trừ buổi'));
+        $this->assertDatabaseHas('notifications', ['user_id' => $member->id, 'type' => 'schedule']);
+        $this->assertSame(10, $package->refresh()->remaining_credits);
+
+        auth('api')->forgetUser();
+        $this->withToken(auth('api')->login($member))->getJson('/api/v1/users/me/bookings')
+            ->assertOk()
+            ->assertJsonPath('data.0.id', $id)
+            ->assertJsonPath('data.0.status', 'cancelled')
+            ->assertJsonPath('data.0.cancelled_by_staff', true);
+    }
+
+    public function test_cancelling_class_emails_every_booked_member(): void
+    {
+        Mail::fake();
+        $schedule = $this->createSchedule('2026-11-10 12:00:00');
+        $first = $this->createOwnedPackage();
+        $this->book($schedule, $first)->assertCreated();
+        $second = $this->createOwnedPackage(User::factory()->create(['role' => Role::Member]));
+        Booking::query()->create(['user_id' => $second->user_id, 'class_schedule_id' => $schedule->id, 'user_package_id' => $second->id, 'status' => BookingStatus::Confirmed]);
+
+        auth('api')->forgetUser();
+        $admin = User::factory()->create(['role' => Role::Admin]);
+        $this->withToken(auth('api')->login($admin))->patchJson("/api/v1/admin/timetable/{$schedule->id}/cancel")->assertOk();
+
+        Mail::assertQueued(ScheduleCancelledMail::class, 2);
+        Mail::assertQueued(ScheduleCancelledMail::class, fn (ScheduleCancelledMail $mail) => $mail->hasTo($first->user->email));
+        Mail::assertQueued(ScheduleCancelledMail::class, fn (ScheduleCancelledMail $mail) => $mail->hasTo($second->user->email));
+    }
+
+    public function test_member_cancel_does_not_send_email(): void
+    {
+        Mail::fake();
+        $id = $this->book($this->createSchedule('2026-11-20 12:00:00'), $this->createOwnedPackage())->json('data.id');
+
+        $this->patchJson("/api/v1/bookings/{$id}/cancel")->assertOk();
+
+        Mail::assertNothingQueued();
+    }
+
     public function test_staff_cannot_cancel_after_class_finished(): void
     {
         $id = $this->book($this->createSchedule(), $this->createOwnedPackage())->json('data.id');
@@ -376,6 +431,29 @@ class BookingFlowTest extends TestCase
 
         $this->assertSame(9, $package->refresh()->remaining_credits);
         $this->assertNotNull(Booking::query()->find($held)->credit_deducted_at);
+    }
+
+    public function test_trainer_is_emailed_when_assigned_to_class(): void
+    {
+        Mail::fake();
+        $first = User::factory()->create(['role' => Role::Trainer]);
+        $second = User::factory()->create(['role' => Role::Trainer]);
+        $class = FitnessClass::query()->first() ?? $this->createSchedule()->fitnessClass;
+        $body = [
+            'fitness_class_id' => $class->id, 'trainer_id' => $first->id, 'room' => config('gym.rooms')[0],
+            'start_time' => '2026-11-20 09:00:00', 'end_time' => '2026-11-20 10:00:00', 'max_slot' => 10, 'status' => ClassScheduleStatus::Active,
+        ];
+        auth('api')->forgetUser();
+        $client = $this->withToken(auth('api')->login(User::factory()->create(['role' => Role::Admin])));
+
+        $id = $client->postJson('/api/v1/admin/timetable', $body)->assertCreated()->json('data.id');
+        Mail::assertQueued(GymNoticeMail::class, fn (GymNoticeMail $mail) => $mail->hasTo($first->email) && str_contains($mail->notice, '09:00 20/11/2026'));
+
+        $client->patchJson("/api/v1/admin/timetable/{$id}", [...$body, 'max_slot' => 12])->assertOk();
+        Mail::assertQueued(GymNoticeMail::class, 1);
+
+        $client->patchJson("/api/v1/admin/timetable/{$id}", [...$body, 'trainer_id' => $second->id])->assertOk();
+        Mail::assertQueued(GymNoticeMail::class, fn (GymNoticeMail $mail) => $mail->hasTo($second->email));
     }
 
     public function test_admin_manages_timetable(): void

@@ -12,6 +12,7 @@ use App\Share\Enums\PackageType;
 use App\Share\Enums\PrivateDiscipline;
 use App\Share\Enums\Role;
 use App\Share\Enums\ScheduleCancelRequestStatus;
+use App\Share\Mail\ScheduleCancelledMail;
 use App\Share\Models\Booking;
 use App\Share\Models\ClassSchedule;
 use App\Share\Models\FitnessClass;
@@ -23,6 +24,7 @@ use App\Share\Models\User;
 use App\Share\Models\UserPackage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 class AttendanceTeachingFlowTest extends TestCase
@@ -287,6 +289,7 @@ class AttendanceTeachingFlowTest extends TestCase
 
     public function test_admin_cancels_teaching_and_member_keeps_credit(): void
     {
+        Mail::fake();
         $package = $this->createUserPackage();
         $schedule = $this->createSchedule();
         $booking = $this->createBooking($schedule, $package);
@@ -300,6 +303,7 @@ class AttendanceTeachingFlowTest extends TestCase
         $this->assertTrue($booking->refresh()->status->is(BookingStatus::Cancelled));
         $this->assertSame(5, $package->refresh()->remaining_credits);
         $this->assertSame(5, $private->userPackage->refresh()->remaining_credits);
+        Mail::assertQueued(ScheduleCancelledMail::class, 2);
 
         $this->as($this->admin)->patchJson("/api/v1/admin/schedules/class/{$schedule->id}/cancel")->assertUnprocessable();
     }

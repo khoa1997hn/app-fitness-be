@@ -151,7 +151,7 @@ class TeachingScheduleController extends BaseAPIController
 
     #[OA\Patch(
         path: '/admin/schedules/{type}/{id}/cancel',
-        description: 'Hủy lớp hoặc buổi Private, học viên không bị trừ buổi. Quyền `schedules.teaching.cancel`.',
+        description: 'Hủy lớp hoặc buổi Private, học viên không bị trừ buổi, được báo trong tài khoản và qua email. Quyền `schedules.teaching.cancel`.',
         summary: 'Admin: hủy lịch dạy',
         security: [['bearerAuth' => []]],
         tags: ['Gym Admin Teaching'],
