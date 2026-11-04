@@ -9,6 +9,8 @@ use App\Share\Enums\PackageType;
 use App\Share\Enums\PaymentMethod;
 use App\Share\Enums\Role;
 use App\Share\Enums\TherapyVariant;
+use App\Share\Enums\UserStatus;
+use App\Share\Mail\GymNoticeMail;
 use App\Share\Models\Order;
 use App\Share\Models\Package;
 use App\Share\Models\TherapyService;
@@ -16,6 +18,7 @@ use App\Share\Models\User;
 use App\Share\Models\UserPackage;
 use App\Share\Models\UserTherapy;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
@@ -75,6 +78,50 @@ class OrderFlowTest extends TestCase
             'amount' => $package->price,
             'status' => OrderStatus::PendingTerms,
         ]);
+    }
+
+    public function test_paid_order_emails_buyer_and_active_admins_once(): void
+    {
+        Mail::fake();
+        User::factory()->create(['role' => Role::Admin, 'email' => 'admin@example.com', 'status' => UserStatus::Active]);
+        User::factory()->create(['role' => Role::Admin, 'email' => 'locked@example.com', 'status' => UserStatus::Locked]);
+        $package = $this->createPackage();
+        $member = User::factory()->create(['role' => Role::Member, 'email' => 'account@example.com']);
+        $client = $this->actingAsUser($member);
+
+        $code = $client->postJson('/api/v1/orders', ['type' => OrderType::Package, 'package_id' => $package->id])->json('data.code');
+        $client->postJson("/api/v1/orders/{$code}/accept-terms", self::TERMS)->assertOk();
+
+        Mail::assertNotQueued(GymNoticeMail::class);
+
+        $payment = ['order_code' => $code, 'payment_method' => PaymentMethod::Momo];
+        $client->postJson('/api/v1/payments', $payment)->assertOk();
+        $client->postJson('/api/v1/payments', $payment)->assertOk();
+
+        Mail::assertQueued(GymNoticeMail::class, 2);
+        Mail::assertQueued(GymNoticeMail::class, fn (GymNoticeMail $mail) => $mail->hasTo('member@example.com')
+            && $mail->firstName === 'Phạm Thị Member'
+            && str_contains($mail->notice, $code)
+            && str_contains($mail->notice, '2.100.000đ')
+            && str_contains($mail->notice, 'MoMo'));
+        Mail::assertQueued(GymNoticeMail::class, fn (GymNoticeMail $mail) => $mail->hasTo('admin@example.com')
+            && str_contains($mail->title, $code)
+            && str_contains($mail->notice, $member->first_name));
+        Mail::assertNotQueued(GymNoticeMail::class, fn (GymNoticeMail $mail) => $mail->hasTo('account@example.com')
+            || $mail->hasTo('locked@example.com'));
+    }
+
+    public function test_order_without_terms_emails_buyer_at_account_address(): void
+    {
+        Mail::fake();
+        $member = User::factory()->create(['role' => Role::Member, 'email' => 'account@example.com']);
+        $client = $this->actingAsUser($member);
+
+        $code = $client->postJson('/api/v1/orders', ['type' => OrderType::ExtraPeople, 'quantity' => 1])->assertCreated()->json('data.code');
+        $client->postJson('/api/v1/payments', ['order_code' => $code, 'payment_method' => PaymentMethod::Cash])->assertOk();
+
+        Mail::assertQueued(GymNoticeMail::class, fn (GymNoticeMail $mail) => $mail->hasTo('account@example.com')
+            && str_contains($mail->notice, 'Tiền mặt'));
     }
 
     public function test_member_buys_package_through_full_flow(): void

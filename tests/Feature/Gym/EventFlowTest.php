@@ -5,7 +5,9 @@ namespace Tests\Feature\Gym;
 use App\Share\Enums\EventStatus;
 use App\Share\Enums\OrderStatus;
 use App\Share\Enums\Role;
+use App\Share\Mail\GymNoticeMail;
 use App\Share\Models\Event;
+use App\Share\Models\EventRegistration;
 use App\Share\Models\Order;
 use App\Share\Models\User;
 use App\Share\Models\UserNotification;
@@ -13,6 +15,7 @@ use App\Share\Services\Gym\EventService;
 use App\Share\Services\Gym\NotificationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 class EventFlowTest extends TestCase
@@ -122,6 +125,18 @@ class EventFlowTest extends TestCase
         $this->postJson("/api/v1/events/{$event->id}/register")->assertUnauthorized();
         $this->as($this->member)->postJson("/api/v1/events/{$event->id}/register")->assertUnprocessable();
         $this->as($this->admin)->postJson('/api/v1/orders', ['type' => 'event', 'event_id' => $event->id, 'quantity' => 1])->assertForbidden();
+    }
+
+    public function test_paid_ticket_email_includes_ticket_code(): void
+    {
+        Mail::fake();
+        $code = $this->createOrderFor($this->createEvent());
+        $this->signAndPay($code);
+
+        $ticketCode = EventRegistration::query()->where('order_id', Order::query()->where('code', $code)->value('id'))->value('ticket_code');
+
+        $this->assertNotNull($ticketCode);
+        Mail::assertQueued(GymNoticeMail::class, fn (GymNoticeMail $mail) => str_contains($mail->notice, "Mã vé: {$ticketCode}."));
     }
 
     public function test_paid_flow_holds_ticket_then_pays_and_counts_sold(): void

@@ -203,6 +203,8 @@ class OrderService
                 );
             }
 
+            $this->notificationService->emailOrderPaid($locked);
+
             return $locked;
         });
     }

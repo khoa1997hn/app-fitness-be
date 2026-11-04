@@ -162,7 +162,7 @@ class OrderController extends BaseAPIController
 
     #[OA\Post(
         path: '/payments',
-        description: 'Thanh toán đơn đã ký. **Hiện là mock**: thành công ngay và cấp gói. Gọi lại trên đơn đã thanh toán không cấp gói lần hai.',
+        description: 'Thanh toán đơn đã ký. **Hiện là mock**: thành công ngay và cấp gói. Thanh toán thành công thì gửi email cho người mua và admin. Gọi lại trên đơn đã thanh toán không cấp gói và không gửi email lần hai.',
         summary: 'Thanh toán đơn hàng (mock)',
         security: [['bearerAuth' => []]],
         requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(

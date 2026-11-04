@@ -8,12 +8,14 @@ use App\Share\Enums\ClassScheduleStatus;
 use App\Share\Enums\EventRegistrationStatus;
 use App\Share\Enums\EventStatus;
 use App\Share\Enums\NotificationType;
+use App\Share\Enums\PaymentMethod;
 use App\Share\Enums\Role;
 use App\Share\Enums\UserStatus;
 use App\Share\Mail\GymNoticeMail;
 use App\Share\Mail\ScheduleCancelledMail;
 use App\Share\Models\Booking;
 use App\Share\Models\EventRegistration;
+use App\Share\Models\Order;
 use App\Share\Models\PrivateRequest;
 use App\Share\Models\TherapyRequest;
 use App\Share\Models\User;
@@ -71,6 +73,50 @@ class NotificationService
                 __('messages.gym_mail_private_pending_subject'),
                 $admin->first_name,
                 $notice,
+            )));
+    }
+
+    /**
+     * Đơn thanh toán thành công: gửi email cho người mua và các admin đang hoạt động.
+     * Người mua nhận ở email đã điền khi ký điều khoản, đơn không có thì dùng email tài khoản.
+     */
+    public function emailOrderPaid(Order $order): void
+    {
+        $member = $order->user;
+        $details = [
+            'code' => $order->code,
+            'name' => $order->name,
+            'amount' => number_format($order->amount, 0, ',', '.').'đ',
+            'method' => PaymentMethod::getDescription($order->payment_method->value),
+            'time' => $order->paid_at->format('H:i d/m/Y'),
+        ];
+
+        $buyerNotice = __('messages.gym_mail_order_paid', $details);
+        $ticketCode = EventRegistration::query()->where('order_id', $order->id)->value('ticket_code');
+
+        if ($ticketCode !== null) {
+            $buyerNotice .= ' '.__('messages.gym_mail_order_paid_ticket', ['code' => $ticketCode]);
+        }
+
+        Mail::to($order->buyer_email ?: $member->email)->queue(new GymNoticeMail(
+            __('messages.gym_mail_order_paid_subject'),
+            $order->buyer_name ?: $member->first_name,
+            $buyerNotice,
+        ));
+
+        $adminNotice = __('messages.gym_mail_order_paid_admin', [
+            ...$details,
+            'member' => trim($member->first_name.' '.$member->last_name),
+        ]);
+
+        User::query()
+            ->where('role', Role::Admin)
+            ->where('status', UserStatus::Active)
+            ->get()
+            ->each(fn (User $admin) => Mail::to($admin->email)->queue(new GymNoticeMail(
+                __('messages.gym_mail_order_paid_admin_subject', ['code' => $order->code]),
+                $admin->first_name,
+                $adminNotice,
             )));
     }
 
