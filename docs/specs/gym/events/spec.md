@@ -30,7 +30,7 @@ Hội viên đăng ký sự kiện Bloom, admin quản lý sự kiện và check
 Đăng ký xong có mã vé ngay, `status=paid`, không có đơn hàng.
 
 ### Vé có phí
-- Tạo đơn: **giữ vé ngay, trong 30 phút** (`GYM_EVENT_HOLD_MINUTES`), kể cả khi chưa ký điều khoản
+- Tạo đơn: **giữ vé ngay, trong 15 phút** (`GYM_EVENT_HOLD_MINUTES`), kể cả khi chưa ký điều khoản
 - Ký, thanh toán trong thời hạn: `status=paid`, gửi thông báo kèm mã vé
 - Quá hạn: vé thôi tính ngay, không ký và không thanh toán được nữa. Command chuyển vé sang `cancelled`, đơn sang `cancelled` và báo cho hội viên
 - `ticket_code`: `EVT-{event_id}-{registration_id}`
@@ -44,7 +44,8 @@ Hội viên đăng ký sự kiện Bloom, admin quản lý sự kiện và check
 Chỉ vé `paid`, mỗi vé một lần. Check-in theo cả lượt đăng ký, không theo từng vé trong lượt.
 
 ### Khác
-- Học viên **chưa tự hủy được vé**, vì hoàn tiền còn thủ công
+- Học viên tự hủy được đơn vé **chưa thanh toán** (`POST orders/{code}/cancel`): vé và đơn sang `cancelled`, vé trả lại ngay, không gửi thông báo. Vé đã thanh toán chưa tự hủy được, vì hoàn tiền còn thủ công
+- Đơn vé chưa thanh toán trả `hold_expires_at` để FE đếm ngược
 - Nhắc lịch trước sự kiện qua `gym:send-reminders`
 - Tài khoản đã có vé sự kiện không xóa được, chỉ khóa
 

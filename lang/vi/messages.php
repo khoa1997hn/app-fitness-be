@@ -112,6 +112,7 @@ return [
     'gym_checkin_not_paid' => 'Chỉ check-in được vé đã thanh toán.',
     'gym_checkin_duplicate' => 'Vé này đã check-in.',
     'gym_order_cancelled' => 'Đơn hàng đã bị hủy.',
+    'gym_order_cancel_not_allowed' => 'Chỉ hủy được đơn vé sự kiện chưa thanh toán.',
     'gym_event_order_name' => 'Vé :name × :quantity',
     'gym_notify_event_registered' => 'Đăng ký sự kiện :name thành công. Mã vé: :code.',
     'gym_notify_event_paid' => 'Thanh toán vé sự kiện :name thành công. Mã vé: :code.',

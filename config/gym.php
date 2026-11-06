@@ -48,7 +48,7 @@ return [
     'package_expiry_notice_days' => (int) env('GYM_PACKAGE_EXPIRY_NOTICE_DAYS', 7),
 
     // Giữ vé sự kiện từng này phút chờ thanh toán, quá hạn tự nhả vé
-    'event_hold_minutes' => (int) env('GYM_EVENT_HOLD_MINUTES', 30),
+    'event_hold_minutes' => (int) env('GYM_EVENT_HOLD_MINUTES', 15),
 
     // Giá dùng thảm Redlight cho một buổi (VNĐ)
     'redlight_price' => (int) env('GYM_REDLIGHT_PRICE', 30000),

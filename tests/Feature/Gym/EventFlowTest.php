@@ -208,6 +208,36 @@ class EventFlowTest extends TestCase
         $this->createOrderFor($event);
     }
 
+    public function test_member_cancels_unpaid_ticket_order_and_ticket_is_released_at_once(): void
+    {
+        $event = $this->createEvent(['total_tickets' => 2]);
+        $code = $this->createOrderFor($event, quantity: 2);
+
+        $this->as($this->member)->getJson("/api/v1/orders/{$code}")
+            ->assertJsonPath('data.hold_expires_at', Carbon::now()->addMinutes(15)->toJSON());
+        $this->as($this->other)->postJson("/api/v1/orders/{$code}/cancel")->assertNotFound();
+
+        $this->as($this->member)->postJson("/api/v1/orders/{$code}/cancel")
+            ->assertOk()
+            ->assertJsonPath('data.status', 'cancelled')
+            ->assertJsonPath('data.hold_expires_at', null);
+        $this->as($this->member)->postJson("/api/v1/orders/{$code}/cancel")->assertOk();
+
+        $this->assertDatabaseHas('event_registrations', ['user_id' => $this->member->id, 'status' => 'cancelled']);
+        $this->assertDatabaseMissing('notifications', ['user_id' => $this->member->id, 'type' => 'event']);
+        $this->as($this->member)->postJson('/api/v1/payments', ['order_code' => $code, 'payment_method' => 'momo'])->assertUnprocessable();
+        $this->createOrderFor($event, $this->other, 2);
+    }
+
+    public function test_paid_or_non_event_order_cannot_be_cancelled(): void
+    {
+        $code = $this->createOrderFor($this->createEvent());
+        $this->signAndPay($code);
+
+        $this->as($this->member)->postJson("/api/v1/orders/{$code}/cancel")->assertUnprocessable();
+        $this->assertDatabaseHas('event_registrations', ['user_id' => $this->member->id, 'status' => 'paid']);
+    }
+
     public function test_quantity_and_sale_window_rules(): void
     {
         $client = $this->as($this->member);

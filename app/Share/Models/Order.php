@@ -8,6 +8,7 @@ use App\Share\Enums\PaymentMethod;
 use App\Share\Enums\TherapyVariant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * @property int $id
@@ -110,5 +111,10 @@ class Order extends Model
     public function event(): BelongsTo
     {
         return $this->belongsTo(Event::class);
+    }
+
+    public function eventRegistration(): HasOne
+    {
+        return $this->hasOne(EventRegistration::class);
     }
 }

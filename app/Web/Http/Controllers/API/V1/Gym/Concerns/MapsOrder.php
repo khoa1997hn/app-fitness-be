@@ -2,6 +2,8 @@
 
 namespace App\Web\Http\Controllers\API\V1\Gym\Concerns;
 
+use App\Share\Enums\OrderStatus;
+use App\Share\Enums\OrderType;
 use App\Share\Models\Order;
 use OpenApi\Attributes as OA;
 
@@ -24,6 +26,7 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'payment_method', type: 'string', enum: ['momo', 'vnpay', 'cash'], nullable: true),
         new OA\Property(property: 'transaction_code', type: 'string', nullable: true),
         new OA\Property(property: 'paid_at', type: 'string', format: 'date-time', nullable: true),
+        new OA\Property(property: 'hold_expires_at', description: 'Hạn giữ vé của đơn sự kiện chưa thanh toán, null với đơn khác', type: 'string', format: 'date-time', nullable: true),
         new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
     ]
 )]
@@ -67,8 +70,18 @@ trait MapsOrder
             'payment_method' => $order->payment_method,
             'transaction_code' => $order->transaction_code,
             'paid_at' => $order->paid_at,
+            'hold_expires_at' => $this->holdExpiresAt($order),
             'created_at' => $order->created_at,
         ];
+    }
+
+    private function holdExpiresAt(Order $order): mixed
+    {
+        if (! $order->type->is(OrderType::Event) || ! $order->status->in([OrderStatus::PendingTerms, OrderStatus::Pending])) {
+            return null;
+        }
+
+        return $order->eventRegistration?->hold_expires_at;
     }
 
     /**

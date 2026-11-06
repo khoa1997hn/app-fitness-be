@@ -95,7 +95,7 @@ class OrderController extends BaseAPIController
         ]);
 
         $orders = Order::query()
-            ->with(['user', 'creator'])
+            ->with(['user', 'creator', 'eventRegistration'])
             ->when($validated['status'] ?? null, fn ($query, string $status) => $query->where('status', $status))
             ->when($validated['type'] ?? null, fn ($query, string $type) => $query->where('type', $type))
             ->when($validated['q'] ?? null, function ($query, string $q) {

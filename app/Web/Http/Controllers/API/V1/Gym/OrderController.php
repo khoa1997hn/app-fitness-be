@@ -5,6 +5,7 @@ namespace App\Web\Http\Controllers\API\V1\Gym;
 use App\Share\Enums\PaymentMethod;
 use App\Share\Models\Order;
 use App\Share\Models\User;
+use App\Share\Services\Gym\EventService;
 use App\Share\Services\Gym\OrderService;
 use App\Share\Services\Gym\TermsDocumentService;
 use App\Share\Utils\ResponseAPI;
@@ -27,6 +28,7 @@ class OrderController extends BaseAPIController
     public function __construct(
         private readonly OrderService $orderService,
         private readonly TermsDocumentService $termsDocumentService,
+        private readonly EventService $eventService,
     ) {}
 
     #[OA\Get(
@@ -48,6 +50,7 @@ class OrderController extends BaseAPIController
     public function index(): JsonResponse
     {
         $orders = Order::query()
+            ->with('eventRegistration')
             ->where('user_id', auth()->id())
             ->orderByDesc('id')
             ->get();
@@ -172,6 +175,33 @@ class OrderController extends BaseAPIController
         ]);
 
         return ResponseAPI::success($this->mapOrder($this->orderService->acceptTerms($order, $terms)));
+    }
+
+    #[OA\Post(
+        path: '/orders/{code}/cancel',
+        description: 'Hủy đơn vé sự kiện chưa thanh toán, vé đang giữ được trả lại ngay. Gọi lại trên đơn đã hủy vẫn trả 200.',
+        summary: 'Hủy đơn vé sự kiện',
+        security: [['bearerAuth' => []]],
+        tags: ['Gym Orders'],
+        parameters: [
+            new OA\Parameter(name: 'code', description: 'Mã đơn', in: 'path', required: true, schema: new OA\Schema(type: 'string', example: 'GYM-7K2M9QXA1B')),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Đã hủy', content: new OA\JsonContent(properties: [
+                new OA\Property(property: 'success', type: 'boolean', example: true),
+                new OA\Property(property: 'message', type: 'string', example: 'Success'),
+                new OA\Property(property: 'data', ref: '#/components/schemas/GymOrder'),
+            ])),
+            new OA\Response(response: 401, description: 'Chưa đăng nhập'),
+            new OA\Response(response: 404, description: 'Không tìm thấy'),
+            new OA\Response(response: 422, description: 'Không phải đơn vé sự kiện hoặc đơn đã thanh toán'),
+        ]
+    )]
+    public function cancel(Order $order): JsonResponse
+    {
+        $this->ensureOwner($order);
+
+        return ResponseAPI::success($this->mapOrder($this->eventService->cancelHold($order)));
     }
 
     #[OA\Post(

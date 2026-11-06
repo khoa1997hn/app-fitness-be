@@ -126,6 +126,7 @@ Route::as('api.')
                 Route::post('orders', [OrderController::class, 'store'])->name('orders.store');
                 Route::get('orders/{order:code}', [OrderController::class, 'show'])->name('orders.show');
                 Route::post('orders/{order:code}/accept-terms', [OrderController::class, 'acceptTerms'])->name('orders.accept-terms');
+                Route::post('orders/{order:code}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
                 Route::post('payments', [OrderController::class, 'pay'])->name('payments.store');
 
                 Route::get('schedules', [BookingController::class, 'schedules'])->name('schedules.index');

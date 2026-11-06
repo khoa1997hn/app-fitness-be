@@ -493,7 +493,7 @@ class UserController extends BaseAPIController
                 ->map(fn (UserPackage $package) => $this->mapPackageItem($package))->all(),
             'therapies' => UserTherapy::query()->where('user_id', $user->id)->latest('id')->get()
                 ->map(fn (UserTherapy $therapy) => $this->mapTherapyItem($therapy))->all(),
-            'orders' => Order::query()->where('user_id', $user->id)->latest('id')->get()
+            'orders' => Order::query()->with('eventRegistration')->where('user_id', $user->id)->latest('id')->get()
                 ->map(fn (Order $order) => $this->mapOrder($order))->all(),
             'attendance' => $this->mapAttendance($user),
         ];

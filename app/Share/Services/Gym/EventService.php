@@ -6,6 +6,7 @@ use App\Share\Enums\EventRegistrationStatus;
 use App\Share\Enums\EventStatus;
 use App\Share\Enums\NotificationType;
 use App\Share\Enums\OrderStatus;
+use App\Share\Enums\OrderType;
 use App\Share\Exceptions\Gym\GymException;
 use App\Share\Models\Event;
 use App\Share\Models\EventRegistration;
@@ -14,7 +15,7 @@ use App\Share\Models\User;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Vé sự kiện. Vé có phí được giữ khi tạo đơn, quá hạn thì tự nhả. Học viên chưa tự hủy được vé.
+ * Vé sự kiện. Vé có phí được giữ khi tạo đơn, quá hạn thì tự nhả. Học viên tự hủy được vé chưa thanh toán.
  */
 class EventService
 {
@@ -192,10 +193,7 @@ class EventService
                     return;
                 }
 
-                $registration->update(['status' => EventRegistrationStatus::Cancelled]);
-                Order::query()->whereKey($registration->order_id)
-                    ->whereIn('status', [OrderStatus::PendingTerms, OrderStatus::Pending])
-                    ->update(['status' => OrderStatus::Cancelled]);
+                $this->release($registration);
 
                 $this->notificationService->send($registration->user_id, NotificationType::Event, __('messages.gym_notify_event_hold_expired', [
                     'name' => $registration->event->name,
@@ -206,6 +204,35 @@ class EventService
         }
 
         return $released;
+    }
+
+    /**
+     * Học viên tự hủy đơn vé chưa thanh toán, vé trả lại ngay.
+     */
+    public function cancelHold(Order $order): Order
+    {
+        return DB::transaction(function () use ($order) {
+            /** @var Order $locked */
+            $locked = Order::query()->lockForUpdate()->findOrFail($order->id);
+
+            if (! $locked->type->is(OrderType::Event)) {
+                throw new GymException(__('messages.gym_order_cancel_not_allowed'));
+            }
+
+            if ($locked->status->is(OrderStatus::Cancelled)) {
+                return $locked;
+            }
+
+            if ($locked->status->is(OrderStatus::Success)) {
+                throw new GymException(__('messages.gym_order_cancel_not_allowed'));
+            }
+
+            /** @var EventRegistration $registration */
+            $registration = EventRegistration::query()->where('order_id', $locked->id)->lockForUpdate()->firstOrFail();
+            $this->release($registration);
+
+            return $locked->refresh();
+        });
     }
 
     public function reservedTickets(Event $event): int
@@ -258,6 +285,14 @@ class EventService
         $registration->update(['ticket_code' => "EVT-{$event->id}-{$registration->id}"]);
 
         return $registration;
+    }
+
+    private function release(EventRegistration $registration): void
+    {
+        $registration->update(['status' => EventRegistrationStatus::Cancelled]);
+        Order::query()->whereKey($registration->order_id)
+            ->whereIn('status', [OrderStatus::PendingTerms, OrderStatus::Pending])
+            ->update(['status' => OrderStatus::Cancelled]);
     }
 
     private function registrationOf(Order $order): EventRegistration
