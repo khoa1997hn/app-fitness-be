@@ -229,7 +229,7 @@ class EventFlowTest extends TestCase
         $this->createOrderFor($event, $this->other, 2);
     }
 
-    public function test_paid_or_non_event_order_cannot_be_cancelled(): void
+    public function test_paid_event_order_cannot_be_cancelled(): void
     {
         $code = $this->createOrderFor($this->createEvent());
         $this->signAndPay($code);

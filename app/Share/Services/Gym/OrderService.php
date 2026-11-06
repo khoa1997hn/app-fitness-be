@@ -128,28 +128,56 @@ class OrderService
      */
     public function acceptTerms(Order $order, array $terms): Order
     {
-        if ($order->status->is(OrderStatus::Cancelled)) {
-            throw new GymException(__('messages.gym_order_cancelled'));
-        }
+        return DB::transaction(function () use ($order, $terms) {
+            $order = Order::query()->lockForUpdate()->findOrFail($order->id);
 
-        if (! $order->status->is(OrderStatus::PendingTerms)) {
-            throw new GymException(__('messages.gym_terms_already_accepted'));
-        }
+            if ($order->status->is(OrderStatus::Cancelled)) {
+                throw new GymException(__('messages.gym_order_cancelled'));
+            }
 
+            if (! $order->status->is(OrderStatus::PendingTerms)) {
+                throw new GymException(__('messages.gym_terms_already_accepted'));
+            }
+
+            if ($order->type->is(OrderType::Event)) {
+                $this->eventService->assertHoldValid($order);
+            }
+
+            $order->update([
+                'status' => OrderStatus::Pending,
+                'buyer_name' => $terms['buyer_name'],
+                'buyer_phone' => $terms['buyer_phone'],
+                'buyer_email' => $terms['buyer_email'],
+                'terms_signature' => $terms['signature_data'],
+                'terms_accepted_at' => now(),
+            ]);
+
+            return $order;
+        });
+    }
+
+    /** Hủy đơn chưa thanh toán; đơn sự kiện cần trả lại vé đang giữ. */
+    public function cancel(Order $order): Order
+    {
         if ($order->type->is(OrderType::Event)) {
-            $this->eventService->assertHoldValid($order);
+            return $this->eventService->cancelHold($order);
         }
 
-        $order->update([
-            'status' => OrderStatus::Pending,
-            'buyer_name' => $terms['buyer_name'],
-            'buyer_phone' => $terms['buyer_phone'],
-            'buyer_email' => $terms['buyer_email'],
-            'terms_signature' => $terms['signature_data'],
-            'terms_accepted_at' => now(),
-        ]);
+        return DB::transaction(function () use ($order) {
+            $locked = Order::query()->lockForUpdate()->findOrFail($order->id);
 
-        return $order;
+            if ($locked->status->is(OrderStatus::Cancelled)) {
+                return $locked;
+            }
+
+            if (! $locked->status->in([OrderStatus::PendingTerms, OrderStatus::Pending])) {
+                throw new GymException(__('messages.gym_order_cancel_not_allowed'));
+            }
+
+            $locked->update(['status' => OrderStatus::Cancelled]);
+
+            return $locked;
+        });
     }
 
     /**

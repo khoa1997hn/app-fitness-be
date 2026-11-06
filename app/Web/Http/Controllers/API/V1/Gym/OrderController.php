@@ -5,7 +5,6 @@ namespace App\Web\Http\Controllers\API\V1\Gym;
 use App\Share\Enums\PaymentMethod;
 use App\Share\Models\Order;
 use App\Share\Models\User;
-use App\Share\Services\Gym\EventService;
 use App\Share\Services\Gym\OrderService;
 use App\Share\Services\Gym\TermsDocumentService;
 use App\Share\Utils\ResponseAPI;
@@ -28,7 +27,6 @@ class OrderController extends BaseAPIController
     public function __construct(
         private readonly OrderService $orderService,
         private readonly TermsDocumentService $termsDocumentService,
-        private readonly EventService $eventService,
     ) {}
 
     #[OA\Get(
@@ -179,8 +177,8 @@ class OrderController extends BaseAPIController
 
     #[OA\Post(
         path: '/orders/{code}/cancel',
-        description: 'Hủy đơn vé sự kiện chưa thanh toán, vé đang giữ được trả lại ngay. Gọi lại trên đơn đã hủy vẫn trả 200.',
-        summary: 'Hủy đơn vé sự kiện',
+        description: 'Hủy đơn chưa ký hoặc chưa thanh toán. Vé sự kiện đang giữ được trả lại ngay. Gọi lại trên đơn đã hủy vẫn trả 200.',
+        summary: 'Hủy đơn chưa thanh toán',
         security: [['bearerAuth' => []]],
         tags: ['Gym Orders'],
         parameters: [
@@ -194,14 +192,14 @@ class OrderController extends BaseAPIController
             ])),
             new OA\Response(response: 401, description: 'Chưa đăng nhập'),
             new OA\Response(response: 404, description: 'Không tìm thấy'),
-            new OA\Response(response: 422, description: 'Không phải đơn vé sự kiện hoặc đơn đã thanh toán'),
+            new OA\Response(response: 422, description: 'Đơn không còn ở trạng thái chờ ký hoặc chờ thanh toán'),
         ]
     )]
     public function cancel(Order $order): JsonResponse
     {
         $this->ensureOwner($order);
 
-        return ResponseAPI::success($this->mapOrder($this->eventService->cancelHold($order)));
+        return ResponseAPI::success($this->mapOrder($this->orderService->cancel($order)));
     }
 
     #[OA\Post(

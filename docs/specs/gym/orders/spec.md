@@ -10,7 +10,7 @@ Screen doc: `fitness-web/docs/screens/student/payment.md`, `admin/payment-manage
 
 ### In-scope
 - Catalog trị liệu: `GET /therapy-services[/{slug}]`, công khai
-- Hội viên (`student.portal`): `POST /orders`, `GET /orders/{code}`, `POST /orders/{code}/accept-terms`, `POST /payments`, `GET /users/me/orders|packages|therapies`
+- Hội viên (`student.portal`): `POST /orders`, `POST /orders/{code}/cancel`, `GET /orders/{code}`, `POST /orders/{code}/accept-terms`, `POST /payments`, `GET /users/me/orders|packages|therapies`
 - Nhân viên: `GET|POST /admin/members`, `GET /admin/members/{id}` (`users.manage`); `POST /admin/users/{id}/orders` (`orders.create`); `GET /admin/payments[/{id}]` (`payments.manage`)
 - Chặn xóa gói đã có đơn, trả `can_delete`
 
@@ -59,3 +59,11 @@ Test: `tests/Feature/Gym/OrderFlowTest.php`.
 ## Liên quan
 
 - [packages](../packages/spec.md), [roles](../roles/spec.md)
+
+## Update 2026-11-06
+
+- Theo yêu cầu người dùng: thêm nút **Huỷ đơn** trong khối **Đơn hàng chờ bạn hoàn tất** để bỏ đơn khỏi danh sách chờ.
+- Chủ đơn được huỷ đơn `pending_terms` hoặc `pending`, gồm đơn nhân viên tạo hộ. Lưu trạng thái `cancelled`, không xóa lịch sử; tải lại trang vẫn không hiển thị đơn trong khối chờ.
+- Dùng `POST /orders/{code}/cancel`: đơn người khác trả 404; đơn đã thanh toán trả 422; huỷ lặp trả 200. Vé sự kiện giữ nguyên luồng trả vé hiện có.
+- Huỷ, ký và thanh toán khóa dòng đơn trong transaction để không khôi phục đơn đã huỷ khi thao tác đồng thời.
+- UI xác nhận trước khi huỷ, khoá thao tác khi gửi, tải lại đơn/vé sau thành công và hiển thị lỗi khi thất bại.

@@ -143,7 +143,7 @@ Giá cụ thể từng plan → env `PLAN_<TIER>_PRICE` (xem `.env.example`).
 - Role + phân quyền phòng tập: `users.role`, middleware `permission:*`, `GET /auth/profile` trả `role`. Spec [`gym/roles`](specs/gym/roles/spec.md).
 - Gói tập phòng tập: `Package` + `package_translations`. API `GET /api/v1/packages[/{id}]` + CRUD `/api/v1/admin/packages`. Spec [`gym/packages`](specs/gym/packages/spec.md).
 
-- Đơn hàng phòng tập: `Order`, `UserPackage`, `UserTherapy`, `TherapyService`; ký điều khoản, thanh toán **mock**, cấp gói qua `OrderService`; nhân viên tạo tài khoản và đơn hộ khách tại quầy. Spec [`gym/orders`](specs/gym/orders/spec.md).
+- Đơn hàng phòng tập: `Order`, `UserPackage`, `UserTherapy`, `TherapyService`; ký điều khoản, thanh toán **mock**, cấp gói qua `OrderService`; nhân viên tạo tài khoản và đơn hộ khách tại quầy. Hội viên tự huỷ đơn chờ ký/chờ thanh toán qua `POST /orders/{code}/cancel`, đơn huỷ không còn xuất hiện trong khối chờ hoàn tất. Spec [`gym/orders`](specs/gym/orders/spec.md).
 - Thời khóa biểu và đặt lịch gói thường: `FitnessClass`, `ClassSchedule`, `Booking`, `BookingService`; trừ buổi khi đặt, hủy trước 8 tiếng được hoàn buổi, vắng vẫn mất buổi; lọc off-peak. Spec [`gym/bookings`](specs/gym/bookings/spec.md).
 - Yêu cầu Private, Trị liệu: `PrivateRequest`, `TherapyRequest`; suất người thêm theo tài khoản, chỉ gói `private_pack`, số dư tính từ đơn và yêu cầu (`ExtraPeopleService`). Spec [`gym/private-therapy`](specs/gym/private-therapy/spec.md).
 - Điểm danh lớp gói thường, lịch dạy, yêu cầu hủy của HLV. Spec [`gym/attendance-teaching`](specs/gym/attendance-teaching/spec.md).

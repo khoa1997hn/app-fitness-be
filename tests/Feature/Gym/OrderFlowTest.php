@@ -80,6 +80,69 @@ class OrderFlowTest extends TestCase
         ]);
     }
 
+    #[DataProvider('cancellableOrders')]
+    public function test_member_cancels_pending_order_and_cannot_sign_or_pay_it(string $type, string $status): void
+    {
+        $member = User::factory()->create(['role' => Role::Member]);
+        $order = Order::query()->create([
+            'code' => 'GYM-CANCEL',
+            'user_id' => $member->id,
+            'created_by' => User::factory()->create(['role' => Role::Receptionist])->id,
+            'type' => $type,
+            'name' => 'Đơn chờ hoàn tất',
+            'amount' => 500000,
+            'status' => $status,
+        ]);
+        $client = $this->actingAsUser($member);
+
+        $client->postJson("/api/v1/orders/{$order->code}/cancel")
+            ->assertOk()->assertJsonPath('data.status', OrderStatus::Cancelled);
+        $client->postJson("/api/v1/orders/{$order->code}/cancel")->assertOk();
+        $client->postJson("/api/v1/orders/{$order->code}/accept-terms", self::TERMS)->assertUnprocessable();
+        $client->postJson('/api/v1/payments', ['order_code' => $order->code, 'payment_method' => PaymentMethod::Momo])
+            ->assertUnprocessable();
+        $client->getJson('/api/v1/users/me/orders')->assertJsonPath('data.0.status', OrderStatus::Cancelled);
+        $this->assertDatabaseHas('orders', ['id' => $order->id, 'status' => OrderStatus::Cancelled]);
+        $this->assertSame(0, UserPackage::query()->count());
+        $this->assertSame(0, UserTherapy::query()->count());
+    }
+
+    public static function cancellableOrders(): array
+    {
+        return [
+            [OrderType::Package, OrderStatus::PendingTerms],
+            [OrderType::Package, OrderStatus::Pending],
+            [OrderType::Therapy, OrderStatus::PendingTerms],
+            [OrderType::Therapy, OrderStatus::Pending],
+            [OrderType::ExtraPeople, OrderStatus::Pending],
+            [OrderType::Redlight, OrderStatus::Pending],
+        ];
+    }
+
+    public function test_member_cannot_cancel_another_members_order_or_a_paid_order(): void
+    {
+        $member = User::factory()->create(['role' => Role::Member]);
+        $order = $this->createOrderFor($member, $this->createPackage());
+        $this->actingAsRole()->postJson("/api/v1/orders/{$order->code}/cancel")->assertNotFound();
+        $this->assertDatabaseHas('orders', ['id' => $order->id, 'status' => OrderStatus::PendingTerms]);
+
+        $order->update(['status' => OrderStatus::Success]);
+        auth('api')->forgetUser();
+        $this->actingAsUser($member)->postJson("/api/v1/orders/{$order->code}/cancel")->assertUnprocessable();
+        $this->assertDatabaseHas('orders', ['id' => $order->id, 'status' => OrderStatus::Success]);
+    }
+
+    public function test_stale_order_cannot_be_signed_after_cancellation(): void
+    {
+        $member = User::factory()->create(['role' => Role::Member]);
+        $order = $this->createOrderFor($member, $this->createPackage());
+        $service = app(\App\Share\Services\Gym\OrderService::class);
+        $service->cancel($order);
+
+        $this->expectException(\App\Share\Exceptions\Gym\GymException::class);
+        $service->acceptTerms($order, self::TERMS);
+    }
+
     public function test_paid_order_emails_buyer_and_active_admins_once(): void
     {
         Mail::fake();
