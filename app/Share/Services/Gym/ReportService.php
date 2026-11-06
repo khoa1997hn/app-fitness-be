@@ -24,7 +24,7 @@ use Illuminate\Support\Collection;
 
 /**
  * Số liệu báo cáo. Doanh thu chỉ tính đơn đã thanh toán theo `paid_at`, giá theo snapshot trên đơn.
- * Vé, Redlight đã thu mà sau đó bị hủy vẫn nằm trong doanh thu vì hoàn tiền còn làm thủ công.
+ * Vé đã thu mà sau đó bị hủy vẫn nằm trong doanh thu vì hoàn tiền còn làm thủ công.
  */
 class ReportService
 {

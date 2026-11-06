@@ -1,57 +1,51 @@
-# Spec: Redlight theo buổi
+# Spec: Redlight theo lượt
 
 ## Bối cảnh
 
-Hội viên trả thêm để dùng thảm Redlight trong một buổi tập. Không quản lý tồn kho. Screen doc: `fitness-web/docs/screens/student/my-courses.md`.
+Hội viên mua trước một số lượt dùng thảm Redlight (giống mua suất người thêm), đặt lớp nào dùng Redlight thì trừ 1 lượt, lịch bị hủy thì hoàn lượt. Thay cho cách trả tiền từng buổi trước đây vì hoàn tiền khó. Không quản lý tồn kho. Screen doc: `fitness-web/docs/screens/student/my-courses.md`.
 
 ## Phạm vi
 
 ### In-scope
-- `student.portal`: `POST /orders` với `type=redlight`, `booking_id`
-- `GET /schedules`, `GET /users/me/bookings` trả thêm trường Redlight
+- `student.portal`: `POST /orders` với `type=redlight`, `quantity`; `GET /users/me/redlight` xem số dư
+- `POST /bookings` nhận `use_redlight`; `POST|DELETE /bookings/{id}/redlight` thêm/bỏ Redlight cho lịch đã đặt
+- `GET /schedules`, `GET /users/me/bookings` trả trường Redlight
 - Nhân viên thấy ai dùng Redlight ở điểm danh, chi tiết lịch dạy, chi tiết booking
-- `bookings.redlight_refund`: `PATCH /admin/bookings/{id}/redlight-refund`, admin xác nhận đã hoàn tiền
+- Nhân viên tạo đơn hộ bán lượt Redlight như sản phẩm khác
 
 ### Out-of-scope
 - Tồn kho thảm, giới hạn số thảm mỗi lớp
-- Hoàn tiền tự động
+- Hạn sử dụng lượt
+- Lịch Private, trị liệu
 
 ## Nghiệp vụ
 
-- **Giá:** `GYM_REDLIGHT_PRICE`, mặc định 30.000đ **mỗi buổi**, chốt vào đơn lúc tạo
-- **Áp dụng:** chỉ lớp nhóm Barre, Pilates (`barre`, `core-pilates`). Không áp dụng cho Private và trị liệu
-- **Mua:** với lịch đã đặt, còn hiệu lực, lớp chưa bắt đầu. Có thể chọn ngay khi đặt lịch, hoặc mua sau ở tab Tiện ích bổ sung
-- **Đơn:** không cần ký điều khoản, vào thẳng `pending`. Đã có đơn chờ của buổi này thì dùng lại
-- **Thanh toán:** kiểm tra lại điều kiện; lớp đã bắt đầu hoặc lịch đã hủy thì không thanh toán được
-- Không liên quan tới việc trừ buổi
-
-### Khi lịch thay đổi
-- Đơn đang chờ bị hủy khi học viên hủy lịch, nhân viên hủy lịch, hủy lớp, hoặc khi lớp kết thúc
-- Đã thanh toán mà lịch bị hủy: `redlight_refund_status=pending`, **hoàn tiền thủ công**. Admin hoàn xong bấm xác nhận → `refunded`, lưu người và thời điểm, học viên nhận thông báo
-- Lễ tân, HLV chỉ xem trạng thái, màn hình ghi rõ chỉ admin được xác nhận
-- Học viên vẫn thấy lịch đã hủy ở Lịch sử tập, kèm chú thích về đơn hoặc tiền Redlight. Thông báo hủy nói rõ sẽ được hoàn nếu đã trả
-- Đã thanh toán mà học viên không đến: không hoàn
+- **Giá:** `GYM_REDLIGHT_PRICE`, mặc định 30.000đ **mỗi lượt**; đơn = số lượt × giá, chốt lúc tạo
+- **Mua:** nhập số lượt tùy ý, không ký điều khoản, vào thẳng `pending`
+- **Số dư:** không lưu, tính = tổng lượt của đơn đã thanh toán − số lịch `confirmed` có `has_redlight`
+- **Áp dụng:** mọi lớp nhóm. Không áp dụng Private và trị liệu
+- **Dùng:** tích khi đặt lịch, hoặc thêm cho lịch đã đặt khi lớp chưa bắt đầu. Hết lượt thì bị chặn (đặt lịch kèm Redlight thì không đặt)
+- **Bỏ:** bỏ Redlight được trước giờ học tối thiểu 8 tiếng (cùng mốc khóa hủy lịch), hoàn lượt
+- **Hủy lịch:** học viên hủy, nhân viên hủy, hủy lớp → tự hoàn lượt, thông báo hủy nói rõ đã hoàn
+- **Không đến:** mất lượt, như mất buổi
 
 ## Acceptance criteria
 
-- [x] Mua cho đúng một buổi, không ký điều khoản, không ảnh hưởng buổi khác và số buổi còn lại
-- [x] Chỉ Barre, Pilates
-- [x] Dùng lại đơn đang chờ; đã trả rồi không mua lại được
+- [x] Mua N lượt, không ký điều khoản, số dư tăng khi thanh toán
+- [x] Đặt lịch kèm Redlight trừ 1 lượt, mọi lớp nhóm; hết lượt thì không đặt
+- [x] Thêm/bỏ Redlight cho lịch đã đặt; bỏ bị chặn trong vòng 8 tiếng; lớp đã bắt đầu không thêm được
 - [x] Lịch của người khác trả 404
-- [x] Lớp đã bắt đầu không mua và không thanh toán được
-- [x] Hủy lịch, lớp kết thúc thì hủy đơn đang chờ
-- [x] Hủy lớp sau khi đã trả: đánh dấu cần hoàn tiền, đơn giữ nguyên
-- [x] HLV thấy học viên nào dùng Redlight
-- [x] Chỉ admin xác nhận được đã hoàn tiền, không xác nhận hai lần
-- [x] Học viên thấy lịch đã hủy với trạng thái đơn hoặc tiền Redlight
+- [x] Hủy lịch, hủy lớp hoàn lượt
+- [x] Đã học hoặc vắng vẫn tính đã dùng
+- [x] Nhân viên thấy học viên nào dùng Redlight
 
 Test: `tests/Feature/Gym/RedlightFlowTest.php`.
 
 ## Quyết định
 
-- 2026-11-02 — Tính theo buổi, học viên chọn khi đặt từng buổi
-- 2026-11-02 — Chỉ lớp Barre, Pilates, không áp dụng Private và trị liệu
-- 2026-11-04 — Hoàn tiền vẫn thủ công, chỉ admin xác nhận; các role khác được chú thích rõ
+- 2026-11-02 — Tính theo buổi, chỉ lớp Barre, Pilates
+- 2026-11-04 — Hoàn tiền thủ công, chỉ admin xác nhận
+- 2026-11-06 — Đổi sang mua trước theo lượt, áp dụng mọi lớp nhóm, lịch hủy hoàn lượt. Bỏ hoàn tiền thủ công, quyền `bookings.redlight_refund`, command hủy đơn chờ. Chưa có dữ liệu thật nên bỏ hẳn cột cũ, không chuyển đổi
 
 ## Liên quan
 

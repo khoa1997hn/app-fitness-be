@@ -55,7 +55,6 @@ return [
     'bookings' => [
         'manage' => [Role::Admin, Role::Receptionist],
         'cancel_class' => [Role::Admin],
-        'redlight_refund' => [Role::Admin],
         'private' => [
             'approve' => [Role::Admin],
             'edit_form' => [Role::Admin],

@@ -19,7 +19,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property int|null $package_id
  * @property int|null $therapy_service_id
  * @property TherapyVariant|null $therapy_variant
- * @property int $quantity Số suất với đơn người thêm, các loại khác là 1
+ * @property int $quantity Số suất với đơn người thêm, số lượt với đơn Redlight, số vé với đơn sự kiện; các loại khác là 1
  * @property string $name
  * @property int $amount Giá chốt lúc tạo đơn
  * @property OrderStatus $status
@@ -49,7 +49,6 @@ class Order extends Model
         'therapy_service_id',
         'therapy_variant',
         'event_id',
-        'booking_id',
         'quantity',
         'name',
         'amount',
@@ -101,11 +100,6 @@ class Order extends Model
     public function therapyService(): BelongsTo
     {
         return $this->belongsTo(TherapyService::class);
-    }
-
-    public function booking(): BelongsTo
-    {
-        return $this->belongsTo(Booking::class);
     }
 
     public function event(): BelongsTo

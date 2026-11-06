@@ -11,7 +11,6 @@ Hội viên dùng gói đã mua để đặt lớp trên thời khóa biểu do 
 - Hội viên (`student.portal`): `GET /schedules[/{id}]`, `GET /users/me/bookings`, `POST /bookings`, `PATCH /bookings/{id}/cancel`
 - Thời khóa biểu (`schedules.timetable.manage`): `GET|POST /admin/timetable`, `GET|PATCH /admin/timetable/{id}`, `PATCH /admin/timetable/{id}/cancel`, `GET /admin/timetable/options`
 - Booking (`bookings.manage`): `GET /admin/bookings/members[/{id}]`; hủy thay học viên `PATCH /admin/bookings/{id}/cancel` (`bookings.cancel_class`)
-- Command `gym:cancel-finished-redlight-orders`, chạy 5 phút một lần qua scheduler
 
 ### Out-of-scope
 - Private, trị liệu: phase 5
@@ -52,7 +51,7 @@ Test: `tests/Feature/Gym/BookingFlowTest.php`.
 
 ## Vận hành
 
-Trừ buổi không phụ thuộc scheduler. Scheduler vẫn cần để hủy đơn Redlight chờ thanh toán của lớp đã qua giờ: cron `php artisan schedule:run` mỗi phút trên server, `php artisan schedule:work` khi dev.
+Trừ buổi, trừ lượt Redlight không phụ thuộc scheduler.
 
 Khi triển khai, migration `deduct_credits_of_held_bookings` trừ buổi cho các booking đang giữ theo quy tắc cũ.
 

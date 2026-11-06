@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Đặt lịch gói thường. Đặt lịch trừ buổi ngay; hủy hợp lệ thì hoàn lại, không đến vẫn mất buổi.
+ * Lượt Redlight theo cùng quy tắc: hủy lịch thì hoàn lượt, không đến vẫn mất lượt.
  */
 class BookingService
 {
@@ -23,9 +24,9 @@ class BookingService
         private readonly RedlightService $redlightService,
     ) {}
 
-    public function book(User $member, int $userPackageId, ClassSchedule $schedule): Booking
+    public function book(User $member, int $userPackageId, ClassSchedule $schedule, bool $useRedlight = false): Booking
     {
-        return DB::transaction(function () use ($member, $userPackageId, $schedule) {
+        return DB::transaction(function () use ($member, $userPackageId, $schedule, $useRedlight) {
             /** @var ClassSchedule $lockedSchedule */
             $lockedSchedule = ClassSchedule::query()->lockForUpdate()->findOrFail($schedule->id);
             /** @var UserPackage $package */
@@ -35,6 +36,10 @@ class BookingService
                 ->findOrFail($userPackageId);
 
             $this->assertBookable($member, $package, $lockedSchedule);
+
+            if ($useRedlight) {
+                $this->redlightService->assertHasCredit($member);
+            }
 
             if ($package->remaining_credits !== null) {
                 $package->update(['remaining_credits' => $package->remaining_credits - 1]);
@@ -46,7 +51,54 @@ class BookingService
                 'class_schedule_id' => $lockedSchedule->id,
                 'status' => BookingStatus::Confirmed,
                 'credit_deducted_at' => now(),
+                'has_redlight' => $useRedlight,
             ]);
+        });
+    }
+
+    /**
+     * Dùng 1 lượt Redlight cho lịch đã đặt.
+     */
+    public function attachRedlight(Booking $booking, User $member): Booking
+    {
+        return DB::transaction(function () use ($booking, $member) {
+            $this->redlightService->assertHasCredit($member);
+
+            /** @var Booking $locked */
+            $locked = Booking::query()->lockForUpdate()->findOrFail($booking->id);
+
+            if (! $locked->status->is(BookingStatus::Confirmed)
+                || $locked->has_redlight
+                || ! $this->redlightService->isAvailable($locked->classSchedule)) {
+                throw new GymException(__('messages.gym_redlight_unavailable'));
+            }
+
+            $locked->update(['has_redlight' => true]);
+
+            return $locked;
+        });
+    }
+
+    /**
+     * Bỏ Redlight và hoàn lượt, cùng mốc khóa với hủy lịch.
+     */
+    public function detachRedlight(Booking $booking): Booking
+    {
+        return DB::transaction(function () use ($booking) {
+            /** @var Booking $locked */
+            $locked = Booking::query()->lockForUpdate()->findOrFail($booking->id);
+
+            if (! $locked->status->is(BookingStatus::Confirmed) || ! $locked->has_redlight) {
+                throw new GymException(__('messages.gym_redlight_not_attached'));
+            }
+
+            if (! $this->canMemberCancel($locked->classSchedule)) {
+                throw new GymException(__('messages.gym_redlight_remove_locked', ['hours' => config('gym.cancel_lock_hours')]));
+            }
+
+            $locked->update(['has_redlight' => false]);
+
+            return $locked;
         });
     }
 
@@ -66,7 +118,7 @@ class BookingService
 
             $this->markCancelled($locked, $member);
 
-            if ($locked->redlight_paid_at !== null) {
+            if ($locked->has_redlight) {
                 $this->notifyCancelled($locked, 'messages.gym_notify_member_cancelled_redlight');
             }
 
@@ -134,7 +186,7 @@ class BookingService
 
     private function notifyCancelledByStaff(Booking $booking): void
     {
-        $messageKey = $booking->redlight_paid_at !== null
+        $messageKey = $booking->has_redlight
             ? 'messages.gym_notify_booking_cancelled_redlight'
             : 'messages.gym_notify_booking_cancelled';
         $this->notificationService->sendScheduleCancelled(
@@ -162,8 +214,6 @@ class BookingService
 
     private function markCancelled(Booking $booking, User $by): Booking
     {
-        $this->redlightService->cancelPendingOrders(collect([$booking->id]));
-
         /** @var UserPackage $package */
         $package = UserPackage::query()->lockForUpdate()->findOrFail($booking->user_package_id);
 

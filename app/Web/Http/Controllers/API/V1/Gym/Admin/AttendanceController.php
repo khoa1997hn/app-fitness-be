@@ -188,7 +188,7 @@ class AttendanceController extends BaseAPIController
                 'package_name' => $booking->userPackage->name,
                 'absent_recent' => $absences[$booking->user_id] ?? 0,
                 'attendance_status' => $booking->attendanceRecord?->status,
-                'has_redlight' => $booking->redlight_paid_at !== null,
+                'has_redlight' => $booking->has_redlight,
             ])->all(),
         ])->all();
     }

@@ -30,8 +30,7 @@ use OpenApi\Attributes as OA;
                 new OA\Property(property: 'package_name', type: 'string', example: '10 classes'),
                 new OA\Property(property: 'remaining_credits', type: 'integer', nullable: true, example: 4),
                 new OA\Property(property: 'status', type: 'string', example: 'confirmed'),
-                new OA\Property(property: 'has_redlight', description: 'Đã trả tiền Redlight', type: 'boolean', example: false),
-                new OA\Property(property: 'redlight_refund_status', description: '`pending` cần hoàn tiền thủ công, `refunded` đã hoàn', type: 'string', enum: ['pending', 'refunded'], nullable: true),
+                new OA\Property(property: 'has_redlight', description: 'Dùng lượt Redlight cho buổi này', type: 'boolean', example: false),
             ], type: 'object')),
         ]),
     ]
@@ -204,8 +203,7 @@ class TeachingScheduleController extends BaseAPIController
                         'package_name' => $booking->userPackage->name,
                         'remaining_credits' => $booking->userPackage->remaining_credits,
                         'status' => $booking->status,
-                        'has_redlight' => $booking->redlight_paid_at !== null,
-                        'redlight_refund_status' => $booking->redlightRefundStatus(),
+                        'has_redlight' => $booking->has_redlight,
                     ])->all(),
             ];
         }
@@ -223,7 +221,6 @@ class TeachingScheduleController extends BaseAPIController
                 'remaining_credits' => $target->userPackage->remaining_credits,
                 'status' => $target->status,
                 'has_redlight' => false,
-                'redlight_refund_status' => null,
             ]],
         ];
     }

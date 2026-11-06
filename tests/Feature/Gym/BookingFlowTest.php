@@ -20,7 +20,6 @@ use App\Share\Models\User;
 use App\Share\Models\UserPackage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Mail;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
@@ -167,7 +166,6 @@ class BookingFlowTest extends TestCase
         $this->book($this->createSchedule(), $package)->assertCreated();
 
         Carbon::setTestNow('2026-11-12 10:00:00');
-        Artisan::call('gym:cancel-finished-redlight-orders');
 
         $this->assertSame(9, $package->refresh()->remaining_credits);
     }

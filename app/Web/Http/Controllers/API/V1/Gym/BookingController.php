@@ -5,10 +5,8 @@ namespace App\Web\Http\Controllers\API\V1\Gym;
 use App\Share\Enums\BookingStatus;
 use App\Share\Enums\ClassScheduleStatus;
 use App\Share\Enums\FitnessClassCategory;
-use App\Share\Enums\OrderStatus;
 use App\Share\Models\Booking;
 use App\Share\Models\ClassSchedule;
-use App\Share\Models\Order;
 use App\Share\Models\User;
 use App\Share\Models\UserPackage;
 use App\Share\Services\Gym\BookingService;
@@ -28,8 +26,7 @@ use OpenApi\Attributes as OA;
         new OA\Schema(properties: [
             new OA\Property(property: 'is_full', type: 'boolean', example: false),
             new OA\Property(property: 'is_booked', description: 'Tôi đã đặt buổi này', type: 'boolean', example: false),
-            new OA\Property(property: 'redlight_available', description: 'Lớp Barre, Pilates chưa bắt đầu', type: 'boolean', example: true),
-            new OA\Property(property: 'redlight_price', type: 'integer', example: 30000),
+            new OA\Property(property: 'redlight_available', description: 'Lớp chưa bắt đầu, dùng được lượt Redlight', type: 'boolean', example: true),
         ]),
     ]
 )]
@@ -48,14 +45,10 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'package_name', type: 'string', example: '10 classes'),
         new OA\Property(property: 'status', description: '`booked` còn hủy được, `locked` trong vòng 8 tiếng, `completed` đã qua giờ, `cancelled` đã hủy', type: 'string', enum: ['booked', 'locked', 'completed'], example: 'booked'),
         new OA\Property(property: 'can_cancel', type: 'boolean', example: true),
-        new OA\Property(property: 'has_redlight', description: 'Đã trả tiền Redlight cho buổi này', type: 'boolean', example: false),
-        new OA\Property(property: 'redlight_available', description: 'Còn mua thêm Redlight được', type: 'boolean', example: true),
-        new OA\Property(property: 'redlight_price', type: 'integer', example: 30000),
-        new OA\Property(property: 'redlight_order_code', description: 'Đơn Redlight đang chờ thanh toán', type: 'string', nullable: true),
+        new OA\Property(property: 'has_redlight', description: 'Buổi này dùng 1 lượt Redlight; lịch đã hủy thì lượt đã được hoàn', type: 'boolean', example: false),
+        new OA\Property(property: 'redlight_available', description: 'Còn thêm Redlight cho buổi này được (chưa dùng, lớp chưa bắt đầu)', type: 'boolean', example: true),
+        new OA\Property(property: 'can_remove_redlight', description: 'Bỏ Redlight được, cùng mốc khóa với hủy lịch', type: 'boolean', example: false),
         new OA\Property(property: 'cancelled_by_staff', description: 'Lịch đã hủy do phòng tập hủy', type: 'boolean', example: false),
-        new OA\Property(property: 'redlight_order_cancelled', description: 'Lịch đã hủy có đơn Redlight chưa thanh toán bị hủy theo', type: 'boolean', example: false),
-        new OA\Property(property: 'redlight_refund_status', description: '`pending` chờ hoàn tiền, `refunded` đã hoàn', type: 'string', enum: ['pending', 'refunded'], nullable: true),
-        new OA\Property(property: 'redlight_amount', description: 'Số tiền Redlight đã trả', type: 'integer', nullable: true, example: 30000),
     ]
 )]
 class BookingController extends BaseAPIController
@@ -170,7 +163,7 @@ class BookingController extends BaseAPIController
     public function index(): JsonResponse
     {
         $bookings = Booking::query()
-            ->with(['classSchedule.fitnessClass', 'classSchedule.trainer', 'userPackage', 'pendingRedlightOrder', 'redlightOrders'])
+            ->with(['classSchedule.fitnessClass', 'classSchedule.trainer', 'userPackage'])
             ->where('user_id', auth()->id())
             ->orderByDesc('id')
             ->get();
@@ -188,6 +181,7 @@ class BookingController extends BaseAPIController
             properties: [
                 new OA\Property(property: 'class_schedule_id', type: 'integer', example: 15),
                 new OA\Property(property: 'user_package_id', type: 'integer', example: 7),
+                new OA\Property(property: 'use_redlight', description: 'Dùng 1 lượt Redlight cho buổi này', type: 'boolean', example: false),
             ]
         )),
         tags: ['Gym Bookings'],
@@ -200,7 +194,7 @@ class BookingController extends BaseAPIController
             new OA\Response(response: 401, description: 'Chưa đăng nhập'),
             new OA\Response(response: 403, description: 'Không phải hội viên'),
             new OA\Response(response: 404, description: 'Không tìm thấy gói hoặc lớp'),
-            new OA\Response(response: 422, description: 'Hết chỗ, hết buổi, gói hết hạn, ngoài khung off-peak, đã đặt rồi, hoặc gói Private'),
+            new OA\Response(response: 422, description: 'Hết chỗ, hết buổi, gói hết hạn, ngoài khung off-peak, đã đặt rồi, gói Private, hoặc hết lượt Redlight'),
         ]
     )]
     public function store(Request $request): JsonResponse
@@ -208,15 +202,16 @@ class BookingController extends BaseAPIController
         $validated = $request->validate([
             'class_schedule_id' => 'required|integer',
             'user_package_id' => 'required|integer',
+            'use_redlight' => 'sometimes|boolean',
         ]);
 
         /** @var User $user */
         $user = auth()->user();
         $schedule = ClassSchedule::query()->findOrFail($validated['class_schedule_id']);
 
-        $booking = $this->bookingService->book($user, $validated['user_package_id'], $schedule);
+        $booking = $this->bookingService->book($user, $validated['user_package_id'], $schedule, (bool) ($validated['use_redlight'] ?? false));
 
-        return ResponseAPI::success($this->mapBooking($booking->load(['classSchedule.fitnessClass', 'classSchedule.trainer', 'userPackage', 'pendingRedlightOrder'])), code: 201);
+        return ResponseAPI::success($this->mapBooking($booking->load(['classSchedule.fitnessClass', 'classSchedule.trainer', 'userPackage'])), code: 201);
     }
 
     #[OA\Patch(
@@ -250,6 +245,98 @@ class BookingController extends BaseAPIController
         return ResponseAPI::success();
     }
 
+    #[OA\Get(
+        path: '/users/me/redlight',
+        description: 'Số lượt Redlight của tài khoản. `used` gồm lịch đang giữ Redlight, buổi đã học và buổi vắng mặt; lịch bị hủy được hoàn lượt.',
+        summary: 'Số dư lượt Redlight',
+        security: [['bearerAuth' => []]],
+        tags: ['Gym Bookings'],
+        responses: [
+            new OA\Response(response: 200, description: 'Thành công', content: new OA\JsonContent(properties: [
+                new OA\Property(property: 'success', type: 'boolean', example: true),
+                new OA\Property(property: 'message', type: 'string', example: 'Success'),
+                new OA\Property(property: 'data', properties: [
+                    new OA\Property(property: 'purchased_total', type: 'integer', example: 10),
+                    new OA\Property(property: 'used', type: 'integer', example: 3),
+                    new OA\Property(property: 'available', type: 'integer', example: 7),
+                    new OA\Property(property: 'price_per_credit', type: 'integer', example: 30000),
+                ], type: 'object'),
+            ])),
+            new OA\Response(response: 401, description: 'Chưa đăng nhập'),
+            new OA\Response(response: 403, description: 'Không phải hội viên'),
+        ]
+    )]
+    public function redlight(): JsonResponse
+    {
+        /** @var User $user */
+        $user = auth()->user();
+
+        return ResponseAPI::success([
+            ...$this->redlightService->summary($user),
+            'price_per_credit' => (int) config('gym.redlight_price'),
+        ]);
+    }
+
+    #[OA\Post(
+        path: '/bookings/{booking}/redlight',
+        description: 'Dùng 1 lượt Redlight cho lịch đã đặt. Lớp phải chưa bắt đầu.',
+        summary: 'Thêm Redlight cho lịch',
+        security: [['bearerAuth' => []]],
+        tags: ['Gym Bookings'],
+        parameters: [
+            new OA\Parameter(name: 'booking', in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 21)),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Đã thêm', content: new OA\JsonContent(properties: [
+                new OA\Property(property: 'success', type: 'boolean', example: true),
+                new OA\Property(property: 'message', type: 'string', example: 'Success'),
+                new OA\Property(property: 'data', type: 'string', example: null, nullable: true),
+            ])),
+            new OA\Response(response: 401, description: 'Chưa đăng nhập'),
+            new OA\Response(response: 404, description: 'Không tìm thấy'),
+            new OA\Response(response: 422, description: 'Hết lượt, đã có Redlight, lịch đã hủy hoặc lớp đã bắt đầu'),
+        ]
+    )]
+    public function attachRedlight(Booking $booking): JsonResponse
+    {
+        abort_unless($booking->user_id === auth()->id(), 404);
+
+        /** @var User $user */
+        $user = auth()->user();
+        $this->bookingService->attachRedlight($booking, $user);
+
+        return ResponseAPI::success();
+    }
+
+    #[OA\Delete(
+        path: '/bookings/{booking}/redlight',
+        description: 'Bỏ Redlight và hoàn lượt. Chỉ được trước giờ học tối thiểu 8 tiếng, như hủy lịch.',
+        summary: 'Bỏ Redlight khỏi lịch',
+        security: [['bearerAuth' => []]],
+        tags: ['Gym Bookings'],
+        parameters: [
+            new OA\Parameter(name: 'booking', in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 21)),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Đã bỏ', content: new OA\JsonContent(properties: [
+                new OA\Property(property: 'success', type: 'boolean', example: true),
+                new OA\Property(property: 'message', type: 'string', example: 'Success'),
+                new OA\Property(property: 'data', type: 'string', example: null, nullable: true),
+            ])),
+            new OA\Response(response: 401, description: 'Chưa đăng nhập'),
+            new OA\Response(response: 404, description: 'Không tìm thấy'),
+            new OA\Response(response: 422, description: 'Lịch chưa có Redlight, đã hủy, hoặc trong vòng 8 tiếng'),
+        ]
+    )]
+    public function detachRedlight(Booking $booking): JsonResponse
+    {
+        abort_unless($booking->user_id === auth()->id(), 404);
+
+        $this->bookingService->detachRedlight($booking);
+
+        return ResponseAPI::success();
+    }
+
     /**
      * @param  list<int>  $scheduleIds
      * @return list<int>
@@ -274,7 +361,6 @@ class BookingController extends BaseAPIController
             'is_full' => $schedule->confirmed_bookings_count >= $schedule->max_slot,
             'is_booked' => $isBooked,
             'redlight_available' => $this->redlightService->isAvailable($schedule),
-            'redlight_price' => (int) config('gym.redlight_price'),
         ];
     }
 
@@ -286,7 +372,6 @@ class BookingController extends BaseAPIController
         $schedule = $booking->classSchedule;
         $isCancelled = $booking->status->is(BookingStatus::Cancelled);
         $canCancel = ! $isCancelled && $this->bookingService->canMemberCancel($schedule);
-        $paidOrder = $booking->redlightOrders->first(fn (Order $order) => $order->status->is(OrderStatus::Success));
 
         return [
             'id' => $booking->id,
@@ -300,14 +385,10 @@ class BookingController extends BaseAPIController
             'package_name' => $booking->userPackage->name,
             'status' => $isCancelled ? 'cancelled' : ($schedule->end_time->isPast() ? 'completed' : ($canCancel ? 'booked' : 'locked')),
             'can_cancel' => $canCancel,
-            'has_redlight' => $booking->redlight_paid_at !== null,
-            'redlight_available' => ! $isCancelled && $booking->redlight_paid_at === null && $this->redlightService->isAvailable($schedule),
-            'redlight_price' => (int) config('gym.redlight_price'),
-            'redlight_order_code' => $booking->pendingRedlightOrder?->code,
+            'has_redlight' => $booking->has_redlight,
+            'redlight_available' => ! $isCancelled && ! $booking->has_redlight && $this->redlightService->isAvailable($schedule),
+            'can_remove_redlight' => $canCancel && $booking->has_redlight,
             'cancelled_by_staff' => $isCancelled && $booking->cancelled_by !== null && $booking->cancelled_by !== $booking->user_id,
-            'redlight_order_cancelled' => $isCancelled && $booking->redlightOrders->contains(fn (Order $order) => $order->status->is(OrderStatus::Cancelled)),
-            'redlight_refund_status' => $booking->redlightRefundStatus(),
-            'redlight_amount' => $paidOrder?->amount,
         ];
     }
 }

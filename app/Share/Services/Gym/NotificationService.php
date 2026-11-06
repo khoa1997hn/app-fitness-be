@@ -124,8 +124,7 @@ class NotificationService
             actionPath: match ($order->type->value) {
                 OrderType::Event => '/bloom/tai-khoan',
                 OrderType::Therapy => '/hoc-vien/khoa-hoc-cua-toi?tab=therapy',
-                OrderType::ExtraPeople => '/hoc-vien/khoa-hoc-cua-toi?tab=addons',
-                OrderType::Redlight => '/hoc-vien/khoa-hoc-cua-toi?tab=history',
+                OrderType::ExtraPeople, OrderType::Redlight => '/hoc-vien/khoa-hoc-cua-toi?tab=addons',
                 default => '/hoc-vien/khoa-hoc-cua-toi',
             },
         ));

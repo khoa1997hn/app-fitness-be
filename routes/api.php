@@ -133,6 +133,9 @@ Route::as('api.')
                 Route::get('users/me/bookings', [BookingController::class, 'index'])->name('users.me.bookings');
                 Route::post('bookings', [BookingController::class, 'store'])->name('bookings.store');
                 Route::patch('bookings/{booking}/cancel', [BookingController::class, 'cancel'])->name('bookings.cancel');
+                Route::post('bookings/{booking}/redlight', [BookingController::class, 'attachRedlight'])->name('bookings.redlight.attach');
+                Route::delete('bookings/{booking}/redlight', [BookingController::class, 'detachRedlight'])->name('bookings.redlight.detach');
+                Route::get('users/me/redlight', [BookingController::class, 'redlight'])->name('users.me.redlight');
 
                 Route::get('users/me/extra-people', [BookingRequestController::class, 'extraPeople'])->name('users.me.extra-people');
                 Route::get('users/me/private-requests', [BookingRequestController::class, 'privateRequests'])->name('users.me.private-requests');
@@ -279,9 +282,6 @@ Route::as('api.')
                         Route::patch('private-requests/{privateRequest}/cancel', [AdminBookingRequestController::class, 'privateCancel'])->name('private-requests.cancel');
                         Route::patch('therapy-requests/{therapyRequest}/cancel', [AdminBookingRequestController::class, 'therapyCancel'])->name('therapy-requests.cancel');
                     });
-                    Route::patch('bookings/{booking}/redlight-refund', [AdminBookingController::class, 'redlightRefund'])
-                        ->middleware('permission:bookings.redlight_refund')
-                        ->name('bookings.redlight-refund');
                     Route::patch('bookings/{booking}/cancel', [AdminBookingController::class, 'cancel'])
                         ->middleware('permission:bookings.cancel_class')
                         ->name('bookings.cancel');
