@@ -56,7 +56,7 @@ class PackagesSeeder extends Seeder
             ['name' => 'Private 1 buổi', 'type' => PackageType::PrivatePack, 'price' => 800000, 'days' => 30, 'credits' => 1, 'description' => '1–2 người/buổi, 60 phút. Từ 3 người +200.000đ/người. Redlight +30.000đ/buổi.'],
             ['name' => 'Private 10 buổi', 'type' => PackageType::PrivatePack, 'price' => 7000000, 'days' => 180, 'credits' => 10, 'description' => '6 tháng. 1–2 người/buổi. Từ 3 người +200.000đ/người. Admin xác nhận lịch.'],
             ['name' => 'Private 20 buổi', 'type' => PackageType::PrivatePack, 'price' => 12000000, 'days' => 365, 'credits' => 20, 'description' => '12 tháng. 1–2 người/buổi. Từ 3 người +200.000đ/người.'],
-            ['name' => 'Private Group (6+ người)', 'type' => PackageType::PrivateGroup, 'price' => 1800000, 'days' => 30, 'credits' => 1, 'base_people' => 15, 'description' => '6–15 người, 60 phút. Giá cố định cho nhóm từ 6 người. Redlight +30.000đ/buổi.'],
+            ['name' => 'Private Group (6+ người)', 'type' => PackageType::PrivateGroup, 'price' => 1800000, 'days' => 30, 'credits' => 1, 'base_people' => 100, 'description' => '6–100 người, 60 phút. Giá cố định cho nhóm từ 6 người. Redlight +30.000đ/buổi.'],
         ];
     }
 }
