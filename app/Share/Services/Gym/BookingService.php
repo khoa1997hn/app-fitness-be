@@ -62,8 +62,6 @@ class BookingService
     public function attachRedlight(Booking $booking, User $member): Booking
     {
         return DB::transaction(function () use ($booking, $member) {
-            $this->redlightService->assertHasCredit($member);
-
             /** @var Booking $locked */
             $locked = Booking::query()->lockForUpdate()->findOrFail($booking->id);
 
@@ -72,6 +70,8 @@ class BookingService
                 || ! $this->redlightService->isAvailable($locked->classSchedule)) {
                 throw new GymException(__('messages.gym_redlight_unavailable'));
             }
+
+            $this->redlightService->assertHasCredit($member);
 
             $locked->update(['has_redlight' => true]);
 
