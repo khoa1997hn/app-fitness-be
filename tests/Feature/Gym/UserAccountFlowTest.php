@@ -246,7 +246,8 @@ class UserAccountFlowTest extends TestCase
 
         $oldHash = $this->member->password;
         $client->postJson("/api/v1/admin/users/{$this->member->id}/reset-password")->assertOk();
-        $this->assertNotSame($oldHash, $this->member->refresh()->password);
+        $this->assertSame($oldHash, $this->member->refresh()->password);
+        Mail::assertSent(\App\Share\Mail\ForgotPasswordMail::class);
     }
 
     public function test_delete_blocked_when_user_has_gym_data_or_schedules(): void

@@ -20,7 +20,7 @@ class MailPresentationTest extends TestCase
         $tokenUrl = 'https://members.example.test/verify-email?token=abc%2B123&source=email';
         $cases = [
             [new VerifyEmailMail($user->first_name, $tokenUrl, 24), 'Xác thực email', 'Verify email', $tokenUrl],
-            [new ForgotPasswordMail($user, 'New<&Password123'), 'Mật khẩu mới', 'Your new password', 'https://members.example.test/login'],
+            [new ForgotPasswordMail($user, $tokenUrl), 'Đặt lại mật khẩu', 'Reset your password', $tokenUrl],
             [new ScheduleCancelledMail($user->first_name, 'Lịch Pilates đã bị hủy.', 'Your Pilates session was cancelled.'), 'Lịch sử tập', 'Session history', 'https://members.example.test/hoc-vien/khoa-hoc-cua-toi?tab=history'],
             [new GymNoticeMail('Thanh toán thành công', $user->first_name, 'Đơn KORE-123 đã thanh toán.', titleEn: 'Payment confirmed', noticeEn: 'Order KORE-123 has been paid.', actionPath: '/admin/payments/123'), 'Đơn KORE-123', 'Order KORE-123', 'https://members.example.test/admin/payments/123'],
         ];
@@ -43,6 +43,6 @@ class MailPresentationTest extends TestCase
             $this->assertStringNotContainsString('<script>', $html);
             $this->assertStringNotContainsString('<x-mail', $html);
         }
-        $this->assertStringContainsString('New&lt;&amp;Password123', $cases[1][0]->render());
+        $this->assertStringNotContainsString('Your new password is:', $cases[1][0]->render());
     }
 }

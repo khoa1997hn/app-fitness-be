@@ -27,3 +27,10 @@
 
 ### Verify
 - [ ] Email render đúng layout Markdown mặc định của Laravel
+
+
+## Update 2026-11-06
+
+- Dùng password broker có sẵn để gửi và xác thực token; dùng chung cho auth và admin.
+- Bổ sung API confirm và trang public nhập mật khẩu mới; cập nhật nội dung email và frontend.
+- Kiểm tra token hết hạn, dùng lại, sai email, tài khoản đã xóa, validation và gửi lại.

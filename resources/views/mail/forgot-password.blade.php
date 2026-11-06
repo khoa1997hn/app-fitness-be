@@ -1,21 +1,17 @@
 <x-mail::message>
-@include('mail.partials.heading', ['headingVi' => 'Mật khẩu mới của bạn', 'headingEn' => 'Your new password', 'recipientName' => $user->first_name])
+@include('mail.partials.heading', ['headingVi' => 'Đặt lại mật khẩu', 'headingEn' => 'Reset your password', 'recipientName' => $user->first_name])
 
-Bạn đã yêu cầu đặt lại mật khẩu. Mật khẩu mới của bạn là:
+Bạn đã yêu cầu đặt lại mật khẩu. Nhấn nút bên dưới để xác nhận và nhập mật khẩu mới.
 
-You requested a password reset. Your new password is:
+You requested a password reset. Click the button below to confirm and enter a new password.
 
-<x-mail::panel>
-<span class="password">{{ $password }}</span>
-</x-mail::panel>
+Liên kết có hiệu lực trong {{ config('auth.passwords.users.expire') }} phút và chỉ sử dụng được một lần. Mật khẩu hiện tại vẫn giữ nguyên cho tới khi bạn hoàn tất.
 
-Vui lòng đăng nhập bằng mật khẩu mới. Bạn có thể đổi mật khẩu sau khi đăng nhập.
+This link expires in {{ config('auth.passwords.users.expire') }} minutes and can only be used once. Your current password remains unchanged until you complete the reset.
 
-Please sign in with your new password. You can change it after signing in.
+Nếu bạn không yêu cầu thay đổi này, hãy bỏ qua email này.
 
-Nếu bạn không yêu cầu thay đổi này, vui lòng liên hệ đội ngũ hỗ trợ.
+If you did not request this change, you can ignore this email.
 
-If you did not request this change, please contact support.
-
-@include('mail.partials.action', ['actionUrl' => rtrim(config('app.frontend_url'), '/').'/login', 'actionVi' => 'Đăng nhập', 'actionEn' => 'Sign in'])
+@include('mail.partials.action', ['actionUrl' => $url, 'actionVi' => 'Đặt lại mật khẩu', 'actionEn' => 'Reset password'])
 </x-mail::message>

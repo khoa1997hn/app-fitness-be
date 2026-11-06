@@ -1,6 +1,9 @@
 <?php
 
 return [
+    'password_reset_email_sent' => 'Nếu email đã đăng ký, liên kết đặt lại mật khẩu đã được gửi tới hộp thư của bạn.',
+    'password_reset_invalid' => 'Liên kết không hợp lệ hoặc đã hết hạn. Vui lòng yêu cầu liên kết mới.',
+    'password_reset_success' => 'Đặt lại mật khẩu thành công. Vui lòng đăng nhập bằng mật khẩu mới.',
 
     /*
     |--------------------------------------------------------------------------
@@ -20,7 +23,6 @@ return [
     'logout_success' => 'Đăng xuất thành công',
     'refresh_success' => 'Làm mới token thành công',
     'login_failed' => 'Email hoặc mật khẩu không đúng.',
-    'password_reset_email_sent' => 'Nếu email đã đăng ký, mật khẩu mới đã được gửi tới hộp thư của bạn.',
 
     // Hệ thống phòng tập
     'gym_package_unavailable' => 'Gói tập không còn mở bán.',

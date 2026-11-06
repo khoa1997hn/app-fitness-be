@@ -33,7 +33,7 @@ Nhân viên quản lý tài khoản thật thay cho dữ liệu mock, hội viê
 - Áp dụng cho mọi API, **gồm cả app**, vì dùng chung `users`. Người chưa bị khóa không bị ảnh hưởng
 
 ### Phân quyền thao tác
-- Lễ tân, HLV: sửa, khóa, gửi lại mật khẩu **chỉ với hội viên**; chỉ tạo được hội viên; xem được mọi user
+- Lễ tân, HLV: sửa, khóa, gửi liên kết đặt lại mật khẩu **chỉ với hội viên**; chỉ tạo được hội viên; xem được mọi user
 - Chỉ admin đổi role, tạo nhân viên, gia hạn, xóa
 - Không tự khóa, tự đổi role hoặc tự xóa mình qua API admin
 

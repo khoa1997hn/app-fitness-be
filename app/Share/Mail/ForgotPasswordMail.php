@@ -17,13 +17,13 @@ class ForgotPasswordMail extends Mailable
 
     public function __construct(
         public User $user,
-        public string $password,
+        public string $url,
     ) {}
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Mật khẩu mới của bạn / Your new password',
+            subject: 'Đặt lại mật khẩu / Reset your password',
         );
     }
 

@@ -341,8 +341,8 @@ class UserController extends BaseAPIController
 
     #[OA\Post(
         path: '/admin/users/{user}/reset-password',
-        description: 'Tạo mật khẩu mới và gửi qua email user. Lễ tân và HLV chỉ thao tác trên hội viên. Quyền `users.manage`.',
-        summary: 'Admin: gửi mật khẩu mới qua email',
+        description: 'Gửi liên kết đặt lại mật khẩu qua email user. Lễ tân và HLV chỉ thao tác trên hội viên. Quyền `users.manage`.',
+        summary: 'Admin: gửi liên kết đặt lại mật khẩu',
         security: [['bearerAuth' => []]],
         tags: ['Gym Admin Users'],
         parameters: [new OA\Parameter(name: 'user', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
@@ -357,7 +357,7 @@ class UserController extends BaseAPIController
     {
         $this->userAccountService->assertCanManage($this->actor(), $user);
 
-        $this->forgotPasswordService->sendNewPasswordIfUserExists($user->email);
+        $this->forgotPasswordService->sendResetLinkIfUserExists($user->email);
 
         return ResponseAPI::success(null, __('messages.password_reset_email_sent'));
     }

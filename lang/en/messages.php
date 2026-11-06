@@ -1,6 +1,10 @@
 <?php
 
 return [
+    'password_reset_email_sent' => 'If an account exists for this email, a password reset link has been sent.',
+    'password_reset_invalid' => 'This link is invalid or has expired. Please request a new link.',
+    'password_reset_success' => 'Your password has been reset. Please sign in with your new password.',
+
     'mail_verify_email_subject' => 'Verify your email address',
     'gym_mail_private_pending_subject' => 'New private session awaiting approval',
     'gym_mail_private_pending' => ':member requested :name at :time for :people people. Open booking management to approve or decline the request.',

@@ -7,34 +7,19 @@ namespace App\Share\Services\Auth;
 use App\Share\Mail\ForgotPasswordMail;
 use App\Share\Models\User;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Password;
 
 readonly class ForgotPasswordService
 {
-    private const PASSWORD_RULE = 'required|string|min:8|max:50';
-
-    public function sendNewPasswordIfUserExists(string $email): void
+    public function sendResetLinkIfUserExists(string $email): void
     {
-        $user = User::query()->where('email', $email)->first();
+        Password::sendResetLink(['email' => $email], function (User $user, string $token): void {
+            $url = rtrim(config('app.frontend_url'), '/').'/reset-password?'.http_build_query([
+                'token' => $token,
+                'email' => $user->email,
+            ]);
 
-        if ($user === null) {
-            return;
-        }
-
-        $password = $this->generatePassword();
-
-        $user->update(['password' => $password]);
-
-        Mail::to($user->email)->send(new ForgotPasswordMail($user, $password));
-    }
-
-    private function generatePassword(): string
-    {
-        do {
-            $password = Str::password(12);
-        } while (! Validator::make(['password' => $password], ['password' => self::PASSWORD_RULE])->passes());
-
-        return $password;
+            Mail::to($user->email)->send(new ForgotPasswordMail($user, $url));
+        });
     }
 }

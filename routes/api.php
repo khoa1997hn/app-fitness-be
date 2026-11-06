@@ -69,6 +69,7 @@ Route::as('api.')
                 ->group(function () {
                     Route::post('register', [RegistrationController::class, 'register'])->name('register');
                     Route::post('login', [AuthController::class, 'login'])->name('login');
+                    Route::post('password/confirm', [PasswordResetController::class, 'confirm'])->name('password.confirm');
                     Route::post('password/reset', [PasswordResetController::class, 'reset'])->name('password.reset');
                     Route::post('email/verify', [EmailVerificationController::class, 'verify'])->name('email.verify');
                     Route::post('email/resend', [EmailVerificationController::class, 'resend'])->middleware('throttle:5,1')->name('email.resend');

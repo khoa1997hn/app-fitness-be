@@ -1,61 +1,30 @@
-# Spec: API quên mật khẩu (gửi mật khẩu mới qua email)
+# Spec: Quên mật khẩu qua liên kết xác nhận
 
-## Bối cảnh
+## Luồng hiện tại (2026-11-06)
 
-End-user quên mật khẩu, nhập email → BE sinh mật khẩu ngẫu nhiên đủ mạnh, cập nhật DB, gửi email chứa mật khẩu mới. User đăng nhập bằng mật khẩu mới.
+1. `POST /api/v1/auth/password/reset` nhận `{ email }` (required, email, max 255), public, không cần JWT.
+2. Nếu tài khoản tồn tại và chưa bị xóa, gửi email song ngữ Việt/Anh chứa link `${FRONTEND_URL}/reset-password?token=...&email=...`. Không đổi mật khẩu khi gửi email và không gửi mật khẩu trong email.
+3. Luôn trả 200 với thông báo chung cho email hợp lệ, kể cả email không tồn tại, đã xóa hoặc đang trong khoảng chờ gửi lại.
+4. Dùng Laravel password broker và bảng `password_reset_tokens` hiện có: token lưu dạng hash, hết hạn theo `auth.passwords.users.expire` (60 phút), giới hạn gửi lại theo `throttle` (60 giây). Link mới thay thế link trước.
+5. Trang `/reset-password` công khai, cho nhập mật khẩu mới và xác nhận; có link yêu cầu gửi lại nếu link thiếu, hết hạn hoặc không hợp lệ.
+6. `POST /api/v1/auth/password/confirm` nhận `{ email, token, password, password_confirmation }`. Mật khẩu `required|string|min:8|max:50|confirmed`.
+7. Token phải hợp lệ cho đúng email, chưa hết hạn/chưa sử dụng. Thành công: cập nhật password qua hashed cast, xóa token, trả 200; người dùng quay lại đăng nhập. Không xác thực email tài khoản hoặc tự đăng nhập trong bước này.
+8. Input sai hoặc token không hợp lệ/đã sử dụng/hết hạn → 422. Không đổi mật khẩu và không tiêu thụ token khi validation thất bại.
+9. Admin gửi yêu cầu reset dùng chung luồng gửi link; giữ nguyên phân quyền quản lý user.
 
-## Phạm vi
+## Ngoài phạm vi
 
-### In-scope
-- `POST /api/v1/auth/password/reset` — public, không JWT.
-- Input: `email` (required, email, max 255).
-- BE sinh password random (đúng rule register: `string`, min 8, max 50 ký tự).
-- Cập nhật `users.password` (hash qua cast).
-- Gửi email **tiếng Anh** chứa mật khẩu plain text.
-- Response **luôn 200** + message chung (kể cả email không tồn tại / user soft-deleted) — không lộ email có hay không.
-
-### Out-of-scope
-- Link reset token / OTP xác nhận.
-- User tự đặt mật khẩu mới qua form.
-- Rate limit (phase sau nếu cần).
-- Invalidate JWT cũ.
-
-## Nghiệp vụ
-
-1. Client `POST` `{ "email": "..." }`.
-2. Validate email format.
-3. Tìm user theo email (không gồm soft-deleted).
-4. **Không tìm thấy** → vẫn trả 200, không gửi mail.
-5. **Tìm thấy** → sinh password (`Str::password`, 12 ký tự, có chữ+số+ký tự đặc biệt), validate rule giống register → update user → gửi mail EN.
-6. User login bằng email + password mới.
-
-## Input / Output
-
-### Input
-```json
-{ "email": "user@example.com" }
-```
-
-### Output (200)
-```json
-{
-  "success": true,
-  "message": "If an account exists for this email, a new password has been sent.",
-  "data": null
-}
-```
-(Message key `messages.password_reset_email_sent` — theo `x-locale` API; **nội dung email** luôn EN.)
-
-### Lỗi
-- 422 — validate email.
+- Thu hồi JWT đã cấp (giữ hành vi hiện tại).
 
 ## Acceptance criteria
 
-- [ ] User tồn tại → nhận email EN có password mới, login được.
-- [ ] Email không tồn tại → 200, không gửi mail.
-- [ ] User soft-deleted → 200, không gửi mail.
-- [ ] Password sinh ra thỏa min 8 max 50.
-- [ ] OpenAPI có endpoint.
+- [x] Gửi email không làm thay đổi mật khẩu hiện tại.
+- [x] Email chứa nút và URL dự phòng, song ngữ Việt/Anh.
+- [x] Người dùng tự nhập và xác nhận mật khẩu mới.
+- [x] Token gắn đúng email, hết hạn, dùng một lần; link mới vô hiệu link trước.
+- [x] Email không tồn tại hoặc đã xóa không nhận mail, API vẫn trả thông báo chung.
+- [x] Admin reset gửi link và không đổi password ngay.
+- [x] API và frontend đồng bộ luồng, có OpenAPI.
 
 ## Quyết định
 
@@ -74,3 +43,9 @@ End-user quên mật khẩu, nhập email → BE sinh mật khẩu ngẫu nhiên
 
 - `RegistrationController@register`
 - `config/mail.php`, `.env` MAIL_*
+
+## Quyết định 2026-11-06
+
+- Theo yêu cầu người dùng: thay việc gửi mật khẩu ngẫu nhiên bằng link xác nhận để nhập mật khẩu mới. Thay thế luồng và ngoài phạm vi cũ ở trên.
+- Giữ endpoint gửi yêu cầu `/auth/password/reset`; bổ sung `/auth/password/confirm` để lưu mật khẩu. Dùng cấu hình expiry/throttle hiện có của Laravel.
+- Email song ngữ theo quy ước email hiện tại của dự án.
