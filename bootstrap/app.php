@@ -22,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
         \App\Share\Console\Commands\CancelFinishedRedlightOrdersCommand::class,
         \App\Share\Console\Commands\SendGymRemindersCommand::class,
         \App\Share\Console\Commands\ReleaseEventHoldsCommand::class,
+        \App\Share\Console\Commands\CompleteStartedPrivateRequestsCommand::class,
     ])
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([

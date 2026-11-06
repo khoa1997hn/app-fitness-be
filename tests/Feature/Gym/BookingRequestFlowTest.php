@@ -262,6 +262,41 @@ class BookingRequestFlowTest extends TestCase
             ->assertJsonPath('data.balance', 0);
     }
 
+    public function test_started_private_auto_completes_and_admin_can_uncomplete_or_cancel(): void
+    {
+        $this->buyExtraPeople(2);
+        $package = $this->createPrivatePackage();
+        $id = $this->submitPrivate($package, ['extra_people_count' => 2])->json('data.id');
+        $pending = $this->submitPrivate($package, ['requested_at' => '2026-11-17T14:00'])->json('data.id');
+        $this->asAdmin()->patchJson("/api/v1/admin/private-requests/{$id}/approve")->assertOk();
+
+        Carbon::setTestNow('2026-11-17 14:59:00');
+        $this->artisan('gym:complete-started-private-requests')->assertSuccessful();
+        $this->assertSame(BookingRequestStatus::Confirmed, PrivateRequest::query()->find($id)->status->value);
+
+        Carbon::setTestNow('2026-11-17 15:00:00');
+        $this->artisan('gym:complete-started-private-requests')->assertSuccessful();
+        $this->assertSame(BookingRequestStatus::Completed, PrivateRequest::query()->find($id)->status->value);
+        $this->assertSame(BookingRequestStatus::Pending, PrivateRequest::query()->find($pending)->status->value);
+        $this->asMember()->getJson('/api/v1/users/me/extra-people')->assertJsonPath('data.used', 2);
+
+        $admin = $this->asAdmin();
+        $admin->patchJson("/api/v1/admin/private-requests/{$id}/uncomplete")->assertOk()
+            ->assertJsonPath('data.status', BookingRequestStatus::Confirmed);
+        $admin->patchJson("/api/v1/admin/private-requests/{$id}/uncomplete")->assertUnprocessable();
+        $this->artisan('gym:complete-started-private-requests')->assertSuccessful();
+        $this->assertSame(BookingRequestStatus::Confirmed, PrivateRequest::query()->find($id)->status->value);
+
+        $admin->patchJson("/api/v1/admin/private-requests/{$id}/complete")->assertOk();
+        $this->assertSame(8, $package->refresh()->remaining_credits);
+        $admin->patchJson("/api/v1/admin/private-requests/{$id}/cancel")->assertOk()
+            ->assertJsonPath('data.status', BookingRequestStatus::Cancelled);
+        $this->assertSame(9, $package->refresh()->remaining_credits);
+        $this->asMember()->getJson('/api/v1/users/me/extra-people')
+            ->assertJsonPath('data.used', 0)
+            ->assertJsonPath('data.available', 2);
+    }
+
     public function test_reject_returns_reserved_people(): void
     {
         $this->buyExtraPeople(2);

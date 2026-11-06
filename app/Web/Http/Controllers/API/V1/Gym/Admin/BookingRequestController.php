@@ -161,13 +161,13 @@ class BookingRequestController extends BaseAPIController
 
     #[OA\Patch(
         path: '/admin/private-requests/{privateRequest}/{action}',
-        description: '`approve` duyệt, `reject` từ chối và hoàn buổi đã tạm trừ (quyền `bookings.private.approve`). `complete` xác nhận buổi đã diễn ra, không trừ thêm buổi vì đã trừ lúc gửi đơn, tính suất người thêm là đã dùng, kể cả khi học viên vắng (quyền `bookings.private.approve`). `cancel` admin hủy lịch đã duyệt, hoàn buổi đã tạm trừ, gửi email cho học viên (quyền `bookings.cancel_class`).',
+        description: '`approve` duyệt, `reject` từ chối và hoàn buổi đã tạm trừ (quyền `bookings.private.approve`). `complete` xác nhận buổi đã diễn ra, không trừ thêm buổi vì đã trừ lúc gửi đơn, tính suất người thêm là đã dùng, kể cả khi học viên vắng (quyền `bookings.private.approve`); hệ thống cũng tự hoàn thành buổi đã duyệt khi qua giờ bắt đầu. `uncomplete` đưa buổi đã hoàn thành về đã duyệt, hệ thống không tự hoàn thành lại buổi đó (quyền `bookings.private.approve`). `cancel` admin hủy lịch đã duyệt hoặc đã hoàn thành, hoàn buổi đã tạm trừ, nhả suất người thêm, gửi email cho học viên (quyền `bookings.cancel_class`).',
         summary: 'Admin: xử lý yêu cầu Private',
         security: [['bearerAuth' => []]],
         tags: ['Gym Admin Requests'],
         parameters: [
             new OA\Parameter(name: 'privateRequest', in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 5)),
-            new OA\Parameter(name: 'action', in: 'path', required: true, schema: new OA\Schema(type: 'string', enum: ['approve', 'reject', 'complete', 'cancel'])),
+            new OA\Parameter(name: 'action', in: 'path', required: true, schema: new OA\Schema(type: 'string', enum: ['approve', 'reject', 'complete', 'uncomplete', 'cancel'])),
         ],
         responses: [
             new OA\Response(response: 200, description: 'Thành công', content: new OA\JsonContent(properties: [
@@ -194,6 +194,11 @@ class BookingRequestController extends BaseAPIController
     public function privateComplete(PrivateRequest $privateRequest): JsonResponse
     {
         return ResponseAPI::success($this->mapAdminPrivate($this->privateRequestService->complete($privateRequest, $this->staff())));
+    }
+
+    public function privateUncomplete(PrivateRequest $privateRequest): JsonResponse
+    {
+        return ResponseAPI::success($this->mapAdminPrivate($this->privateRequestService->uncomplete($privateRequest, $this->staff())));
     }
 
     public function privateCancel(PrivateRequest $privateRequest): JsonResponse

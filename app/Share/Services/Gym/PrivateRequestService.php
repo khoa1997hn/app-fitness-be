@@ -14,7 +14,8 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Yêu cầu lịch gói Private. Buổi bị trừ ngay khi gửi đơn, từ chối hoặc hủy hợp lệ thì hoàn lại.
- * Suất người thêm được giữ chỗ khi gửi đơn và chỉ tính là đã dùng khi admin xác nhận hoàn thành.
+ * Suất người thêm được giữ chỗ khi gửi đơn và chỉ tính là đã dùng khi buổi hoàn thành.
+ * Buổi đã duyệt tự hoàn thành khi qua giờ bắt đầu; admin vẫn bỏ hoàn thành hoặc hủy được.
  */
 class PrivateRequestService
 {
@@ -166,6 +167,39 @@ class PrivateRequestService
         });
     }
 
+    /**
+     * Tự hoàn thành các buổi đã duyệt đã qua giờ bắt đầu, trừ buổi admin đã bỏ hoàn thành.
+     */
+    public function completeStarted(): int
+    {
+        return PrivateRequest::query()
+            ->where('status', BookingRequestStatus::Confirmed)
+            ->where('requested_at', '<=', now())
+            ->where('skip_auto_complete', false)
+            ->update(['status' => BookingRequestStatus::Completed, 'completed_at' => now()]);
+    }
+
+    /**
+     * Đưa buổi đã hoàn thành về đã duyệt để admin xử lý lại. Hệ thống không tự hoàn thành lại buổi này.
+     */
+    public function uncomplete(PrivateRequest $request, User $staff): PrivateRequest
+    {
+        return DB::transaction(function () use ($request, $staff) {
+            /** @var PrivateRequest $locked */
+            $locked = PrivateRequest::query()->lockForUpdate()->findOrFail($request->id);
+            $this->assertStatus($locked, BookingRequestStatus::Completed);
+
+            $locked->update([
+                'status' => BookingRequestStatus::Confirmed,
+                'completed_at' => null,
+                'skip_auto_complete' => true,
+                'reviewed_by' => $staff->id,
+            ]);
+
+            return $locked;
+        });
+    }
+
     public function cancelByMember(PrivateRequest $request): PrivateRequest
     {
         return DB::transaction(function () use ($request) {
@@ -184,16 +218,18 @@ class PrivateRequestService
     }
 
     /**
-     * Admin hủy thì hoàn lại buổi đã trừ lúc gửi đơn.
+     * Admin hủy lịch đã duyệt hoặc đã hoàn thành thì hoàn lại buổi đã trừ lúc gửi đơn và nhả suất người thêm.
      */
     public function cancelByStaff(PrivateRequest $request, User $staff): PrivateRequest
     {
         return DB::transaction(function () use ($request, $staff) {
             /** @var PrivateRequest $locked */
             $locked = PrivateRequest::query()->lockForUpdate()->findOrFail($request->id);
-            $this->assertStatus($locked, BookingRequestStatus::Confirmed);
+            if (! $locked->status->in([BookingRequestStatus::Confirmed, BookingRequestStatus::Completed])) {
+                throw new GymException(__('messages.gym_request_invalid_status'));
+            }
 
-            $locked->update(['status' => BookingRequestStatus::Cancelled, 'reviewed_by' => $staff->id]);
+            $locked->update(['status' => BookingRequestStatus::Cancelled, 'completed_at' => null, 'reviewed_by' => $staff->id]);
             $this->refundCredit($locked);
             $this->notificationService->sendScheduleCancelled(
                 $locked->user_id,

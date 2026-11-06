@@ -270,6 +270,7 @@ Route::as('api.')
                         Route::patch('private-requests/{privateRequest}/approve', [AdminBookingRequestController::class, 'privateApprove'])->name('private-requests.approve');
                         Route::patch('private-requests/{privateRequest}/reject', [AdminBookingRequestController::class, 'privateReject'])->name('private-requests.reject');
                         Route::patch('private-requests/{privateRequest}/complete', [AdminBookingRequestController::class, 'privateComplete'])->name('private-requests.complete');
+                        Route::patch('private-requests/{privateRequest}/uncomplete', [AdminBookingRequestController::class, 'privateUncomplete'])->name('private-requests.uncomplete');
                         Route::patch('therapy-requests/{therapyRequest}/approve', [AdminBookingRequestController::class, 'therapyApprove'])->name('therapy-requests.approve');
                         Route::patch('therapy-requests/{therapyRequest}/reject', [AdminBookingRequestController::class, 'therapyReject'])->name('therapy-requests.reject');
                     });

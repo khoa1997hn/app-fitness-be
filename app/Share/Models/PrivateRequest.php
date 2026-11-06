@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property BookingRequestStatus $status
  * @property int|null $reviewed_by
  * @property \Carbon\Carbon|null $completed_at
+ * @property bool $skip_auto_complete Admin đã bỏ hoàn thành thì hệ thống không tự hoàn thành lại
  * @property \Carbon\Carbon $created_at
  * @property-read User $user
  * @property-read UserPackage $userPackage
@@ -41,6 +42,7 @@ class PrivateRequest extends Model
         'status',
         'reviewed_by',
         'completed_at',
+        'skip_auto_complete',
     ];
 
     protected function casts(): array
@@ -52,6 +54,7 @@ class PrivateRequest extends Model
             'extra_people_count' => 'integer',
             'status' => BookingRequestStatus::class,
             'completed_at' => 'datetime',
+            'skip_auto_complete' => 'boolean',
         ];
     }
 
