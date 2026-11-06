@@ -233,10 +233,11 @@ class UserController extends BaseAPIController
 
     #[OA\Patch(
         path: '/admin/users/{user}',
-        description: 'Sửa thông tin cá nhân, không sửa email và role. Lễ tân và HLV chỉ sửa được hội viên. Quyền `users.manage`.',
+        description: 'Sửa thông tin cá nhân, không sửa role. Chỉ admin (quyền `users.change_email`) sửa được email, role khác gửi email sẽ bị bỏ qua. Lễ tân và HLV chỉ sửa được hội viên. Quyền `users.manage`.',
         summary: 'Admin: sửa user',
         security: [['bearerAuth' => []]],
         requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['first_name', 'last_name', 'phone'], properties: [
+            new OA\Property(property: 'email', description: 'Chỉ admin. Không gửi thì giữ nguyên', type: 'string', format: 'email'),
             new OA\Property(property: 'first_name', type: 'string'),
             new OA\Property(property: 'last_name', type: 'string'),
             new OA\Property(property: 'phone', type: 'string'),
@@ -261,15 +262,25 @@ class UserController extends BaseAPIController
     {
         $this->userAccountService->assertCanManage($this->actor(), $user);
 
-        $validated = $request->validate([
+        $rules = [
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'phone' => 'required|string|max:255',
             'dob' => 'nullable|date_format:Y-m-d',
             'gender' => ['nullable', Rule::in(Gender::getValues())],
-        ]);
+        ];
+        if ($this->actor()->hasPermission('users.change_email')) {
+            $rules['email'] = ['sometimes', 'required', 'email', 'max:255', Rule::unique('users')->ignore($user->id)];
+        }
 
-        $user->update($validated);
+        $validated = $request->validate($rules);
+
+        $user->fill($validated);
+        if ($user->isDirty('email')) {
+            // Email do admin đặt coi như đã xác thực, user không bị chặn đăng nhập vì chưa xác thực.
+            $user->email_verified_at = now();
+        }
+        $user->save();
 
         return ResponseAPI::success($this->mapUser($user));
     }

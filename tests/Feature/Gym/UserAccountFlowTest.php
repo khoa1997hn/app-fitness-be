@@ -235,6 +235,27 @@ class UserAccountFlowTest extends TestCase
         $admin->patchJson("/api/v1/admin/users/{$this->admin->id}/status", ['status' => 'locked'])->assertUnprocessable();
     }
 
+    public function test_admin_can_change_user_email_with_unique_check(): void
+    {
+        $admin = $this->as($this->admin);
+        $body = ['first_name' => 'Hội', 'last_name' => 'Viên', 'phone' => '0911111111'];
+        $this->member->update(['email_verified_at' => null]);
+
+        $admin->patchJson("/api/v1/admin/users/{$this->member->id}", [...$body, 'email' => $this->receptionist->email])
+            ->assertUnprocessable()->assertJsonValidationErrors('email');
+        $admin->patchJson("/api/v1/admin/users/{$this->member->id}", [...$body, 'email' => 'khong-hop-le'])
+            ->assertUnprocessable()->assertJsonValidationErrors('email');
+        $admin->patchJson("/api/v1/admin/users/{$this->member->id}", [...$body, 'email' => $this->member->email])->assertOk();
+
+        $admin->patchJson("/api/v1/admin/users/{$this->member->id}", [...$body, 'email' => 'moi@example.com'])
+            ->assertOk()->assertJsonPath('data.email', 'moi@example.com');
+        $this->assertNotNull($this->member->refresh()->email_verified_at);
+
+        $this->app['auth']->forgetGuards();
+        $this->flushHeaders();
+        $this->postJson('/api/v1/auth/login', ['email' => 'moi@example.com', 'password' => 'Secret@123'])->assertOk();
+    }
+
     public function test_receptionist_can_create_member_and_reset_password_by_email(): void
     {
         Mail::fake();
