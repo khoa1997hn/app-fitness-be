@@ -28,6 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'permission' => \App\Share\Http\Middleware\RequirePermission::class,
         ]);
+        $middleware->prepend(\App\Share\Http\Middleware\SetLocaleMiddleware::class);
         $middleware->api(append: [\App\Share\Http\Middleware\RejectLockedUser::class]);
         $middleware->redirectGuestsTo(fn () => null);
 

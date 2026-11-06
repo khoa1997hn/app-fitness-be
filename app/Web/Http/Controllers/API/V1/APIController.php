@@ -12,7 +12,8 @@ use OpenApi\Attributes as OA;
 **Đa ngôn ngữ:**
 Tất cả API endpoints hỗ trợ đa ngôn ngữ thông qua header `x-locale`. 
 - Header `x-locale` (optional): Locale code (ví dụ: `vi`, `en`)
-- Nếu không có header, hệ thống sẽ sử dụng locale mặc định từ config
+- Nếu không có header hoặc locale không được hỗ trợ, hệ thống sử dụng locale mặc định từ config
+- `message` và `errors` validation trong response theo locale, kể cả lỗi xác thực và không tìm thấy tài nguyên
 - Các locale được hỗ trợ: `vi` (Tiếng Việt), `en` (English)',
     title: 'Fitness App API'
 )]

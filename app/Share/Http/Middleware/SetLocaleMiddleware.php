@@ -10,10 +10,23 @@ class SetLocaleMiddleware
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $locale = $request->header('x-locale') ?? config('app.locale');
+        if (! $request->is('api/*')) {
+            return $next($request);
+        }
+
+        $previousLocale = app()->getLocale();
+        $locale = $request->header('x-locale');
+
+        if (! in_array($locale, config('translatable.locales'), true)) {
+            $locale = config('app.locale');
+        }
 
         app()->setLocale($locale);
 
-        return $next($request);
+        try {
+            return $next($request);
+        } finally {
+            app()->setLocale($previousLocale);
+        }
     }
 }

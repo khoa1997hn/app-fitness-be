@@ -92,7 +92,8 @@ Giá cụ thể từng plan → env `PLAN_<TIER>_PRICE` (xem `.env.example`).
 
 - Package: `astrotomic/laravel-translatable`.
 - Locales: `vi` (default), `en`. Config: `config/translatable.php`.
-- Header API: `x-locale` (optional, default từ `config('app.locale')`).
+- Header API: `x-locale` (optional, `vi`/`en`, thiếu hoặc không hỗ trợ thì dùng `config('app.locale')`). Middleware chạy trước xác thực và kiểm tra tài khoản khóa, áp dụng cả lỗi 404; locale được khôi phục sau mỗi request.
+- `message` của response (thành công, xác thực, lỗi nghiệp vụ) và `errors` validation theo `x-locale`; catalog `lang/en/messages.php` đồng bộ đầy đủ key và placeholder với tiếng Việt. Email vẫn giữ cả hai ngôn ngữ trong cùng thư.
 - Pattern: 2 table (`<entities>` + `<entity>_translations`). Xem `docs/rules/14-translatable.md` và mẫu [`Banner`](app/Share/Models/Banner.php) + [`BannerTranslation`](app/Share/Models/BannerTranslation.php).
 - **Khi thiết kế DB cho entity mới** (Program, Lesson, ...): tự hỏi "Tiếng Nhật field này có khác không?" CÓ → bảng translation. Nghi ngờ → hỏi user, KHÔNG bịa.
 

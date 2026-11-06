@@ -9,11 +9,11 @@ class ResponseAPI
     /**
      * Trả về response thành công
      */
-    public static function success(mixed $data = null, string $message = 'Success', int $code = 200): JsonResponse
+    public static function success(mixed $data = null, ?string $message = null, int $code = 200): JsonResponse
     {
         return response()->json([
             'success' => true,
-            'message' => $message,
+            'message' => $message ?? __('messages.success'),
             'data' => $data,
         ], $code);
     }

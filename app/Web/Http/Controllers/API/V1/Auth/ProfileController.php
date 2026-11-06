@@ -184,6 +184,6 @@ class ProfileController extends BaseAPIController
 
         $user->delete();
 
-        return ResponseAPI::success(null, 'Tài khoản đã được xóa thành công');
+        return ResponseAPI::success(null, __('messages.account_deleted'));
     }
 }
