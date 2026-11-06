@@ -18,6 +18,7 @@ use App\Share\Models\Booking;
 use App\Share\Models\EventRegistration;
 use App\Share\Models\Order;
 use App\Share\Models\PrivateRequest;
+use App\Share\Models\ScheduleCancelRequest;
 use App\Share\Models\TherapyRequest;
 use App\Share\Models\User;
 use App\Share\Models\UserNotification;
@@ -170,6 +171,37 @@ class NotificationService
             $trainer->first_name,
             $notices['vi'],
             titleEn: __('messages.gym_mail_trainer_assigned_subject', [], 'en'),
+            noticeEn: $notices['en'],
+            actionPath: '/admin/schedules?tab=teaching',
+        ));
+    }
+
+    /**
+     * Admin duyệt hoặc từ chối yêu cầu hủy: gửi email kết quả cho HLV, kèm ghi chú của admin nếu có.
+     */
+    public function emailTrainerCancelRequestReviewed(ScheduleCancelRequest $request): void
+    {
+        $schedule = $request->classSchedule;
+        $private = $request->privateRequest;
+        $details = $schedule !== null
+            ? ['name' => $schedule->fitnessClass->name, 'time' => $schedule->start_time->format('H:i d/m/Y')]
+            : ['name' => 'Private '.$private->discipline, 'time' => $private->requested_at->format('H:i d/m/Y')];
+        $result = $request->status->value;
+        $notices = [];
+
+        foreach (['vi', 'en'] as $locale) {
+            $notices[$locale] = __("messages.gym_mail_cancel_request_{$result}", $details, $locale);
+
+            if ($request->review_note !== null && $request->review_note !== '') {
+                $notices[$locale] .= ' '.__('messages.gym_mail_cancel_request_note', ['note' => $request->review_note], $locale);
+            }
+        }
+
+        Mail::to($request->trainer->email)->queue(new GymNoticeMail(
+            __("messages.gym_mail_cancel_request_{$result}_subject", [], 'vi'),
+            $request->trainer->first_name,
+            $notices['vi'],
+            titleEn: __("messages.gym_mail_cancel_request_{$result}_subject", [], 'en'),
             noticeEn: $notices['en'],
             actionPath: '/admin/schedules?tab=teaching',
         ));

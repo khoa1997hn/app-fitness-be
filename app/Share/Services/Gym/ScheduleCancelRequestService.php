@@ -11,11 +11,15 @@ use App\Share\Models\User;
 use Illuminate\Support\Facades\DB;
 
 /**
- * HLV gửi yêu cầu hủy, kể cả trong vòng 8 tiếng trước giờ dạy. Admin duyệt thì lịch bị hủy, học viên không mất buổi.
+ * HLV gửi yêu cầu hủy, kể cả trong vòng 8 tiếng trước giờ dạy. Admin duyệt thì lịch bị hủy, học viên không mất buổi
+ * và nhận email hủy lịch. Duyệt hay từ chối đều gửi email kết quả cho HLV.
  */
 class ScheduleCancelRequestService
 {
-    public function __construct(private readonly TeachingScheduleService $teachingScheduleService) {}
+    public function __construct(
+        private readonly TeachingScheduleService $teachingScheduleService,
+        private readonly NotificationService $notificationService,
+    ) {}
 
     public function create(ClassSchedule|PrivateRequest $target, User $trainer, string $reason): ScheduleCancelRequest
     {
@@ -87,6 +91,7 @@ class ScheduleCancelRequestService
     private function review(ScheduleCancelRequest $request, string $status, User $staff, ?string $note): ScheduleCancelRequest
     {
         $request->update(['status' => $status, 'reviewed_by' => $staff->id, 'review_note' => $note]);
+        $this->notificationService->emailTrainerCancelRequestReviewed($request);
 
         return $request;
     }

@@ -12,6 +12,7 @@ use App\Share\Enums\PackageType;
 use App\Share\Enums\PrivateDiscipline;
 use App\Share\Enums\Role;
 use App\Share\Enums\ScheduleCancelRequestStatus;
+use App\Share\Mail\GymNoticeMail;
 use App\Share\Mail\ScheduleCancelledMail;
 use App\Share\Models\Booking;
 use App\Share\Models\ClassSchedule;
@@ -365,6 +366,30 @@ class AttendanceTeachingFlowTest extends TestCase
         $this->assertTrue($rejected->refresh()->status->is(BookingRequestStatus::Confirmed));
         $this->assertTrue($approved->refresh()->status->is(BookingRequestStatus::Cancelled));
         $this->assertSame(5, $approved->userPackage->refresh()->remaining_credits);
+    }
+
+    public function test_reviewing_cancel_request_emails_trainer_and_members(): void
+    {
+        Mail::fake();
+        $schedule = $this->createSchedule('2026-11-10 12:00:00');
+        $this->createBooking($schedule);
+        $private = $this->createPrivate();
+        $trainer = $this->as($this->trainer);
+        $approveId = $trainer->postJson("/api/v1/instructor/schedules/class/{$schedule->id}/cancel-request", ['reason' => 'Ốm'])->json('data.id');
+        $rejectId = $trainer->postJson("/api/v1/instructor/schedules/private/{$private->id}/cancel-request", ['reason' => 'Bận'])->json('data.id');
+
+        $admin = $this->as($this->admin);
+        $admin->patchJson("/api/v1/admin/schedule-cancel-requests/{$approveId}/approve", ['note' => 'Đã báo học viên'])->assertOk();
+        $admin->patchJson("/api/v1/admin/schedule-cancel-requests/{$rejectId}/reject")->assertOk();
+
+        Mail::assertQueued(ScheduleCancelledMail::class, 1);
+        Mail::assertQueued(GymNoticeMail::class, 2);
+        Mail::assertQueued(GymNoticeMail::class, fn (GymNoticeMail $mail) => $mail->hasTo($this->trainer->email)
+            && $mail->title === __('messages.gym_mail_cancel_request_approved_subject', [], 'vi')
+            && str_contains($mail->notice, 'Đã báo học viên'));
+        Mail::assertQueued(GymNoticeMail::class, fn (GymNoticeMail $mail) => $mail->hasTo($this->trainer->email)
+            && $mail->title === __('messages.gym_mail_cancel_request_rejected_subject', [], 'vi')
+            && ! str_contains($mail->notice, 'Ghi chú'));
     }
 
     public function test_trainer_cannot_request_for_others_or_after_start(): void
