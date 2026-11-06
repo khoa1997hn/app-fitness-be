@@ -110,12 +110,12 @@ Route::as('api.')
             Route::get('events', [EventController::class, 'index'])->name('events.index');
             Route::get('events/{event}', [EventController::class, 'show'])->name('events.show');
 
-            Route::patch('users/me/password', [AccountController::class, 'changePassword'])
-                ->middleware('auth:api')
-                ->name('users.me.password');
+            Route::middleware('auth:api')->group(function () {
+                Route::patch('users/me', [AccountController::class, 'update'])->name('users.me.update');
+                Route::patch('users/me/password', [AccountController::class, 'changePassword'])->name('users.me.password');
+            });
 
             Route::middleware(['auth:api', 'permission:student.portal'])->group(function () {
-                Route::patch('users/me', [AccountController::class, 'update'])->name('users.me.update');
                 Route::post('events/{event}/register', [EventController::class, 'register'])->name('events.register');
                 Route::get('users/me/event-registrations', [EventController::class, 'myRegistrations'])->name('users.me.event-registrations');
                 Route::get('users/me/notifications', [NotificationController::class, 'index'])->name('users.me.notifications');

@@ -11,8 +11,8 @@ Nhân viên quản lý tài khoản thật thay cho dữ liệu mock, hội viê
 - `users.change_role`: `PATCH /admin/users/{id}/role`
 - `users.extend_package`: `PATCH /admin/users/{id}/packages/{pid}/extend`, `.../therapies/{tid}/extend`
 - `records.delete`: `DELETE /admin/users/{id}`
-- `student.portal`: `PATCH /users/me`, `GET /users/me/notifications`, `PATCH /notifications/{id}/read`
-- Mọi tài khoản đăng nhập: `PATCH /users/me/password`
+- `student.portal`: `GET /users/me/notifications`, `PATCH /notifications/{id}/read`
+- Mọi tài khoản đăng nhập (hội viên, admin, lễ tân, PT): `PATCH /users/me`, `PATCH /users/me/password`
 - Command `gym:send-reminders` chạy mỗi giờ
 
 ### Out-of-scope

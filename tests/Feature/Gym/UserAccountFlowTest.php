@@ -335,7 +335,11 @@ class UserAccountFlowTest extends TestCase
         $this->flushHeaders();
         $this->postJson('/api/v1/auth/login', ['email' => $this->member->email, 'password' => 'NewPass@123'])->assertOk();
 
-        $this->as($this->trainer)->patchJson('/api/v1/users/me', ['first_name' => 'A', 'last_name' => 'B', 'phone' => '1'])->assertForbidden();
+        foreach ([$this->trainer, $this->receptionist] as $staff) {
+            $this->as($staff)->patchJson('/api/v1/users/me', ['first_name' => 'A', 'last_name' => 'B', 'phone' => '1', 'role' => 'admin'])->assertOk();
+            $this->assertSame('A', $staff->refresh()->first_name);
+            $this->assertFalse($staff->role->is(Role::Admin));
+        }
     }
 
     public function test_events_create_notifications_for_member_only(): void

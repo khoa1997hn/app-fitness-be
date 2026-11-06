@@ -17,7 +17,7 @@ class AccountController extends BaseAPIController
 {
     #[OA\Patch(
         path: '/users/me',
-        description: 'Hội viên sửa thông tin cá nhân. Không sửa được email.',
+        description: 'Tài khoản đã đăng nhập (mọi role) sửa thông tin cá nhân. Không sửa được email, role.',
         summary: 'Cập nhật thông tin cá nhân',
         security: [['bearerAuth' => []]],
         requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['first_name', 'last_name', 'phone'], properties: [
@@ -31,7 +31,6 @@ class AccountController extends BaseAPIController
         responses: [
             new OA\Response(response: 200, description: 'Thành công'),
             new OA\Response(response: 401, description: 'Chưa đăng nhập'),
-            new OA\Response(response: 403, description: 'Không phải hội viên'),
             new OA\Response(response: 422, description: 'Dữ liệu không hợp lệ'),
         ]
     )]
