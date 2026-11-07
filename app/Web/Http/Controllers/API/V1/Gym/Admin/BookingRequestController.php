@@ -76,6 +76,7 @@ class BookingRequestController extends BaseAPIController
     public function privateIndex(Request $request): JsonResponse
     {
         $validated = $this->validateFilters($request);
+        $this->privateRequestService->cancelExpiredPending();
 
         $requests = PrivateRequest::query()
             ->with(['user', 'userPackage', 'trainer'])
@@ -112,7 +113,9 @@ class BookingRequestController extends BaseAPIController
     )]
     public function privateShow(PrivateRequest $privateRequest): JsonResponse
     {
-        return ResponseAPI::success($this->mapAdminPrivate($privateRequest));
+        $this->privateRequestService->cancelExpiredPending();
+
+        return ResponseAPI::success($this->mapAdminPrivate($privateRequest->refresh()));
     }
 
     #[OA\Patch(

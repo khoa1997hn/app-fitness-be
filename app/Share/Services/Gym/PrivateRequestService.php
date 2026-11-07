@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\DB;
  * Yêu cầu lịch gói Private. Buổi bị trừ ngay khi gửi đơn, từ chối hoặc hủy hợp lệ thì hoàn lại.
  * Suất người thêm được giữ chỗ khi gửi đơn và chỉ tính là đã dùng khi buổi hoàn thành.
  * Buổi đã duyệt tự hoàn thành khi qua giờ bắt đầu; admin vẫn bỏ hoàn thành hoặc hủy được.
+ * Đơn chờ duyệt mà qua giờ mong muốn thì tự hủy và hoàn buổi.
  */
 class PrivateRequestService
 {
@@ -117,8 +118,10 @@ class PrivateRequestService
     {
         $this->assertStatus($request, BookingRequestStatus::Pending);
 
-        if ($request->requested_at->isPast()) {
-            throw new GymException(__('messages.gym_request_time_passed'));
+        if (! $request->requested_at->isFuture()) {
+            $this->expire($request);
+
+            throw new GymException(__('messages.gym_request_expired_cancelled'));
         }
 
         $request->update(['status' => BookingRequestStatus::Confirmed, 'reviewed_by' => $staff->id]);
@@ -177,6 +180,37 @@ class PrivateRequestService
             ->where('requested_at', '<=', now())
             ->where('skip_auto_complete', false)
             ->update(['status' => BookingRequestStatus::Completed, 'completed_at' => now()]);
+    }
+
+    /**
+     * Tự hủy các đơn chờ duyệt đã qua giờ mong muốn, hoàn buổi đã trừ và báo học viên.
+     */
+    public function cancelExpiredPending(): int
+    {
+        $ids = PrivateRequest::query()
+            ->where('status', BookingRequestStatus::Pending)
+            ->where('requested_at', '<=', now())
+            ->pluck('id');
+
+        return $ids->filter(fn (int $id) => $this->expire(PrivateRequest::query()->findOrFail($id)))->count();
+    }
+
+    private function expire(PrivateRequest $request): bool
+    {
+        return DB::transaction(function () use ($request) {
+            /** @var PrivateRequest $locked */
+            $locked = PrivateRequest::query()->lockForUpdate()->findOrFail($request->id);
+
+            if (! $locked->status->is(BookingRequestStatus::Pending) || $locked->requested_at->isFuture()) {
+                return false;
+            }
+
+            $locked->update(['status' => BookingRequestStatus::Cancelled]);
+            $this->refundCredit($locked);
+            $this->notify($locked, 'messages.gym_notify_private_expired');
+
+            return true;
+        });
     }
 
     /**

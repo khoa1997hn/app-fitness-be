@@ -9,10 +9,11 @@ class CompleteStartedPrivateRequestsCommand extends Command
 {
     protected $signature = 'gym:complete-started-private-requests';
 
-    protected $description = 'Tự xác nhận hoàn thành các buổi Private đã duyệt và đã qua giờ bắt đầu';
+    protected $description = 'Tự hủy đơn Private chờ duyệt đã quá giờ (hoàn buổi) và tự hoàn thành các buổi đã duyệt đã qua giờ bắt đầu';
 
     public function handle(PrivateRequestService $privateRequestService): int
     {
+        $this->info('Đã tự hủy '.$privateRequestService->cancelExpiredPending().' đơn Private quá giờ chưa duyệt.');
         $this->info('Đã hoàn thành '.$privateRequestService->completeStarted().' buổi Private.');
 
         return self::SUCCESS;

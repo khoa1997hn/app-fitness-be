@@ -82,6 +82,8 @@ class BookingRequestController extends BaseAPIController
     )]
     public function privateRequests(): JsonResponse
     {
+        $this->privateRequestService->cancelExpiredPending();
+
         $requests = PrivateRequest::query()
             ->with(['userPackage', 'trainer'])
             ->where('user_id', auth()->id())

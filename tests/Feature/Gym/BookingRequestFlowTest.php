@@ -267,7 +267,7 @@ class BookingRequestFlowTest extends TestCase
         $this->buyExtraPeople(2);
         $package = $this->createPrivatePackage();
         $id = $this->submitPrivate($package, ['extra_people_count' => 2])->json('data.id');
-        $pending = $this->submitPrivate($package, ['requested_at' => '2026-11-17T14:00'])->json('data.id');
+        $pending = $this->submitPrivate($package, ['requested_at' => '2026-11-18T14:00'])->json('data.id');
         $this->asAdmin()->patchJson("/api/v1/admin/private-requests/{$id}/approve")->assertOk();
 
         Carbon::setTestNow('2026-11-17 14:59:00');
@@ -294,6 +294,32 @@ class BookingRequestFlowTest extends TestCase
         $this->assertSame(9, $package->refresh()->remaining_credits);
         $this->asMember()->getJson('/api/v1/users/me/extra-people')
             ->assertJsonPath('data.used', 0)
+            ->assertJsonPath('data.available', 2);
+    }
+
+    public function test_pending_private_past_requested_time_is_auto_cancelled_and_refunded(): void
+    {
+        $this->buyExtraPeople(2);
+        $package = $this->createPrivatePackage();
+        $byCommand = $this->submitPrivate($package, ['extra_people_count' => 2])->json('data.id');
+        $byApprove = $this->submitPrivate($package)->json('data.id');
+        $byList = $this->submitPrivate($package)->json('data.id');
+        $this->assertSame(7, $package->refresh()->remaining_credits);
+
+        Carbon::setTestNow('2026-11-17 15:00:00');
+        $this->asAdmin()->patchJson("/api/v1/admin/private-requests/{$byApprove}/approve")
+            ->assertUnprocessable()
+            ->assertJsonPath('message', __('messages.gym_request_expired_cancelled'));
+        $this->assertSame(BookingRequestStatus::Cancelled, PrivateRequest::query()->find($byApprove)->status->value);
+
+        $this->asAdmin()->getJson('/api/v1/admin/private-requests')->assertOk();
+        $this->assertSame(BookingRequestStatus::Cancelled, PrivateRequest::query()->find($byList)->status->value);
+        $this->assertSame(BookingRequestStatus::Cancelled, PrivateRequest::query()->find($byCommand)->status->value);
+
+        $this->artisan('gym:complete-started-private-requests')->assertSuccessful();
+        $this->assertSame(10, $package->refresh()->remaining_credits);
+        $this->asMember()->getJson('/api/v1/users/me/extra-people')
+            ->assertJsonPath('data.reserved', 0)
             ->assertJsonPath('data.available', 2);
     }
 
