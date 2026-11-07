@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Gym;
 
+use App\Share\Enums\AttendanceStatus;
 use App\Share\Enums\BookingStatus;
 use App\Share\Enums\ClassScheduleStatus;
 use App\Share\Enums\EventStatus;
@@ -10,6 +11,7 @@ use App\Share\Enums\OrderStatus;
 use App\Share\Enums\OrderType;
 use App\Share\Enums\PackageType;
 use App\Share\Enums\Role;
+use App\Share\Models\AttendanceRecord;
 use App\Share\Models\Booking;
 use App\Share\Models\ClassSchedule;
 use App\Share\Models\Event;
@@ -226,9 +228,9 @@ class ReportFlowTest extends TestCase
 
         $response = $this->as($this->admin)->getJson('/api/v1/admin/reports/classes?from=2026-11-01&to=2026-11-30')->assertOk();
 
-        $response->assertJsonPath('data.classes.0', ['name' => 'Yoga Flow', 'sessions' => 2, 'bookings' => 2, 'fill_rate_pct' => 50]);
-        $response->assertJsonPath('data.trainers.0', ['name' => 'Thu Hà', 'sessions' => 1, 'bookings' => 2, 'fill_rate_pct' => 100]);
-        $response->assertJsonPath('data.trainers.1', ['name' => 'Minh Anh', 'sessions' => 1, 'bookings' => 0, 'fill_rate_pct' => 0]);
+        $response->assertJsonPath('data.classes.0', ['name' => 'Yoga Flow', 'sessions' => 2, 'bookings' => 2, 'attended' => 0, 'fill_rate_pct' => 50]);
+        $response->assertJsonPath('data.trainers.0', ['name' => 'Thu Hà', 'sessions' => 1, 'bookings' => 2, 'attended' => 0, 'fill_rate_pct' => 100]);
+        $response->assertJsonPath('data.trainers.1', ['name' => 'Minh Anh', 'sessions' => 1, 'bookings' => 0, 'attended' => 0, 'fill_rate_pct' => 0]);
     }
 
     public function test_range_validation_and_defaults(): void
@@ -254,29 +256,76 @@ class ReportFlowTest extends TestCase
         }
     }
 
-    public function test_dashboard_differs_by_role_and_hides_revenue_from_staff(): void
+    public function test_dashboard_is_admin_only_and_filters_cards_by_date(): void
     {
         $this->createOrder();
-        $own = $this->createSchedule('2026-11-10 18:00:00');
-        $this->createBooking($own);
-        $otherTrainer = User::factory()->create(['role' => Role::Trainer]);
-        $this->createBooking($this->createSchedule('2026-11-10 19:00:00', $otherTrainer), BookingStatus::Confirmed, User::factory()->create());
+        $this->createOrder(['paid_at' => '2026-10-01 12:00:00', 'amount' => 500000]);
+        $this->createSchedule('2026-11-10 18:00:00');
 
-        $admin = collect($this->as($this->admin)->getJson('/api/v1/admin/dashboard')->assertOk()->json('data'))->keyBy('label');
-        $this->assertSame(1000000, $admin['Doanh thu']['value']);
-        $this->assertSame('currency', $admin['Doanh thu']['format']);
-        $this->assertSame(2, $admin['Lớp hôm nay']['value']);
+        $cards = collect($this->as($this->admin)->getJson('/api/v1/admin/dashboard?from=2026-11-01&to=2026-11-10')->assertOk()->json('data'))->keyBy('label');
+        $this->assertSame(1000000, $cards['Doanh thu']['value']);
+        $this->assertSame('currency', $cards['Doanh thu']['format']);
+        $this->assertSame(1, $cards['Buổi học trong kỳ']['value']);
+        $this->assertSame('2026-11-01 — 2026-11-10', $cards['Doanh thu']['note']);
+        $previous = collect($this->as($this->admin)->getJson('/api/v1/admin/dashboard?from=2026-10-01&to=2026-10-01')->assertOk()->json('data'))->keyBy('label');
+        $this->assertSame(500000, $previous['Doanh thu']['value']);
+        $this->assertSame(0, $previous['Buổi học trong kỳ']['value']);
+        $this->as($this->admin)->getJson('/api/v1/admin/dashboard?from=2026-11-10&to=2026-11-01')->assertUnprocessable();
 
-        $trainer = collect($this->as($this->trainer)->getJson('/api/v1/admin/dashboard')->assertOk()->json('data'))->keyBy('label');
-        $this->assertFalse($trainer->has('Doanh thu'));
-        $this->assertSame(1, $trainer['Lớp hôm nay']['value']);
-        $this->assertSame(1, $trainer['Học viên hôm nay']['value']);
-        $this->assertSame(1, $trainer['Chưa điểm danh']['value']);
+        foreach ([$this->trainer, $this->receptionist, $this->member] as $user) {
+            $this->as($user)->getJson('/api/v1/admin/dashboard')->assertForbidden();
+            $this->as($user)->getJson('/api/v1/admin/dashboard?from=invalid')->assertForbidden();
+        }
+    }
 
-        $receptionist = collect($this->as($this->receptionist)->getJson('/api/v1/admin/dashboard')->assertOk()->json('data'))->keyBy('label');
-        $this->assertFalse($receptionist->has('Doanh thu'));
-        $this->assertSame(2, $receptionist['Học viên hôm nay']['value']);
+    public function test_cancellations_are_separated_by_actor_without_reclassifying_unknown_history(): void
+    {
+        $schedule = $this->createSchedule('2026-11-20 10:00:00');
+        $memberCancelled = $this->createBooking($schedule, BookingStatus::Cancelled);
+        $memberCancelled->update(['cancelled_by' => $memberCancelled->user_id]);
+        $staffCancelled = $this->createBooking($schedule, BookingStatus::Cancelled, User::factory()->create());
+        $staffCancelled->update(['cancelled_by' => $this->admin->id]);
+        $this->createBooking($schedule, BookingStatus::Confirmed, User::factory()->create());
+        $this->createBooking($schedule, BookingStatus::Cancelled, User::factory()->create());
 
-        $this->as($this->member)->getJson('/api/v1/admin/dashboard')->assertForbidden();
+        foreach (['overview', 'members'] as $report) {
+            $this->as($this->admin)->getJson('/api/v1/admin/reports/'.$report.'?from=2026-11-10&to=2026-11-10')
+                ->assertOk()
+                ->assertJsonPath('data.cancellation_rate', 75)
+                ->assertJsonPath('data.member_cancellations', 1)
+                ->assertJsonPath('data.staff_cancellations', 1)
+                ->assertJsonPath('data.member_cancellation_rate', 25)
+                ->assertJsonPath('data.staff_cancellation_rate', 25);
+        }
+        $this->as($this->admin)->getJson('/api/v1/admin/reports/overview?from=2026-10-01&to=2026-10-01')
+            ->assertJsonPath('data.member_cancellations', 0)
+            ->assertJsonPath('data.staff_cancellation_rate', 0);
+    }
+
+    public function test_performance_groups_finished_classes_and_counts_only_present_confirmed_bookings(): void
+    {
+        $schedule = $this->createSchedule('2026-11-05 09:00:00', maxSlot: 4);
+        $present = $this->createBooking($schedule);
+        $absent = $this->createBooking($schedule, BookingStatus::Confirmed, User::factory()->create());
+        $cancelled = $this->createBooking($schedule, BookingStatus::Cancelled, User::factory()->create());
+        foreach ([[$present, AttendanceStatus::Present], [$absent, AttendanceStatus::Absent], [$cancelled, AttendanceStatus::Present]] as [$booking, $status]) {
+            AttendanceRecord::query()->create(['booking_id' => $booking->id, 'status' => $status, 'attendance_date' => '2026-11-05', 'marked_by' => $this->admin->id]);
+        }
+        $this->createSchedule('2026-11-02 07:00:00', maxSlot: 2);
+        $this->createSchedule('2026-11-20 09:00:00');
+        $this->createSchedule('2026-10-31 09:00:00');
+        $this->createSchedule('2026-11-07 09:00:00')->update(['status' => ClassScheduleStatus::Cancelled]);
+        $data = $this->as($this->admin)->getJson('/api/v1/admin/reports/classes?from=2026-11-01&to=2026-11-30')->assertOk();
+        $data->assertJsonPath('data.subjects.0.sessions', 2)
+            ->assertJsonPath('data.subjects.0.bookings', 2)
+            ->assertJsonPath('data.subjects.0.attended', 1)
+            ->assertJsonPath('data.subjects.0.fill_rate_pct', 25)
+            ->assertJsonCount(2, 'data.time_slots')
+            ->assertJsonPath('data.time_slots.0.name', '07:00–08:00')
+            ->assertJsonPath('data.time_slots.1.attended', 1)
+            ->assertJsonPath('data.dates.0.name', '2026-11-02')
+            ->assertJsonPath('data.dates.1.name', '2026-11-05')
+            ->assertJsonPath('data.weekdays.0.name', '1')
+            ->assertJsonPath('data.weekdays.1.name', '4');
     }
 }

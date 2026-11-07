@@ -3,7 +3,6 @@
 namespace App\Web\Http\Controllers\API\V1\Gym\Admin;
 
 use App\Share\Exceptions\Gym\GymException;
-use App\Share\Models\User;
 use App\Share\Services\Gym\ReportService;
 use App\Share\Utils\ResponseAPI;
 use App\Web\Http\Controllers\API\V1\APIController as BaseAPIController;
@@ -22,11 +21,12 @@ use OpenApi\Attributes as OA;
 )]
 #[OA\Schema(
     schema: 'GymReportFillStat',
-    required: ['name', 'sessions', 'bookings', 'fill_rate_pct'],
+    required: ['name', 'sessions', 'bookings', 'attended', 'fill_rate_pct'],
     properties: [
         new OA\Property(property: 'name', type: 'string', example: 'Yoga Flow'),
         new OA\Property(property: 'sessions', description: 'Số buổi đã diễn ra', type: 'integer', example: 8),
         new OA\Property(property: 'bookings', type: 'integer', example: 42),
+        new OA\Property(property: 'attended', description: 'Lượt điểm danh có mặt', type: 'integer', example: 35),
         new OA\Property(property: 'fill_rate_pct', type: 'number', example: 78.5),
     ]
 )]
@@ -40,10 +40,14 @@ class ReportController extends BaseAPIController
 
     #[OA\Get(
         path: '/admin/dashboard',
-        description: 'Thẻ số liệu theo vai trò: admin thấy số liệu vận hành, lễ tân thấy việc trong ngày, HLV chỉ thấy lớp của mình. Quyền `dashboard.view`.',
-        summary: 'Tổng quan theo vai trò',
+        description: 'Thẻ số liệu trong kỳ, mặc định 30 ngày, tối đa 366 ngày. Chỉ admin, quyền `dashboard.view`.',
+        summary: 'Tổng quan admin',
         security: [['bearerAuth' => []]],
         tags: ['Gym Admin Reports'],
+        parameters: [
+            new OA\Parameter(name: 'from', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date')),
+            new OA\Parameter(name: 'to', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date')),
+        ],
         responses: [
             new OA\Response(response: 200, description: 'Thành công', content: new OA\JsonContent(properties: [
                 new OA\Property(property: 'success', type: 'boolean', example: true),
@@ -57,14 +61,14 @@ class ReportController extends BaseAPIController
             ])),
             new OA\Response(response: 401, description: 'Chưa đăng nhập'),
             new OA\Response(response: 403, description: 'Không có quyền'),
+            new OA\Response(response: 422, description: 'Khoảng thời gian không hợp lệ'),
         ]
     )]
-    public function dashboard(): JsonResponse
+    public function dashboard(Request $request): JsonResponse
     {
-        /** @var User $user */
-        $user = auth()->user();
+        [$from, $to] = $this->range($request);
 
-        return ResponseAPI::success($this->reportService->dashboard($user));
+        return ResponseAPI::success($this->reportService->dashboard($from, $to));
     }
 
     #[OA\Get(
@@ -87,6 +91,10 @@ class ReportController extends BaseAPIController
                     new OA\Property(property: 'new_members', description: 'Số người mua gói đầu tiên trong kỳ', type: 'integer', example: 24),
                     new OA\Property(property: 'bookings', type: 'integer', example: 127),
                     new OA\Property(property: 'cancellation_rate', type: 'number', example: 8.5),
+                    new OA\Property(property: 'staff_cancellations', description: 'Lượt nhân viên hủy', type: 'integer'),
+                    new OA\Property(property: 'staff_cancellation_rate', description: 'Tỷ lệ nhân viên hủy trên tổng lượt đặt trong kỳ', type: 'number'),
+                    new OA\Property(property: 'member_cancellations', description: 'Lượt học viên tự hủy', type: 'integer'),
+                    new OA\Property(property: 'member_cancellation_rate', description: 'Tỷ lệ học viên tự hủy trên tổng lượt đặt trong kỳ', type: 'number'),
                 ], type: 'object'),
             ])),
             new OA\Response(response: 401, description: 'Chưa đăng nhập'),
@@ -153,10 +161,15 @@ class ReportController extends BaseAPIController
                 new OA\Property(property: 'message', type: 'string', example: 'Success'),
                 new OA\Property(property: 'data', properties: [
                     new OA\Property(property: 'series', type: 'array', items: new OA\Items(ref: '#/components/schemas/GymReportPoint')),
+                    new OA\Property(property: 'bookings', type: 'integer'),
                     new OA\Property(property: 'new_members', type: 'integer', example: 24),
                     new OA\Property(property: 'buyers', type: 'integer', example: 40),
                     new OA\Property(property: 'renewal_rate', type: 'number', example: 40.0),
                     new OA\Property(property: 'cancellation_rate', type: 'number', example: 8.5),
+                    new OA\Property(property: 'staff_cancellations', description: 'Lượt nhân viên hủy', type: 'integer'),
+                    new OA\Property(property: 'staff_cancellation_rate', description: 'Tỷ lệ nhân viên hủy trên tổng lượt đặt trong kỳ', type: 'number'),
+                    new OA\Property(property: 'member_cancellations', description: 'Lượt học viên tự hủy', type: 'integer'),
+                    new OA\Property(property: 'member_cancellation_rate', description: 'Tỷ lệ học viên tự hủy trên tổng lượt đặt trong kỳ', type: 'number'),
                 ], type: 'object'),
             ])),
             new OA\Response(response: 401, description: 'Chưa đăng nhập'),
@@ -173,7 +186,7 @@ class ReportController extends BaseAPIController
 
     #[OA\Get(
         path: '/admin/reports/classes',
-        description: 'Lượt đặt và tỷ lệ lấp đầy theo lớp, theo HLV. Chỉ tính buổi đã diễn ra. Quyền `reports.view`.',
+        description: 'Lượt đặt còn hiệu lực, lượt điểm danh có mặt và tỷ lệ lấp đầy theo lớp, HLV, bộ môn, khung giờ, ngày, thứ ISO. Chỉ tính buổi đã kết thúc, không bị hủy. Tỷ lệ lấp đầy là trung bình lượt đặt/sức chứa từng buổi. Quyền `reports.view`.',
         summary: 'Báo cáo: lớp học',
         security: [['bearerAuth' => []]],
         tags: ['Gym Admin Reports'],
@@ -188,6 +201,10 @@ class ReportController extends BaseAPIController
                 new OA\Property(property: 'data', properties: [
                     new OA\Property(property: 'classes', type: 'array', items: new OA\Items(ref: '#/components/schemas/GymReportFillStat')),
                     new OA\Property(property: 'trainers', type: 'array', items: new OA\Items(ref: '#/components/schemas/GymReportFillStat')),
+                    new OA\Property(property: 'subjects', description: 'Theo bộ môn', type: 'array', items: new OA\Items(ref: '#/components/schemas/GymReportFillStat')),
+                    new OA\Property(property: 'time_slots', description: 'Theo giờ bắt đầu và kết thúc', type: 'array', items: new OA\Items(ref: '#/components/schemas/GymReportFillStat')),
+                    new OA\Property(property: 'dates', description: 'Theo ngày Y-m-d', type: 'array', items: new OA\Items(ref: '#/components/schemas/GymReportFillStat')),
+                    new OA\Property(property: 'weekdays', description: 'Theo thứ ISO 1: thứ Hai đến 7: Chủ nhật', type: 'array', items: new OA\Items(ref: '#/components/schemas/GymReportFillStat')),
                 ], type: 'object'),
             ])),
             new OA\Response(response: 401, description: 'Chưa đăng nhập'),

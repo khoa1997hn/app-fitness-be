@@ -191,4 +191,8 @@ return [
     'video_lesson_type_not_allowed' => 'Loại bài học này không thuộc gói đăng ký của bạn.',
     'video_file_not_available' => 'Video chưa sẵn sàng cho ngôn ngữ này.',
 
+    'gym_dashboard_staff_cancellations' => 'Nhân viên hủy',
+    'gym_dashboard_member_cancellations' => 'Học viên tự hủy',
+    'gym_dashboard_sessions' => 'Buổi học trong kỳ',
+    'gym_dashboard_paid_orders' => 'Đơn đã thanh toán',
 ];

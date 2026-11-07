@@ -165,4 +165,8 @@ return [
     'video_program_not_selected' => 'Please select a program before watching a lesson.',
     'video_lesson_type_not_allowed' => 'This lesson type is not included in your subscription.',
     'video_file_not_available' => 'This video is not available in this language yet.',
+    'gym_dashboard_staff_cancellations' => 'Cancelled by staff',
+    'gym_dashboard_member_cancellations' => 'Cancelled by members',
+    'gym_dashboard_sessions' => 'Sessions in period',
+    'gym_dashboard_paid_orders' => 'Paid orders',
 ];

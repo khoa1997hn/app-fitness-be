@@ -67,7 +67,7 @@ return [
         'view' => [Role::Admin],
     ],
     'dashboard' => [
-        'view' => [Role::Admin, Role::Receptionist, Role::Trainer],
+        'view' => [Role::Admin],
     ],
     'student' => [
         'portal' => [Role::Member],

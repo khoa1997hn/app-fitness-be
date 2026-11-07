@@ -2,21 +2,16 @@
 
 namespace App\Share\Services\Gym;
 
-use App\Share\Enums\BookingRequestStatus;
+use App\Share\Enums\AttendanceStatus;
 use App\Share\Enums\BookingStatus;
 use App\Share\Enums\ClassScheduleStatus;
+use App\Share\Enums\FitnessClassCategory;
 use App\Share\Enums\OrderStatus;
 use App\Share\Enums\OrderType;
-use App\Share\Enums\Role;
-use App\Share\Enums\ScheduleCancelRequestStatus;
 use App\Share\Models\Booking;
 use App\Share\Models\ClassSchedule;
 use App\Share\Models\Event;
 use App\Share\Models\Order;
-use App\Share\Models\PrivateRequest;
-use App\Share\Models\ScheduleCancelRequest;
-use App\Share\Models\TherapyRequest;
-use App\Share\Models\User;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Builder;
@@ -81,7 +76,7 @@ class ReportService
             'new_members' => $firstPurchases->count(),
             'buyers' => $buyers->count(),
             'renewal_rate' => $this->percent($returning, $buyers->count()),
-            'cancellation_rate' => $this->bookingStats($from, $to)['cancellation_rate'],
+            ...$this->bookingStats($from, $to),
         ];
     }
 
@@ -94,7 +89,11 @@ class ReportService
     {
         $schedules = ClassSchedule::query()
             ->with(['fitnessClass', 'trainer'])
-            ->withCount('confirmedBookings')
+            ->withCount([
+                'confirmedBookings',
+                'confirmedBookings as attended_count' => fn (Builder $query) => $query
+                    ->whereHas('attendanceRecord', fn (Builder $attendance) => $attendance->where('status', AttendanceStatus::Present)),
+            ])
             ->where('status', ClassScheduleStatus::Active)
             ->whereBetween('start_time', [$from, $to])
             ->where('end_time', '<=', now())
@@ -102,125 +101,40 @@ class ReportService
 
         return [
             'classes' => $this->fillStats($schedules, fn (ClassSchedule $schedule) => $schedule->fitnessClass->name),
+            'subjects' => $this->fillStats($schedules, fn (ClassSchedule $schedule) => FitnessClassCategory::getDescription($schedule->fitnessClass->category->value)),
+            'time_slots' => $this->fillStats($schedules, fn (ClassSchedule $schedule) => $schedule->start_time->format('H:i').'–'.$schedule->end_time->format('H:i'), false),
+            'dates' => $this->fillStats($schedules, fn (ClassSchedule $schedule) => $schedule->start_time->toDateString(), false),
+            'weekdays' => $this->fillStats($schedules, fn (ClassSchedule $schedule) => (string) $schedule->start_time->dayOfWeekIso, false),
             'trainers' => $this->fillStats($schedules, fn (ClassSchedule $schedule) => trim($schedule->trainer->first_name.' '.$schedule->trainer->last_name)),
         ];
     }
 
     /**
-     * Thẻ số liệu theo vai trò.
-     *
-     * @return list<array{label: string, value: int|string, note: string, format: string}>
+     * @return list<array{label: string, value: int|float, note: string, format: string}>
      */
-    public function dashboard(User $user): array
+    public function dashboard(Carbon $from, Carbon $to): array
     {
-        return match ($user->role->value) {
-            Role::Admin => $this->adminDashboard(),
-            Role::Receptionist => $this->receptionistDashboard(),
-            default => $this->trainerDashboard($user),
-        };
-    }
-
-    /**
-     * @return list<array{label: string, value: int|string, note: string, format: string}>
-     */
-    private function adminDashboard(): array
-    {
-        $overview = $this->overview(now()->subDays(29)->startOfDay(), now()->endOfDay());
-        $period = __('messages.gym_dashboard_last_30_days');
-        $thisMonth = __('messages.gym_dashboard_this_month');
+        $overview = $this->overview($from, $to);
+        $period = $from->toDateString().' — '.$to->toDateString();
 
         return [
             $this->card(__('messages.gym_dashboard_revenue'), $overview['total_revenue'], $period, 'currency'),
             $this->card(__('messages.gym_dashboard_new_members'), $overview['new_members'], $period),
             $this->card(__('messages.gym_dashboard_bookings'), $overview['bookings'], $period),
             $this->card(__('messages.gym_dashboard_cancellation_rate'), $overview['cancellation_rate'], $period, 'percent'),
-            $this->card(
-                __('messages.gym_dashboard_classes_upcoming'),
-                ClassSchedule::query()->where('status', ClassScheduleStatus::Active)->where('start_time', '>', now())->count(),
-                __('messages.gym_dashboard_classes_upcoming_note'),
-            ),
-            $this->card(__('messages.gym_dashboard_classes_today'), $this->classesToday()->count(), __('messages.gym_dashboard_today')),
-            $this->card(
-                __('messages.gym_dashboard_pending_cancel_requests'),
-                ScheduleCancelRequest::query()->where('status', ScheduleCancelRequestStatus::Pending)->count(),
-                __('messages.gym_dashboard_pending'),
-            ),
-            $this->card(
-                __('messages.gym_dashboard_orders_this_month'),
-                $this->paidOrders(now()->startOfMonth(), now()->endOfDay())->count(),
-                $thisMonth,
-            ),
+            $this->card(__('messages.gym_dashboard_staff_cancellations'), $overview['staff_cancellations'], $period.' · '.$overview['staff_cancellation_rate'].'%'),
+            $this->card(__('messages.gym_dashboard_member_cancellations'), $overview['member_cancellations'], $period.' · '.$overview['member_cancellation_rate'].'%'),
+            $this->card(__('messages.gym_dashboard_sessions'), ClassSchedule::query()->where('status', ClassScheduleStatus::Active)->whereBetween('start_time', [$from, $to])->count(), $period),
+            $this->card(__('messages.gym_dashboard_paid_orders'), $this->paidOrders($from, $to)->count(), $period),
         ];
     }
 
     /**
-     * @return list<array{label: string, value: int|string, note: string, format: string}>
-     */
-    private function receptionistDashboard(): array
-    {
-        return [
-            $this->card(__('messages.gym_dashboard_classes_today'), $this->classesToday()->count(), __('messages.gym_dashboard_today')),
-            $this->card(__('messages.gym_dashboard_students_today'), $this->studentsToday(), __('messages.gym_dashboard_today')),
-            $this->card(
-                __('messages.gym_dashboard_pending_requests'),
-                PrivateRequest::query()->where('status', BookingRequestStatus::Pending)->count()
-                    + TherapyRequest::query()->where('status', BookingRequestStatus::Pending)->count(),
-                __('messages.gym_dashboard_pending'),
-            ),
-            $this->card(
-                __('messages.gym_dashboard_pending_orders'),
-                Order::query()->whereIn('status', [OrderStatus::PendingTerms, OrderStatus::Pending])->count(),
-                __('messages.gym_dashboard_pending'),
-            ),
-        ];
-    }
-
-    /**
-     * @return list<array{label: string, value: int|string, note: string, format: string}>
-     */
-    private function trainerDashboard(User $trainer): array
-    {
-        $today = __('messages.gym_dashboard_today');
-        $bookingsToday = Booking::query()
-            ->where('status', BookingStatus::Confirmed)
-            ->whereHas('classSchedule', fn (Builder $query) => $query
-                ->where('status', ClassScheduleStatus::Active)
-                ->where('trainer_id', $trainer->id)
-                ->whereDate('start_time', today()));
-
-        return [
-            $this->card(__('messages.gym_dashboard_classes_today'), $this->classesToday()->where('trainer_id', $trainer->id)->count(), $today),
-            $this->card(__('messages.gym_dashboard_students_today'), (clone $bookingsToday)->count(), $today),
-            $this->card(__('messages.gym_dashboard_unmarked_attendance'), (clone $bookingsToday)->whereDoesntHave('attendanceRecord')->count(), $today),
-            $this->card(
-                __('messages.gym_dashboard_pending_cancel_requests'),
-                ScheduleCancelRequest::query()->where('trainer_id', $trainer->id)->where('status', ScheduleCancelRequestStatus::Pending)->count(),
-                __('messages.gym_dashboard_pending'),
-            ),
-        ];
-    }
-
-    /**
-     * @return array{label: string, value: int|string, note: string, format: string}
+     * @return array{label: string, value: int|float, note: string, format: string}
      */
     private function card(string $label, int|float $value, string $note, string $format = 'number'): array
     {
         return ['label' => $label, 'value' => $value, 'note' => $note, 'format' => $format];
-    }
-
-    private function classesToday(): Builder
-    {
-        return ClassSchedule::query()->where('status', ClassScheduleStatus::Active)->whereDate('start_time', today());
-    }
-
-    private function studentsToday(): int
-    {
-        return Booking::query()
-            ->where('status', BookingStatus::Confirmed)
-            ->whereHas('classSchedule', fn (Builder $query) => $query
-                ->where('status', ClassScheduleStatus::Active)
-                ->whereDate('start_time', today()))
-            ->count();
     }
 
     private function paidOrders(Carbon $from, Carbon $to): Builder
@@ -257,7 +171,7 @@ class ReportService
     /**
      * Lượt đặt và tỷ lệ hủy theo ngày tạo lịch. Tính mọi lượt hủy, gồm cả phòng tập hủy.
      *
-     * @return array{bookings: int, cancellation_rate: float}
+     * @return array{bookings: int, cancellation_rate: float, member_cancellations: int, member_cancellation_rate: float, staff_cancellations: int, staff_cancellation_rate: float}
      */
     private function bookingStats(Carbon $from, Carbon $to): array
     {
@@ -265,7 +179,20 @@ class ReportService
         $total = (clone $bookings)->count();
         $cancelled = (clone $bookings)->where('status', BookingStatus::Cancelled)->count();
 
-        return ['bookings' => $total, 'cancellation_rate' => $this->percent($cancelled, $total)];
+        // So sánh với chủ booking để không bị đổi nhóm khi người hủy đổi role sau này.
+        $memberCancelled = (clone $bookings)->where('status', BookingStatus::Cancelled)
+            ->whereColumn('cancelled_by', 'user_id')->count();
+        $staffCancelled = (clone $bookings)->where('status', BookingStatus::Cancelled)
+            ->whereColumn('cancelled_by', '!=', 'user_id')->count();
+
+        return [
+            'bookings' => $total,
+            'cancellation_rate' => $this->percent($cancelled, $total),
+            'member_cancellations' => $memberCancelled,
+            'member_cancellation_rate' => $this->percent($memberCancelled, $total),
+            'staff_cancellations' => $staffCancelled,
+            'staff_cancellation_rate' => $this->percent($staffCancelled, $total),
+        ];
     }
 
     /**
@@ -314,19 +241,21 @@ class ReportService
 
     /**
      * @param  Collection<int, ClassSchedule>  $schedules
-     * @return list<array{name: string, sessions: int, bookings: int, fill_rate_pct: float}>
+     * @return list<array{name: string, sessions: int, bookings: int, attended: int, fill_rate_pct: float}>
      */
-    private function fillStats(Collection $schedules, callable $groupBy): array
+    private function fillStats(Collection $schedules, callable $groupBy, bool $rankByBookings = true): array
     {
-        return $schedules
+        $stats = $schedules
             ->groupBy($groupBy)
             ->map(fn (Collection $group, string $name) => [
                 'name' => $name,
                 'sessions' => $group->count(),
                 'bookings' => (int) $group->sum('confirmed_bookings_count'),
+                'attended' => (int) $group->sum('attended_count'),
                 'fill_rate_pct' => round($group->avg(fn (ClassSchedule $schedule) => min(100, $schedule->confirmed_bookings_count / $schedule->max_slot * 100)), 1),
-            ])
-            ->sortByDesc('bookings')
+            ]);
+
+        return ($rankByBookings ? $stats->sortByDesc('bookings') : $stats->sortKeys())
             ->values()
             ->all();
     }

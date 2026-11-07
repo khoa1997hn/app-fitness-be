@@ -2,13 +2,13 @@
 
 ## Bối cảnh
 
-Admin xem doanh thu, học viên, lớp học; mỗi vai trò nhân viên có trang Tổng quan riêng. Screen doc: `fitness-web/docs/screens/admin/reports.md`.
+Admin xem doanh thu, học viên, lớp học và trang Tổng quan. Screen doc: `fitness-web/docs/screens/admin/reports.md`.
 
 ## Phạm vi
 
 ### In-scope
 - `reports.view` (admin): `GET /admin/reports/overview|revenue|members|classes?from=&to=`
-- `dashboard.view` (nhân viên): `GET /admin/dashboard`
+- `dashboard.view` (chỉ admin): `GET /admin/dashboard?from=&to=`
 
 ### Out-of-scope
 - Xuất Excel, PDF: để sau, xem `fitness-web/plan/deferred.md`
@@ -24,10 +24,14 @@ Admin xem doanh thu, học viên, lớp học; mỗi vai trò nhân viên có tr
 - **Tỷ lệ lấp đầy:** trung bình `đã đặt / số chỗ` của từng buổi, chỉ buổi đã diễn ra và không bị hủy
 - **Breakdown:** gói, trị liệu theo sản phẩm; sự kiện theo sự kiện; Redlight, suất người thêm gộp một dòng. `quantity_sold` tính theo số vé, số suất
 
-### Tổng quan theo vai trò
-- **Admin:** doanh thu, học viên mới, lượt đặt, tỷ lệ hủy (30 ngày); lớp sắp tới, lớp hôm nay, yêu cầu hủy chờ duyệt, đơn đã thanh toán trong tháng
-- **Lễ tân:** lớp hôm nay, học viên hôm nay, yêu cầu Private và trị liệu chờ duyệt, đơn chờ thanh toán. Không có doanh thu
-- **HLV:** chỉ số liệu của mình: lớp hôm nay, học viên hôm nay, chưa điểm danh, yêu cầu hủy chờ duyệt. Không có doanh thu
+### Tổng quan admin (cập nhật 2026-11-07)
+- Chỉ admin xem được Dashboard, báo cáo và gọi trực tiếp các API dữ liệu tương ứng; PT/lễ tân nhận 403. Frontend ẩn menu và chặn URL, chuyển về Quản lý lịch.
+- Bộ lọc chung: hôm nay, tuần này (thứ Hai đến hôm nay), tháng này, 30 ngày và khoảng ngày tùy chọn; theo giờ Việt Nam.
+- Thẻ số liệu trong kỳ: doanh thu, học viên mới, lượt đặt, tỷ lệ hủy chung, nhân viên hủy, học viên tự hủy, buổi học không hủy, đơn thanh toán.
+- Biểu đồ phân theo bộ môn (`FitnessClass.category`), khung giờ bắt đầu–kết thúc, ngày và thứ ISO (1–7); chỉ tính buổi gói thường đã kết thúc, không hủy.
+- Mỗi nhóm có số buổi, lượt đặt còn hiệu lực, lượt điểm danh có mặt và lấp đầy trung bình. Có thể chọn chỉ số cho biểu đồ; ngày/giờ/thứ sắp theo thời gian.
+- Hủy phân theo người bấm: `cancelled_by = user_id` là học viên tự hủy; khác là nhân viên hủy, kể cả hủy hộ. Không phụ thuộc role hiện tại. Bản ghi thiếu người hủy chỉ nằm trong tỷ lệ chung.
+- Số và tỷ lệ hủy vẫn dựa trên booking tạo trong kỳ; mỗi tỷ lệ dùng cùng mẫu số tổng lượt đặt. Không bao gồm Private/trị liệu.
 
 ## Acceptance criteria
 
@@ -37,7 +41,7 @@ Admin xem doanh thu, học viên, lớp học; mỗi vai trò nhân viên có tr
 - [x] Học viên mới chỉ tính lần mua gói đầu tiên
 - [x] Lấp đầy chỉ tính buổi đã diễn ra, không tính buổi hủy và lượt hủy
 - [x] Khoảng thời gian sai báo 422
-- [x] Báo cáo chỉ admin xem được; lễ tân, HLV không thấy doanh thu ở Tổng quan
+- [x] Dashboard và mọi báo cáo chỉ admin xem được; lễ tân/HLV bị chặn cả URL và API
 
 Test: `tests/Feature/Gym/ReportFlowTest.php`.
 
@@ -45,6 +49,8 @@ Test: `tests/Feature/Gym/ReportFlowTest.php`.
 
 - 2026-11-02 — Học viên mới là người mua gói đầu tiên trong kỳ
 - 2026-11-02 — Chưa làm xuất Excel, PDF
+
+- 2026-11-07 — PO chọn cả lượt đặt, điểm danh có mặt, tỷ lệ lấp đầy; hủy theo người bấm (nhân viên/học viên).
 
 ## Liên quan
 
