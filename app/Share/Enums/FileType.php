@@ -6,6 +6,8 @@ namespace App\Share\Enums;
 
 final class FileType extends Enum
 {
+    const EventImage = 'event_image';
+
     const BannerImage = 'banner_image';
 
     const ProgramCover = 'program_cover';

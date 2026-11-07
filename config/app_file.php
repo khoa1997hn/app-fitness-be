@@ -6,6 +6,12 @@ return [
     'default_disk' => env('FILE_UPLOAD_DISK', 's3'),
     'presigned_expires_minutes' => (int) env('AWS_PRESIGNED_URL_EXPIRES', 15),
 
+    FileType::EventImage => [
+        'disk' => 's3',
+        'prefix_path' => 'event/image',
+        'allow_mimetypes' => ['image/jpeg', 'image/png', 'image/webp'],
+        'allow_max_size' => 5120, // KB (5MB), shared by cover and inline images.
+    ],
     FileType::BannerImage => [
         'disk' => 's3',
         'prefix_path' => 'banner/image',

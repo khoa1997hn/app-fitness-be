@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property EventStatus $status
  * @property string|null $cancel_reason
  * @property string $name
+ * @property \App\Share\Attributes\File|null $image
  * @property string|null $description
  */
 class Event extends Model implements TranslatableContract
@@ -40,6 +41,7 @@ class Event extends Model implements TranslatableContract
     protected $translatedAttributes = [
         'name',
         'description',
+        'image',
     ];
 
     protected function casts(): array

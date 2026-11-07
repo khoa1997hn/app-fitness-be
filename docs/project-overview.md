@@ -149,7 +149,7 @@ Giá cụ thể từng plan → env `PLAN_<TIER>_PRICE` (xem `.env.example`).
 - Yêu cầu Private, Trị liệu: `PrivateRequest`, `TherapyRequest`; suất người thêm theo tài khoản, chỉ gói `private_pack`, số dư tính từ đơn và yêu cầu (`ExtraPeopleService`). Spec [`gym/private-therapy`](specs/gym/private-therapy/spec.md).
 - Điểm danh lớp gói thường, lịch dạy, yêu cầu hủy của HLV. Spec [`gym/attendance-teaching`](specs/gym/attendance-teaching/spec.md).
 - Quản lý user, khóa tài khoản (chặn cả token còn hạn trên mọi API), hồ sơ hội viên, đổi mật khẩu, thông báo trong web. Spec [`gym/users-account`](specs/gym/users-account/spec.md).
-- Sự kiện: vé miễn phí và có phí, giữ vé 30 phút khi chờ thanh toán, check-in, hủy sự kiện. Spec [`gym/events`](specs/gym/events/spec.md).
+- Sự kiện: ảnh bìa và ảnh trong mô tả (frontend resize 1600px + WebP, presigned S3), editor HTML an toàn, modal chi tiết công khai; vé miễn phí và có phí, giữ vé 30 phút khi chờ thanh toán, check-in, hủy sự kiện. Spec [`gym/events`](specs/gym/events/spec.md).
 - Redlight mua trước theo lượt, đặt lớp nhóm nào dùng thì trừ 1 lượt, hủy lịch hoàn lượt. Spec [`gym/redlight`](specs/gym/redlight/spec.md).
 - Báo cáo và tổng quan chỉ admin, lọc ngày/tuần/tháng; thống kê bộ môn/giờ/ngày/thứ theo lượt đặt, điểm danh, lấp đầy; tách nhân viên và học viên hủy. Spec [`gym/reports`](specs/gym/reports/spec.md).
 

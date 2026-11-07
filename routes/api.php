@@ -245,6 +245,7 @@ Route::as('api.')
                     });
 
                     Route::middleware('permission:events.manage')->group(function () {
+                        Route::post('events/images/presigned-upload', [AdminEventController::class, 'presignedImageUpload'])->name('events.images.upload');
                         Route::get('events', [AdminEventController::class, 'index'])->name('events.index');
                         Route::post('events', [AdminEventController::class, 'store'])->name('events.store');
                         Route::get('events/{event}', [AdminEventController::class, 'show'])->name('events.show');

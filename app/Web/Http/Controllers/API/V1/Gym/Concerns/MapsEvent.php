@@ -6,15 +6,28 @@ use App\Share\Enums\EventRegistrationStatus;
 use App\Share\Enums\OrderStatus;
 use App\Share\Models\Event;
 use App\Share\Models\EventRegistration;
+use App\Share\Services\Gym\EventContentService;
 use OpenApi\Attributes as OA;
 
+#[OA\Schema(
+    schema: 'GymEventImage',
+    required: ['path', 'name', 'extension', 'size'],
+    properties: [
+        new OA\Property(property: 'path', type: 'string', example: 'event/image/AbCdEf0123456789AbCdEf0123456789AbCdEf01.webp'),
+        new OA\Property(property: 'name', type: 'string', example: 'event.webp'),
+        new OA\Property(property: 'extension', type: 'string', enum: ['webp', 'jpg', 'jpeg', 'png']),
+        new OA\Property(property: 'size', type: 'integer', example: 204800),
+        new OA\Property(property: 'url', description: 'URL có hạn, chỉ dùng trong response', type: 'string'),
+    ]
+)]
 #[OA\Schema(
     schema: 'GymEvent',
     required: ['id', 'name', 'event_date', 'location', 'ticket_price', 'total_tickets', 'sold_tickets', 'tickets_left', 'status'],
     properties: [
         new OA\Property(property: 'id', type: 'integer', example: 2),
         new OA\Property(property: 'name', type: 'string', example: 'Workshop Pilates chuyên sâu'),
-        new OA\Property(property: 'description', type: 'string', nullable: true),
+        new OA\Property(property: 'description', description: 'Văn bản cũ hoặc HTML an toàn; URL ảnh có hạn được cấp lại khi đọc', type: 'string', nullable: true),
+        new OA\Property(property: 'image', ref: '#/components/schemas/GymEventImage', nullable: true),
         new OA\Property(property: 'event_date', description: 'Giờ địa phương', type: 'string', example: '2026-12-20T09:00:00'),
         new OA\Property(property: 'location', type: 'string', example: 'Cơ sở Hải Phòng'),
         new OA\Property(property: 'ticket_price', description: '0 là miễn phí', type: 'integer', example: 300000),
@@ -54,7 +67,8 @@ trait MapsEvent
         return [
             'id' => $event->id,
             'name' => $event->name,
-            'description' => $event->description,
+            'description' => app(EventContentService::class)->forDisplay($event->description),
+            'image' => $event->image,
             'event_date' => $event->event_date->format('Y-m-d\TH:i:s'),
             'location' => $event->location,
             'ticket_price' => $event->ticket_price,

@@ -264,6 +264,66 @@ class EventFlowTest extends TestCase
         $this->as($this->member)->getJson('/api/v1/admin/events')->assertForbidden();
     }
 
+    public function test_event_cover_and_rich_description_round_trip_with_fresh_image_urls(): void
+    {
+        $path = 'event/image/'.str_repeat('a', 40).'.webp';
+        $image = ['path' => $path, 'name' => 'cover.webp', 'extension' => 'webp', 'size' => 12345];
+        $body = ['name' => 'Ngày hội Yoga', 'description' => '<h2>Lịch trình</h2><ul><li><strong>09:00</strong> Đón khách</li></ul><img src="'.$path.'" alt="Yoga">', 'image' => $image, 'event_date' => '2026-12-01T09:00', 'location' => 'Sảnh', 'ticket_price' => 0, 'total_tickets' => 10];
+        $response = $this->as($this->admin)->postJson('/api/v1/admin/events', $body)->assertCreated();
+        $id = $response->json('data.id');
+        $firstUrl = $response->json('data.image.url');
+        $response->assertJsonPath('data.image.path', $path);
+        $this->assertStringContainsString('<h2>Lịch trình</h2>', $response->json('data.description'));
+        $this->assertStringContainsString('data-file-path="'.$path.'"', $response->json('data.description'));
+        $this->assertStringContainsString('loading="lazy"', $response->json('data.description'));
+        $stored = Event::query()->findOrFail($id)->description;
+        $this->assertStringContainsString('src="'.$path.'"', $stored);
+        $this->assertStringNotContainsString('X-Amz-', $stored);
+
+        Carbon::setTestNow(now()->addHour());
+        $detail = $this->getJson("/api/v1/events/{$id}")->assertOk();
+        $this->assertNotSame($firstUrl, $detail->json('data.image.url'));
+        $this->assertStringContainsString('<strong>09:00</strong>', $detail->json('data.description'));
+        $this->getJson('/api/v1/events')->assertOk()->assertJsonPath('data.0.image.path', $path);
+
+        // Resaving the hydrated HTML must discard its expiring URLs.
+        $this->as($this->admin)->patchJson("/api/v1/admin/events/{$id}", [...$body, 'description' => $detail->json('data.description')])->assertOk();
+        $this->assertStringNotContainsString('X-Amz-', Event::query()->findOrFail($id)->description);
+        $withoutImage = $body;
+        unset($withoutImage['image']);
+        $this->patchJson("/api/v1/admin/events/{$id}", $withoutImage)->assertOk()->assertJsonPath('data.image.path', $path);
+        $this->patchJson("/api/v1/admin/events/{$id}", [...$body, 'image' => null])->assertOk()->assertJsonPath('data.image', null);
+    }
+
+    public function test_event_html_is_sanitized_and_only_event_images_are_kept(): void
+    {
+        $body = ['name' => 'Yoga', 'description' => '<h2 onclick="alert(1)">Yoga</h2><script>alert(1)</script><a href="javascript:alert(1)">Link</a><img src="https://evil.example/a.jpg"><img src="data:image/png;base64,AA=="><iframe src="https://evil.example"></iframe>', 'event_date' => '2026-12-01T09:00', 'location' => 'Sảnh', 'ticket_price' => 0, 'total_tickets' => 10];
+        $response = $this->as($this->admin)->postJson('/api/v1/admin/events', $body)->assertCreated();
+        $html = $response->json('data.description');
+        $this->assertStringContainsString('<h2>Yoga</h2>', $html);
+        foreach (['onclick', '<script', 'javascript:', '<iframe', '<img'] as $unsafe) {
+            $this->assertStringNotContainsString($unsafe, $html);
+        }
+        foreach (['program/cover/'.str_repeat('a', 40).'.webp', 'event/image/../../secret.webp', 'event/image/a.svg'] as $path) {
+            $this->postJson('/api/v1/admin/events', [...$body, 'image' => ['path' => $path, 'name' => 'a.webp', 'extension' => 'webp', 'size' => 1]])->assertUnprocessable();
+        }
+    }
+
+    public function test_event_image_upload_checks_permission_type_mime_and_size(): void
+    {
+        $body = ['type' => 'event_image', 'filename' => 'yoga.webp', 'mimetype' => 'image/webp', 'size' => 12345];
+        $url = '/api/v1/admin/events/images/presigned-upload';
+        $this->as($this->member)->postJson($url, $body)->assertForbidden();
+        $admin = $this->as($this->admin);
+        $upload = $admin->postJson($url, $body)->assertOk()->assertJsonPath('data.method', 'PUT')->assertJsonPath('data.file.size', 12345);
+        $this->assertStringStartsWith('event/image/', $upload->json('data.file.path'));
+        $this->assertStringContainsString('X-Amz-', $upload->json('data.upload_url'));
+        $admin->postJson($url, [...$body, 'size' => 5242881])->assertUnprocessable();
+        $admin->postJson($url, [...$body, 'mimetype' => 'image/svg+xml'])->assertUnprocessable();
+        $admin->postJson($url, [...$body, 'type' => 'program_cover'])->assertUnprocessable();
+        $admin->postJson($url, [...$body, 'type' => 'lesson_video'])->assertUnprocessable();
+    }
+
     public function test_total_tickets_cannot_go_below_sold_and_held(): void
     {
         $event = $this->createEvent();

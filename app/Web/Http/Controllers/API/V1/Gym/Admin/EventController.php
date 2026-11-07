@@ -3,10 +3,14 @@
 namespace App\Web\Http\Controllers\API\V1\Gym\Admin;
 
 use App\Share\Enums\EventStatus;
+use App\Share\Enums\FileType;
 use App\Share\Exceptions\Gym\GymException;
+use App\Share\Http\Requests\PresignedFileUploadRequest;
 use App\Share\Models\Event;
 use App\Share\Models\EventRegistration;
 use App\Share\Models\User;
+use App\Share\Services\File\FileUploadService;
+use App\Share\Services\Gym\EventContentService;
 use App\Share\Services\Gym\EventService;
 use App\Share\Utils\ResponseAPI;
 use App\Web\Http\Controllers\API\V1\APIController as BaseAPIController;
@@ -18,11 +22,22 @@ use Illuminate\Validation\Rule;
 use OpenApi\Attributes as OA;
 
 #[OA\Schema(
+    schema: 'GymEventImageUploadInput',
+    required: ['type', 'filename', 'mimetype', 'size'],
+    properties: [
+        new OA\Property(property: 'type', type: 'string', enum: ['event_image']),
+        new OA\Property(property: 'filename', type: 'string', example: 'event.webp'),
+        new OA\Property(property: 'mimetype', type: 'string', enum: ['image/jpeg', 'image/png', 'image/webp']),
+        new OA\Property(property: 'size', type: 'integer', minimum: 1, maximum: 5242880),
+    ]
+)]
+#[OA\Schema(
     schema: 'GymEventInput',
     required: ['name', 'event_date', 'location', 'ticket_price', 'total_tickets'],
     properties: [
         new OA\Property(property: 'name', type: 'string', example: 'Workshop Pilates chuyên sâu'),
-        new OA\Property(property: 'description', type: 'string', nullable: true),
+        new OA\Property(property: 'description', description: 'HTML an toàn tối đa 5000 ký tự; src ảnh là key S3 event/image, không lưu URL có hạn', type: 'string', maxLength: 5000, nullable: true),
+        new OA\Property(property: 'image', ref: '#/components/schemas/GymEventImage', nullable: true),
         new OA\Property(property: 'event_date', type: 'string', example: '2026-12-20T09:00'),
         new OA\Property(property: 'location', type: 'string', example: 'Cơ sở Hải Phòng'),
         new OA\Property(property: 'ticket_price', description: '0 là miễn phí', type: 'integer', example: 300000),
@@ -57,7 +72,34 @@ class EventController extends BaseAPIController
 {
     use MapsEvent;
 
-    public function __construct(private readonly EventService $eventService) {}
+    public function __construct(private readonly EventService $eventService, private readonly EventContentService $contentService) {}
+
+    #[OA\Post(
+        path: '/admin/events/images/presigned-upload',
+        summary: 'Upload ảnh bìa hoặc ảnh mô tả sự kiện',
+        description: 'Quyền events.manage. Chỉ chấp nhận event_image; JPEG, PNG, WebP tối đa 5MB. FE resize trước khi upload trực tiếp lên S3.',
+        security: [['bearerAuth' => []]],
+        tags: ['Gym Admin Events'],
+        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(ref: '#/components/schemas/GymEventImageUploadInput')),
+        responses: [
+            new OA\Response(response: 200, description: 'URL PUT S3 và metadata', content: new OA\JsonContent(properties: [
+                new OA\Property(property: 'success', type: 'boolean'),
+                new OA\Property(property: 'message', type: 'string'),
+                new OA\Property(property: 'data', ref: '#/components/schemas/AppAdminUpload'),
+            ])),
+            new OA\Response(response: 401, description: 'Chưa đăng nhập'),
+            new OA\Response(response: 403, description: 'Không có quyền'),
+            new OA\Response(response: 422, description: 'Ảnh không hợp lệ'),
+        ]
+    )]
+    public function presignedImageUpload(PresignedFileUploadRequest $request, FileUploadService $files): JsonResponse
+    {
+        $validated = $request->validate(['type' => ['required', Rule::in([FileType::EventImage])]]);
+
+        return ResponseAPI::success($files->createPresignedUpload(
+            $validated['type'], $request->validated('filename'), $request->validated('mimetype'), (int) $request->validated('size'),
+        ));
+    }
 
     #[OA\Get(
         path: '/admin/events',
@@ -296,6 +338,12 @@ class EventController extends BaseAPIController
         return $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string|max:5000',
+            'image' => 'sometimes|nullable|array:path,name,extension,size,url',
+            'image.path' => ['required_with:image', 'string', 'regex:'.$this->contentService->imagePathPattern()],
+            'image.name' => 'required_with:image|string|max:255',
+            'image.extension' => ['required_with:image', Rule::in(['webp', 'jpg', 'jpeg', 'png'])],
+            'image.size' => ['required_with:image', 'integer', 'min:1', 'max:'.(config('app_file.'.FileType::EventImage.'.allow_max_size') * 1024)],
+            'image.url' => 'sometimes|nullable|string',
             'event_date' => 'required|date',
             'location' => 'required|string|max:255',
             'ticket_price' => 'required|integer|min:0|max:1000000000',
@@ -314,7 +362,11 @@ class EventController extends BaseAPIController
             'location' => $validated['location'],
             'ticket_price' => $validated['ticket_price'],
             'total_tickets' => $validated['total_tickets'],
-            'vi' => ['name' => $validated['name'], 'description' => $validated['description'] ?? null],
+            'vi' => [
+                'name' => $validated['name'],
+                'description' => $this->contentService->sanitize($validated['description'] ?? null),
+                ...(array_key_exists('image', $validated) ? ['image' => $validated['image'] === null ? null : array_diff_key($validated['image'], ['url' => true])] : []),
+            ],
         ];
     }
 

@@ -10,6 +10,7 @@
         "astrotomic/laravel-translatable": "^11.16",
         "bensampo/laravel-enum": "^6.12",
         "darkaonline/l5-swagger": "^10.1",
+        "ezyang/htmlpurifier": "^4.19",
         "imdhemy/laravel-purchases": "^1.16",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
